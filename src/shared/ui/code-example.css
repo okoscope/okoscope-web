@@ -1,0 +1,59 @@
+.docs-code {
+  min-width: 0;
+  max-width: 100%;
+  color: #edf5ff;
+  border: 1px solid #29465f;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  margin: 1.5rem 0;
+  background: #040f1b;
+}
+.docs-code-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 0.7rem 1rem;
+  background: #11283b;
+  font-size: 0.85rem;
+}
+.docs-code button {
+  color: #a5e9f4;
+  cursor: pointer;
+}
+.docs-code .token.comment {
+  color: #d8bd7a;
+}
+.docs-code-language {
+  color: #b6c9dc;
+  margin-right: auto;
+}
+.docs-code .token.function,
+.docs-code .token.builtin,
+.docs-code .token.key,
+.docs-code .token.atrule {
+  color: #86d9f7;
+}
+.docs-code .token.string,
+.docs-code .token.scalar {
+  color: #b7e6a5;
+}
+.docs-code .token.keyword,
+.docs-code .token.boolean,
+.docs-code .token.number {
+  color: #dfb5ff;
+}
+.docs-code .token.variable,
+.docs-code .token.parameter,
+.docs-code .token.operator {
+  color: #ffcd91;
+}
+.docs-code .token.punctuation {
+  color: #c7d8e7;
+}
+.docs-code pre {
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 1.25rem;
+  line-height: 1.7;
+  font-size: 0.85rem;
+}

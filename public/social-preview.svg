@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="accent" x1="0" x2="1"><stop stop-color="#3458ff"/><stop offset="0.5" stop-color="#08b9ff"/><stop offset="1" stop-color="#15f0bd"/></linearGradient>
+    <radialGradient id="glow"><stop stop-color="#0e4660" stop-opacity="0.7"/><stop offset="1" stop-color="#06111f" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="#06111f"/>
+  <ellipse cx="1060" cy="300" rx="460" ry="430" fill="url(#glow)"/>
+  <rect x="0" y="0" width="1200" height="7" fill="url(#accent)"/>
+  <g fill="none" stroke="#17394c" stroke-width="2">
+    <circle cx="1100" cy="340" r="180"/><circle cx="1100" cy="340" r="250"/>
+    <path d="M850 340h250V90M920 490h180v100"/>
+  </g>
+  <g fill="#15d9c1"><circle cx="920" cy="340" r="7"/><circle cx="1100" cy="160" r="7"/><circle cx="1100" cy="520" r="7"/></g>
+<svg x="76" y="76" width="108" height="108" viewBox="0 0 64 64">
+  <defs><linearGradient id="g" x1="7" y1="50" x2="57" y2="14"><stop stop-color="#3458ff"/><stop offset=".48" stop-color="#08b9ff"/><stop offset="1" stop-color="#15f0bd"/></linearGradient></defs>
+  <rect width="64" height="64" rx="14" fill="#06111f"/>
+  <path d="M5 32c7-11 16-17 27-17s20 6 27 17c-7 11-16 17-27 17S12 43 5 32Z" fill="none" stroke="url(#g)" stroke-width="5" stroke-linejoin="round"/>
+  <circle cx="32" cy="32" r="12" fill="#071526" stroke="url(#g)" stroke-width="5"/>
+  <circle cx="32" cy="32" r="7" fill="#0a1a30" stroke="#2464d8" stroke-width="1.5"/>
+  <circle cx="35" cy="29" r="2.5" fill="#fff"/>
+  <path d="M32 7v8M32 49v8M49 32h6" stroke="#10e5d1" stroke-width="4" stroke-linecap="round"/>
+</svg>
+
+  <g font-family="Arial, Helvetica, sans-serif">
+    <text x="206" y="148" font-size="62" font-weight="700" fill="#f4f8ff">Okoscope</text>
+    <text x="80" y="296" font-size="52" font-weight="700" fill="#f4f8ff">Kubernetes runtime</text>
+    <text x="80" y="360" font-size="52" font-weight="700" fill="#f4f8ff">observability</text>
+    <text x="80" y="437" font-size="27" fill="#afc7d9">Explore activity. Understand changes.</text>
+    <text x="80" y="553" font-size="24" fill="#52ded1">okoscope.com</text>
+  </g>
+</svg>

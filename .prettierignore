@@ -1,0 +1,8 @@
+dist
+.codex
+coverage
+playwright-report
+test-results
+src/routeTree.gen.ts
+src/shared/api/schema.d.ts
+openapi/okoscope-v1.yaml

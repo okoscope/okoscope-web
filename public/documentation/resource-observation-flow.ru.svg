@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">От счётчиков cgroup к выводам о ресурсах</title>
+  <desc id="desc">Счётчики выбранных контейнеров проходят ограниченную агрегацию на узле, попадают в историю ресурсов, сравнение стабильных окон релизов и раздел внимания.</desc>
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#071425"/><stop offset="1" stop-color="#040c17"/></linearGradient>
+    <linearGradient id="brand"><stop stop-color="#3458ff"/><stop offset=".52" stop-color="#08b9ff"/><stop offset="1" stop-color="#15f0bd"/></linearGradient>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse"><path d="M48 0H0V48" fill="none" stroke="#5b8bbf" stroke-opacity=".08"/></pattern>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M1 1l9 5-9 5" fill="none" stroke="#20dcd4" stroke-width="2.2"/></marker>
+    <style>
+      text{font-family:Inter,ui-sans-serif,system-ui,sans-serif}
+      .card{fill:#0b1d33;stroke:#3573a6;stroke-opacity:.55;stroke-width:1.5}
+      .eyebrow{fill:#31e6d0;font-size:11px;font-weight:800;letter-spacing:1.6px}
+      .heading{fill:#edf5ff;font-size:19px;font-weight:750}
+      .body{fill:#9eb4ce;font-size:13px}
+      .flow{stroke:#20dcd4;stroke-width:3;marker-end:url(#arrow)}
+      .pill{fill:#0a2037;stroke:#2d7fa9}
+      .pillText{fill:#c4d5e7;font-size:11px}
+    </style>
+  </defs>
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <rect width="1600" height="900" fill="url(#grid)"/>
+  <text x="64" y="86" fill="#edf5ff" font-size="38" font-weight="780">От счётчиков ресурсов к расследованию</text>
+  <text x="64" y="122" class="body" font-size="17">Покрытие, разрывы, контейнер и релиз остаются видимыми на каждом этапе.</text>
+
+  <g transform="translate(64 210)">
+    <rect class="card" width="300" height="420" rx="22"/>
+    <text class="eyebrow" x="28" y="44">НАБЛЮДЕНИЕ</text>
+    <text class="heading" x="28" y="82">cgroup контейнеров</text>
+    <text class="body" x="28" y="118">Read-only счётчики</text>
+    <text class="body" x="28" y="140">Linux</text>
+    <g transform="translate(28 166)">
+      <rect class="pill" width="108" height="36" rx="18"/><text class="pillText" x="23" y="23">CPU quota</text>
+      <rect class="pill" x="116" width="128" height="36" rx="18"/><text class="pillText" x="142" y="23">Троттлинг</text>
+      <rect class="pill" y="52" width="108" height="36" rx="18"/><text class="pillText" x="31" y="75">Память</text>
+      <rect class="pill" x="116" y="52" width="128" height="36" rx="18"/><text class="pillText" x="137" y="75">Ожидание PSI</text>
+      <rect class="pill" y="104" width="108" height="36" rx="18"/><text class="pillText" x="47" y="127">I/O</text>
+      <rect class="pill" x="116" y="104" width="128" height="36" rx="18"/><text class="pillText" x="170" y="127">PID</text>
+    </g>
+    <text class="body" x="28" y="350">Интервал: 10–60 секунд</text>
+    <text class="body" x="28" y="378">Нет источника — недоступно</text>
+  </g>
+  <path class="flow" d="M364 420h72"/>
+
+  <g transform="translate(436 210)">
+    <rect class="card" width="300" height="420" rx="22"/>
+    <text class="eyebrow" x="28" y="44">АГРЕГАЦИЯ</text>
+    <text class="heading" x="28" y="82">Агент узла</text>
+    <text class="body" x="28" y="118">Минутные UTC-интервалы</text>
+    <text class="body" x="28" y="158">Разности · min / max</text>
+    <text class="body" x="28" y="180">Среднее значение</text>
+    <text class="body" x="28" y="214">Покрытие · источники</text>
+    <text class="body" x="28" y="246">Ready-реплики</text>
+    <text class="body" x="28" y="268">Контейнеры · релиз</text>
+    <rect x="28" y="304" width="244" height="82" rx="14" fill="#1c1b22" stroke="#fbbf24" stroke-opacity=".65"/>
+    <text x="48" y="334" fill="#fbbf24" font-size="13" font-weight="750">Разрывы видны</text>
+    <text class="body" x="48" y="360">Пропуск не становится</text>
+    <text class="body" x="48" y="380">нулевым значением.</text>
+  </g>
+  <path class="flow" d="M736 420h72"/>
+
+  <g transform="translate(808 210)">
+    <rect class="card" width="300" height="420" rx="22"/>
+    <text class="eyebrow" x="28" y="44">ИССЛЕДОВАНИЕ</text>
+    <text class="heading" x="28" y="82">История ресурсов</text>
+    <path d="M32 270l48-30 44 15 49-103 48 38 47-64" fill="none" stroke="url(#brand)" stroke-width="6" stroke-linecap="round"/>
+    <path d="M32 296h236M32 202h236M32 108v210" fill="none" stroke="#547394" stroke-opacity=".38"/>
+    <text class="body" x="28" y="344">Всего по приложению</text>
+    <text class="body" x="28" y="368">Или на Ready-реплику</text>
+    <text class="body" x="28" y="396">Лимиты · покрытие · релизы</text>
+  </g>
+  <path class="flow" d="M1108 420h72"/>
+
+  <g transform="translate(1180 210)">
+    <rect class="card" width="356" height="420" rx="22"/>
+    <text class="eyebrow" x="28" y="44">СРАВНЕНИЕ И РАЗБОР</text>
+    <text class="heading" x="28" y="78">Стабильные окна</text>
+    <text class="heading" x="28" y="102">релизов</text>
+    <text class="body" x="28" y="134">Было 2,1% → стало 14,8%</text>
+    <text x="28" y="178" fill="#fbbf24" font-size="27" font-weight="780"><tspan>+</tspan><tspan dx="5">12,7 п.п.</tspan></text>
+    <text class="body" x="28" y="208">Периоды троттлинга CPU</text>
+    <rect x="28" y="236" width="300" height="122" rx="15" fill="#201722" stroke="#fb7185" stroke-opacity=".65"/>
+    <circle cx="52" cy="268" r="8" fill="#fb7185"/>
+    <text x="72" y="274" fill="#edf5ff" font-size="13" font-weight="720">После релиза вырос</text>
+    <text x="52" y="298" fill="#edf5ff" font-size="13" font-weight="720">троттлинг CPU</text>
+    <text class="body" x="52" y="326">Наблюдалась корреляция;</text>
+    <text class="body" x="52" y="348">причина неизвестна.</text>
+    <text class="body" x="28" y="394">Равные окна · без прогрева</text>
+  </g>
+
+  <text x="64" y="714" fill="#edf5ff" font-size="21" font-weight="730">Читайте каждый сигнал буквально</text>
+  <text class="body" x="64" y="754">Утилизация — расход ресурса. PSI — ожидание задач.</text>
+  <text class="body" x="64" y="778">Троттлинг — применение квоты CPU.</text>
+  <text class="body" x="64" y="812">Байты и операции I/O — поток, PSI I/O — ожидание.</text>
+  <text class="body" x="64" y="836">Это не утилизация ёмкости диска.</text>
+  <text x="1536" y="866" fill="#6683a5" font-size="11" text-anchor="end">okoscope.dev · наблюдение ресурсов</text>
+</svg>

@@ -1,0 +1,111 @@
+.docs-setup-flow {
+  display: block;
+  margin: 2.5rem 0;
+  padding: 1.5rem;
+  border: 1px solid #29465f;
+  border-radius: 1rem;
+  background:
+    radial-gradient(ellipse at top right, #15f0bd12, transparent 65%),
+    radial-gradient(ellipse at top left, #3458ff1c, transparent 65%),
+    linear-gradient(#5b8bbf0d 1px, transparent 1px),
+    linear-gradient(90deg, #5b8bbf0d 1px, transparent 1px),
+    linear-gradient(135deg, #071425, #06111f 52%, #040c17);
+  background-size:
+    auto,
+    auto,
+    24px 24px,
+    24px 24px,
+    auto;
+}
+.docs-setup-flow-stages {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2rem;
+}
+.docs-setup-flow-stage {
+  position: relative;
+  min-width: 0;
+  padding: 1rem 0.75rem;
+  border: 1px solid #3573a67a;
+  border-radius: 0.85rem;
+  background: linear-gradient(135deg, #0b1d33f5, #051120fa);
+  box-shadow: 0 12px 18px #0004;
+}
+.docs-reading .docs-setup-flow-stage-title {
+  margin: 0 0 1rem;
+  color: #31e6d0;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.docs-setup-flow ol {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.docs-setup-flow a {
+  display: flex;
+  min-height: 5rem;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 0.6rem;
+  border: 1px solid #2279a494;
+  border-radius: 0.6rem;
+  background: #08182b;
+  color: #d8e4f2;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.45;
+  text-decoration: none;
+}
+.docs-setup-flow a:hover {
+  border-color: #20dcd4;
+  background: #0a2037;
+}
+.docs-setup-flow a:focus-visible {
+  outline: 2px solid #20dcd4;
+  outline-offset: 3px;
+}
+.docs-setup-flow-badge {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #3458ff, #08b9ff 48%, #15f0bd);
+  box-shadow: 0 0 10px #08cbea40;
+  color: #06111f;
+}
+.docs-setup-flow-inner-arrow,
+.docs-setup-flow-arrow {
+  color: #20dcd4;
+  filter: drop-shadow(0 0 4px #08cbea50);
+}
+.docs-setup-flow-inner-arrow {
+  margin: 0.4rem auto;
+}
+.docs-setup-flow-arrow {
+  position: absolute;
+  right: -1.8rem;
+  top: calc(50% - 12px);
+}
+@media (max-width: 65rem) {
+  .docs-setup-flow {
+    padding: 1.25rem;
+  }
+  .docs-setup-flow-stages {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .docs-setup-flow a {
+    min-height: 0;
+    font-size: 0.95rem;
+  }
+  .docs-setup-flow-arrow {
+    top: auto;
+    right: calc(50% - 12px);
+    bottom: -1.8rem;
+    transform: rotate(90deg);
+  }
+}

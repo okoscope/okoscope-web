@@ -2,6 +2,7 @@ import type { Locale } from '../../shared/i18n'
 import { quickStartArticle } from './quick-start'
 import { selfHostingArticle } from './self-hosting'
 import { accountEmailArticle } from './account-email'
+import { accessControlArticle } from './access-control'
 
 type Localized = Record<Locale, string>
 export type SectionIcon = 'processes' | 'network' | 'files' | 'review'
@@ -210,6 +211,7 @@ export const articles: Article[] = [
       'compatibility-and-limits',
     ],
   },
+  accessControlArticle,
   {
     slug: 'how-it-works',
     title: {

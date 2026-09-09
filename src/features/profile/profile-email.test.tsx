@@ -7,21 +7,13 @@ import { ApiProvider } from '../../shared/api/context'
 import type { AuthContext } from '../../shared/api/types'
 import { authenticationSession } from '../../shared/auth/session'
 import { LocalizationProvider } from '../../shared/i18n'
+import { createAuthContext } from '../../test/auth-context'
 import { Profile } from './profile'
 
 vi.mock('../notifications/retention', () => ({ NotificationRetention: () => null }))
 vi.mock('../runtime-retention/settings', () => ({ RuntimeRetention: () => null }))
 
-const context: AuthContext = {
-  user: {
-    id: 'user-1',
-    email: 'owner@example.com',
-    email_verified: true,
-    preferred_locale: 'en',
-  },
-  organization: { id: 'org-1', name: 'Acme', slug: 'acme' },
-  role: 'owner',
-}
+const context: AuthContext = createAuthContext()
 
 afterEach(() => authenticationSession.reset())
 

@@ -72,9 +72,9 @@ export function NotificationRetention({ projectId }: { projectId?: string | unde
   if (auth.status !== 'authenticated') return null
   return (
     <RetentionPanel
-      organizationId={auth.context.organization.id}
+      organizationId={auth.context.active_organization!.id}
       projectId={projectId}
-      canEdit={auth.context.role === 'owner'}
+      canEdit={auth.context.active_role === 'owner'}
     />
   )
 }

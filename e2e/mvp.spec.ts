@@ -227,36 +227,29 @@ test('authentication flow and primary navigation have no detectable accessibilit
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
 })
 
-test('keeps registration visible and shows registration_disabled without a capability probe', async ({
+test('hides public registration when policy disables it without disabling sign-in', async ({
   page,
 }) => {
   await mockApi(page)
-  let capabilityRequests = 0
-  await page.route('**/api/v1/auth/register', (route) =>
+  let registrationRequests = 0
+  await page.route('**/api/v1/auth/policy', (route) =>
     route.fulfill({
-      status: 404,
       contentType: 'application/json',
-      headers: { 'x-request-id': 'registration-disabled-id' },
       body: JSON.stringify({
-        error: 'registration_disabled',
-        message: 'registration is disabled',
-        request_id: 'registration-disabled-id',
+        public_signup_enabled: false,
+        invitation_registration_enabled: true,
+        organization_mode: 'single',
       }),
     }),
   )
   page.on('request', (request) => {
-    if (request.url().includes('capabilit')) capabilityRequests += 1
+    if (request.url().endsWith('/api/v1/auth/register')) registrationRequests += 1
   })
   await page.goto('/')
-  await page.getByRole('button', { name: 'Create organization' }).click()
-  await page.getByLabel('Email').fill('owner@example.com')
-  await page.getByLabel('Password').fill('correct horse battery staple')
-  await page.getByLabel('Organization name').fill('Acme')
-  await page.getByRole('button', { name: 'Create account' }).click()
-  await expect(page.getByText('registration is disabled')).toBeVisible()
-  await expect(page.getByText('registration-disabled-id')).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Create organization' })).toBeVisible()
-  expect(capabilityRequests).toBe(0)
+  await expect(page.getByRole('button', { name: 'Create organization' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Sign in', exact: true }).last()).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Documentation' })).toBeVisible()
+  expect(registrationRequests).toBe(0)
 })
 
 test('registers an Organization and waits for email verification without a session', async ({
@@ -267,6 +260,7 @@ test('registers an Organization and waits for email verification without a sessi
   await page.getByRole('button', { name: 'Create organization' }).click()
   await page.getByLabel('Email').fill('owner@example.com')
   await page.getByLabel('Password').fill('correct horse battery staple')
+  await page.getByLabel('Display name').fill('Owner Example')
   await page.getByLabel('Organization name').fill('Acme')
   await expect(page.getByLabel('Organization slug')).toHaveValue('acme')
   await page.getByRole('button', { name: 'Create account' }).click()

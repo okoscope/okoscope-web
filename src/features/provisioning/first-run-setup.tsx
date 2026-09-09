@@ -5,7 +5,7 @@ import { getCurrentUser } from '../../shared/api/auth'
 import { useApi } from '../../shared/api/context'
 import { completeSetup, onboardingKeys } from '../../shared/api/onboarding'
 import { authenticationSession } from '../../shared/auth/session'
-import { useT } from '../../shared/i18n'
+import { useLocalization } from '../../shared/i18n'
 import { LanguageSelector } from '../../shared/i18n/language-selector'
 import { Button } from '../../shared/ui/button'
 import { Brand } from '../../shared/ui/brand'
@@ -13,26 +13,15 @@ import { Card } from '../../shared/ui/card'
 import { ErrorState } from '../../shared/ui/error-state'
 import { clearSetupTokenFragment, peekSetupTokenFragment } from './setup-token-memory'
 
-const slugify = (value: string) =>
-  value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-    .slice(0, 63)
-
 export function FirstRunSetup() {
   const api = useApi()
-  const t = useT()
+  const { locale, t } = useLocalization()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const [setupToken, setSetupToken] = useState(peekSetupTokenFragment)
   const [email, setEmail] = useState('')
+  const [displayName, setDisplayName] = useState('')
   const [password, setPassword] = useState('')
-  const [organizationName, setOrganizationName] = useState('')
-  const [organizationSlug, setOrganizationSlug] = useState('')
-  const [projectName, setProjectName] = useState('Default')
-  const [projectSlug, setProjectSlug] = useState('default')
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<unknown>(null)
 
@@ -49,16 +38,14 @@ export function FirstRunSetup() {
         setup_token: setupToken,
         email: email.trim(),
         password,
-        organization_name: organizationName.trim(),
-        organization_slug: organizationSlug,
-        project_name: projectName.trim(),
-        project_slug: projectSlug,
+        display_name: displayName.trim(),
+        locale,
       })
       setSetupToken('')
       setPassword('')
       await queryClient.invalidateQueries({ queryKey: onboardingKeys.setup })
       authenticationSession.authenticate(await getCurrentUser(api))
-      await navigate({ to: '/onboarding' })
+      await navigate({ to: '/platform' })
     } catch (failure) {
       setPassword('')
       setError(failure)
@@ -94,34 +81,18 @@ export function FirstRunSetup() {
             autoComplete="email"
           />
           <SetupField
+            label={t('displayName')}
+            value={displayName}
+            onChange={setDisplayName}
+            autoComplete="name"
+          />
+          <SetupField
             label={t('password')}
             type="password"
             value={password}
             onChange={setPassword}
             autoComplete="new-password"
           />
-          <SetupField
-            label={t('organizationName')}
-            value={organizationName}
-            onChange={(value) => {
-              setOrganizationName(value)
-              setOrganizationSlug(slugify(value))
-            }}
-          />
-          <SetupField
-            label={t('organizationSlug')}
-            value={organizationSlug}
-            onChange={setOrganizationSlug}
-          />
-          <SetupField
-            label={t('projectName')}
-            value={projectName}
-            onChange={(value) => {
-              setProjectName(value)
-              setProjectSlug(slugify(value))
-            }}
-          />
-          <SetupField label={t('projectSlug')} value={projectSlug} onChange={setProjectSlug} />
           {Boolean(error) && <ErrorState title={t('setupFailed')} error={error} />}
           <Button
             className="w-full"

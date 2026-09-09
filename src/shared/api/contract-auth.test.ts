@@ -16,26 +16,41 @@ describe('authentication contract snapshot', () => {
       '/api/v1/auth/me',
       '/api/v1/auth/logout',
     ]
-    const roles: components['schemas']['OrganizationRole'][] = ['owner', 'member']
+    const roles: components['schemas']['OrganizationRole'][] = ['owner', 'admin', 'member']
     const context: components['schemas']['AuthContext'] = {
       user: {
         id: 'user',
         email: 'owner@example.com',
+        display_name: 'Owner Example',
         email_verified: true,
         preferred_locale: 'en',
       },
-      organization: { id: 'organization', name: 'Acme', slug: 'acme' },
-      role: 'owner',
+      platform_role: null,
+      organizations: [{ id: 'organization', name: 'Acme', slug: 'acme', role: 'owner' }],
+      active_organization: { id: 'organization', name: 'Acme', slug: 'acme', role: 'owner' },
+      active_role: 'owner',
+      requires_organization_selection: false,
+      privileged_until: null,
+      capabilities: {
+        manage_platform: false,
+        manage_organization: true,
+        create_project: true,
+        manage_project_members: true,
+        create_application: true,
+        manage_credentials: true,
+        organization_roles_grantable: ['owner', 'admin', 'member'],
+        project_roles_grantable: ['admin', 'member'],
+      },
     }
     expect(operations).toHaveLength(10)
-    expect(roles).toEqual(['owner', 'member'])
-    expect(context.organization.slug).toBe('acme')
+    expect(roles).toEqual(['owner', 'admin', 'member'])
+    expect(context.active_organization?.slug).toBe('acme')
   })
 
-  it('does not publish legacy tenant bearer authentication', () => {
+  it('publishes only browser session authentication', () => {
     expect(contract).not.toContain('bearerAuth:')
     expect(contract).toContain('sessionAuth:')
-    expect(contract).toContain('adminAuth:')
+    expect(contract).not.toContain('adminAuth:')
   })
 
   it('publishes anonymous security actions and write-only secrets', () => {

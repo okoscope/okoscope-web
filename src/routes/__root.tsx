@@ -1,7 +1,7 @@
 import { useQuery, type QueryClient } from '@tanstack/react-query'
 import { Link, Outlet, createRootRoute, useRouterState } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
-import { Menu, X } from 'lucide-react'
+import { Menu, ShieldCheck, X } from 'lucide-react'
 import { getCurrentUser, isAnonymousResponse } from '../shared/api/auth'
 import { useApi } from '../shared/api/context'
 import { buildInfoOptions } from '../shared/api/queries'
@@ -16,6 +16,7 @@ import { Loading } from '../shared/ui/loading'
 import { FirstRunSetup } from '../features/provisioning/first-run-setup'
 import { captureSetupTokenFragment } from '../features/provisioning/setup-token-memory'
 import { AuthenticationScreen } from '../features/auth/authentication-screen'
+import { OrganizationSelection } from '../features/access/organization-selection'
 
 export const REQUIRED_API_VERSION = 'v1'
 export const REQUIRED_DATABASE_MIGRATION = 26
@@ -40,7 +41,9 @@ function RootComponent() {
   const t = useT()
   const location = useRouterState({ select: (state) => state.location })
   const isSecurityAction =
-    location.pathname === '/verify-email' || location.pathname === '/reset-password'
+    location.pathname === '/verify-email' ||
+    location.pathname === '/reset-password' ||
+    location.pathname === '/invite'
   if (!isSecurityAction) captureSetupTokenFragment()
   const isPublicRoute =
     location.pathname === '/docs' || location.pathname.startsWith('/docs/') || isSecurityAction
@@ -95,7 +98,7 @@ function SetupGate() {
         onRetry={() => void setup.refetch()}
       />
     )
-  if (setup.data.state === 'owner_required') return <FirstRunSetup />
+  if (setup.data.state === 'platform_admin_required') return <FirstRunSetup />
   return <SessionGate />
 }
 
@@ -131,11 +134,33 @@ function SessionGate() {
 function AuthenticatedShell() {
   const t = useT()
   const locationHref = useRouterState({ select: (state) => state.location.href })
+  const pathname = useRouterState({ select: (state) => state.location.pathname })
+  const auth = useAuthentication()
+  if (auth.status !== 'authenticated') return null
+  if (pathname.startsWith('/platform') && !auth.context.capabilities.manage_platform)
+    return (
+      <main id="main-content" className="page">
+        <ErrorState title={t('platform')} error={new Error(t('platformAccessDenied'))} />
+      </main>
+    )
+  const needsOrganization =
+    !pathname.startsWith('/platform') &&
+    pathname !== '/profile' &&
+    (auth.context.requires_organization_selection || auth.context.active_organization === null)
   return (
     <div className="min-h-screen">
       <ApplicationHeader key={locationHref} />
+      {auth.context.platform_role === 'super_admin' && (
+        <div
+          className="border-b border-violet-400/20 bg-violet-500/10 px-6 py-2 text-center text-sm text-violet-100"
+          role="status"
+        >
+          <ShieldCheck className="mr-2 inline size-4" aria-hidden="true" />
+          {t('platformAccessBanner', { email: auth.context.user.email })}
+        </div>
+      )}
       <main id="main-content" className="page">
-        <Outlet />
+        {needsOrganization ? <OrganizationSelection /> : <Outlet />}
       </main>
       <footer className="mx-auto max-w-6xl px-6 pb-8 text-xs text-slate-500">
         {t('webVersion', { version: __APP_VERSION__, commit: __GIT_COMMIT__ })}
@@ -147,6 +172,8 @@ function AuthenticatedShell() {
 function ApplicationHeader() {
   const t = useT()
   const [menuOpen, setMenuOpen] = useState(false)
+  const auth = useAuthentication()
+  const context = auth.status === 'authenticated' ? auth.context : null
   const toggleRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
@@ -193,13 +220,44 @@ function ApplicationHeader() {
             if (event.target instanceof Element && event.target.closest('a')) setMenuOpen(false)
           }}
         >
-          <Link
-            to="/projects"
-            className="nav-link"
-            activeProps={{ className: 'nav-link text-cyan-300' }}
-          >
-            {t('projects')}
-          </Link>
+          {context?.active_organization && (
+            <>
+              <Link
+                to="/projects"
+                className="nav-link"
+                activeProps={{ className: 'nav-link text-cyan-300' }}
+              >
+                {t('projects')}
+              </Link>
+              {context.capabilities.manage_organization && (
+                <Link
+                  to="/access"
+                  className="nav-link"
+                  activeProps={{ className: 'nav-link text-cyan-300' }}
+                >
+                  {t('access')}
+                </Link>
+              )}
+            </>
+          )}
+          {context && context.organizations.length > 1 && (
+            <Link
+              to="/organizations"
+              className="nav-link"
+              activeProps={{ className: 'nav-link text-cyan-300' }}
+            >
+              {context.active_organization?.name ?? t('chooseOrganization')}
+            </Link>
+          )}
+          {context?.platform_role === 'super_admin' && (
+            <Link
+              to="/platform"
+              className="nav-link"
+              activeProps={{ className: 'nav-link text-violet-300' }}
+            >
+              {t('platform')}
+            </Link>
+          )}
           <Link
             to="/profile"
             className="nav-link"

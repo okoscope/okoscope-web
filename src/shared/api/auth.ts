@@ -2,9 +2,12 @@ import { ApiClientError, type ApiClient } from './client'
 import type {
   AcceptedSecurityAction,
   AuthContext,
+  AuthenticationPolicy,
   EmailActionRequest,
   EmailSecurityRequest,
   LoginRequest,
+  OrganizationSelectionRequest,
+  PrivilegeConfirmationRequest,
   PasswordChangeRequest,
   PasswordResetRequest,
   RegisterRequest,
@@ -16,6 +19,15 @@ export const getCurrentUser = (api: ApiClient) =>
 
 export const login = (api: ApiClient, body: LoginRequest) =>
   api.post<AuthContext>('/api/v1/auth/login', { body, unauthorized: 'ignore' })
+
+export const getAuthenticationPolicy = (api: ApiClient) =>
+  api.get<AuthenticationPolicy>('/api/v1/auth/policy', { unauthorized: 'ignore' })
+
+export const selectActiveOrganization = (api: ApiClient, body: OrganizationSelectionRequest) =>
+  api.post<void>('/api/v1/auth/organization-selections', { body, protected: true })
+
+export const confirmPlatformPrivilege = (api: ApiClient, body: PrivilegeConfirmationRequest) =>
+  api.post<void>('/api/v1/auth/privilege-confirmations', { body, protected: true })
 
 export const register = (api: ApiClient, body: RegisterRequest) =>
   api.post<AcceptedSecurityAction>('/api/v1/auth/register', { body, unauthorized: 'ignore' })

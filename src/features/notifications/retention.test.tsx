@@ -5,18 +5,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ApiClient } from '../../shared/api/client'
 import { ApiProvider } from '../../shared/api/context'
 import { authenticationSession } from '../../shared/auth/session'
+import { createAuthContext } from '../../test/auth-context'
 import { NotificationRetention } from './retention'
 
-const auth = {
-  user: {
-    id: 'user-1',
-    email: 'owner@example.com',
-    email_verified: true,
-    preferred_locale: 'en' as const,
-  },
-  organization: { id: 'org-1', name: 'Acme', slug: 'acme' },
-  role: 'owner' as const,
-}
+const auth = createAuthContext()
 
 afterEach(() => authenticationSession.reset())
 

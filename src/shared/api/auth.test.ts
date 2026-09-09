@@ -12,19 +12,11 @@ import {
   updateUserPreferences,
 } from './auth'
 import type { ApiClient } from './client'
+import { createAuthContext } from '../../test/auth-context'
 
 describe('generated authentication operations', () => {
   it('uses the published paths and endpoint-specific unauthorized behavior', async () => {
-    const context = {
-      user: {
-        id: 'user',
-        email: 'owner@example.com',
-        email_verified: true,
-        preferred_locale: 'en',
-      },
-      organization: { id: 'organization', name: 'Acme', slug: 'acme' },
-      role: 'owner' as const,
-    }
+    const context = createAuthContext({ user: { id: 'user' } })
     const get = vi.fn().mockResolvedValue(context)
     const post = vi
       .fn()
@@ -40,6 +32,7 @@ describe('generated authentication operations', () => {
     await register(api, {
       email: 'owner@example.com',
       password: 'long password',
+      display_name: 'Owner Example',
       organization_name: 'Acme',
       organization_slug: 'acme',
       locale: 'en',
@@ -64,16 +57,7 @@ describe('generated authentication operations', () => {
 
   it('calls every security and preference endpoint with the published protection', async () => {
     const post = vi.fn().mockResolvedValue({ status: 'accepted' })
-    const put = vi.fn().mockResolvedValue({
-      user: {
-        id: 'user',
-        email: 'owner@example.com',
-        email_verified: true,
-        preferred_locale: 'en',
-      },
-      organization: { id: 'organization', name: 'Acme', slug: 'acme' },
-      role: 'owner',
-    })
+    const put = vi.fn().mockResolvedValue(createAuthContext({ user: { id: 'user' } }))
     const api = { post, put } as unknown as ApiClient
 
     await requestEmailVerification(api, { email: 'owner@example.com' })

@@ -13,6 +13,14 @@ const project = {
   name: 'Production',
   slug: 'production',
   created_at: '2026-01-01T00:00:00Z',
+  effective_project_role: 'admin',
+  effective_access_source: 'organization',
+  capabilities: {
+    manage_project_members: true,
+    create_application: true,
+    manage_credentials: true,
+    project_roles_grantable: ['admin', 'member'],
+  },
 }
 const app = {
   id: '00000000-0000-4000-8000-000000000103',
@@ -54,30 +62,58 @@ const auth = {
   user: {
     id: 'user',
     email: 'owner@example.com',
+    display_name: 'Owner Example',
     email_verified: true,
     preferred_locale: 'en',
   },
-  organization: org,
-  role: 'owner',
+  platform_role: null,
+  organizations: [{ ...org, role: 'owner' }],
+  active_organization: { ...org, role: 'owner' },
+  active_role: 'owner',
+  requires_organization_selection: false,
+  privileged_until: null,
+  capabilities: {
+    manage_platform: false,
+    manage_organization: true,
+    create_project: true,
+    manage_project_members: true,
+    create_application: true,
+    manage_credentials: true,
+    organization_roles_grantable: ['owner', 'admin', 'member'],
+    project_roles_grantable: ['admin', 'member'],
+  },
 }
 
-test('first owner setup removes fragment and never persists its secrets', async ({ page }) => {
+test('first super administrator setup removes fragment and creates no tenant scope', async ({
+  page,
+}) => {
   let body: Record<string, string> = {}
   await page.route('**/api/v1/**', (route) => {
     const path = new URL(route.request().url()).pathname
     if (path.endsWith('/build-info')) return reply(route, build)
-    if (path.endsWith('/setup/status')) return reply(route, { state: 'owner_required' })
+    if (path.endsWith('/setup/status')) return reply(route, { state: 'platform_admin_required' })
     if (path.endsWith('/setup/complete')) {
       body = route.request().postDataJSON()
       return reply(
         route,
-        { user_id: 'u', organization_id: org.id, project_id: project.id, role: 'owner' },
+        {
+          user_id: 'u',
+          platform_role: 'super_admin',
+          active_organization_id: null,
+          privileged_until: '2026-01-01T00:10:00Z',
+        },
         201,
       )
     }
-    if (path.endsWith('/auth/me')) return reply(route, auth)
-    if (path === '/api/v1/projects') return reply(route, { items: [project], next_cursor: null })
-    if (path.endsWith('/applications')) return reply(route, { items: [], next_cursor: null })
+    if (path.endsWith('/auth/me'))
+      return reply(route, {
+        ...auth,
+        platform_role: 'super_admin',
+        organizations: [],
+        active_organization: null,
+        active_role: null,
+        capabilities: { ...auth.capabilities, manage_platform: true },
+      })
     return reply(route, {}, 404)
   })
   const setupToken = 's'.repeat(40)
@@ -85,15 +121,18 @@ test('first owner setup removes fragment and never persists its secrets', async 
   await expect(page).toHaveURL(/\?window=24h$/)
   await expect(page.getByLabel('One-time setup token')).toHaveValue(setupToken)
   await page.getByLabel('Email').fill('owner@example.com')
+  await page.getByLabel('Display name').fill('Owner Example')
   await page.getByLabel('Password').fill('correct horse battery staple')
-  await page.getByLabel('Organization name').fill('Acme')
-  await page.getByLabel('Initial Project name').fill('Production')
-  await page.getByRole('button', { name: 'Create owner and continue' }).click()
-  await expect(page).toHaveURL('/onboarding')
-  expect(body).toMatchObject({
+  await expect(page.getByLabel('Organization name')).toHaveCount(0)
+  await expect(page.getByLabel('Initial Project name')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Create super administrator' }).click()
+  await expect(page).toHaveURL('/platform')
+  expect(body).toEqual({
     setup_token: setupToken,
-    organization_slug: 'acme',
-    project_slug: 'production',
+    email: 'owner@example.com',
+    password: 'correct horse battery staple',
+    display_name: 'Owner Example',
+    locale: 'en',
   })
   expect(await page.evaluate(() => JSON.stringify({ localStorage, sessionStorage }))).not.toContain(
     setupToken,
@@ -110,9 +149,7 @@ test('setup unavailable can recover to ready login', async ({ page }) => {
     return reply(route, {}, 404)
   })
   await page.goto('/')
-  await expect(
-    page.getByRole('heading', { name: 'First-owner setup is unavailable' }),
-  ).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Platform setup is unavailable' })).toBeVisible()
   state = 'ready'
   await page.getByRole('button', { name: 'Try again' }).click()
   await expect(page.getByRole('button', { name: 'Sign in', exact: true }).last()).toBeVisible()

@@ -13,17 +13,19 @@ import type { ApiClient } from '../../shared/api/client'
 import { ApplicationList } from './application-list'
 import { ProjectList } from './project-list'
 import { authenticationSession } from '../../shared/auth/session'
+import { createAuthContext } from '../../test/auth-context'
 
 function renderWithProviders(
   node: React.ReactNode,
   get: ApiClient['get'],
   post: ApiClient['post'] = vi.fn(),
 ) {
-  authenticationSession.authenticate({
-    user: { id: 'user', email: 'owner@example.com', email_verified: true, preferred_locale: 'en' },
-    organization: { id: 'organization', name: 'Acme', slug: 'acme' },
-    role: 'owner',
-  })
+  authenticationSession.authenticate(
+    createAuthContext({
+      user: { id: 'user' },
+      organizations: [{ id: 'organization', name: 'Acme', slug: 'acme', role: 'owner' }],
+    }),
+  )
   const rootRoute = createRootRoute({ component: () => node })
   const router = createRouter({
     routeTree: rootRoute,
@@ -50,24 +52,43 @@ describe('tenant lists', () => {
   })
 
   it('formats an Application without observations', async () => {
-    renderWithProviders(
-      <ApplicationList projectId="project-1" />,
-      vi.fn().mockResolvedValue({
-        items: [
-          {
-            id: 'application-1',
-            project_id: 'project-1',
-            slug: 'api',
-            name: 'API',
+    const get = vi.fn().mockImplementation((path: string) =>
+      path.endsWith('/api/v1/projects/project-1')
+        ? Promise.resolve({
+            id: 'project-1',
+            organization_id: 'organization',
+            slug: 'project',
+            name: 'Project',
             created_at: '2026-08-17T12:00:00Z',
-            release_count: 0,
+            archived_at: null,
+            application_count: 1,
             runtime_group_count: 0,
-            latest_observed_at: null,
-          },
-        ],
-        next_cursor: null,
-      }),
+            effective_project_role: 'admin',
+            effective_access_source: 'organization',
+            capabilities: {
+              manage_project_members: true,
+              create_application: true,
+              manage_credentials: true,
+              project_roles_grantable: ['admin', 'member'],
+            },
+          })
+        : Promise.resolve({
+            items: [
+              {
+                id: 'application-1',
+                project_id: 'project-1',
+                slug: 'api',
+                name: 'API',
+                created_at: '2026-08-17T12:00:00Z',
+                release_count: 0,
+                runtime_group_count: 0,
+                latest_observed_at: null,
+              },
+            ],
+            next_cursor: null,
+          }),
     )
+    renderWithProviders(<ApplicationList projectId="project-1" />, get)
     expect(await screen.findByText('Never observed')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /API/ })).toHaveAttribute(
       'href',
@@ -144,11 +165,29 @@ describe('tenant lists', () => {
         shown_once: true,
       },
     })
-    renderWithProviders(
-      <ApplicationList projectId="project-1" />,
-      vi.fn().mockResolvedValue({ items: [], next_cursor: null }),
-      post,
+    const get = vi.fn().mockImplementation((path: string) =>
+      path.endsWith('/api/v1/projects/project-1')
+        ? Promise.resolve({
+            id: 'project-1',
+            organization_id: 'organization',
+            slug: 'project',
+            name: 'Project',
+            created_at: '2026-08-17T12:00:00Z',
+            archived_at: null,
+            application_count: 0,
+            runtime_group_count: 0,
+            effective_project_role: 'admin',
+            effective_access_source: 'organization',
+            capabilities: {
+              manage_project_members: true,
+              create_application: true,
+              manage_credentials: true,
+              project_roles_grantable: ['admin', 'member'],
+            },
+          })
+        : Promise.resolve({ items: [], next_cursor: null }),
     )
+    renderWithProviders(<ApplicationList projectId="project-1" />, get, post)
     await userEvent.click(await screen.findByRole('button', { name: 'Create Application' }))
     await userEvent.type(await screen.findByLabelText('Name'), 'Payments')
     await userEvent.click(

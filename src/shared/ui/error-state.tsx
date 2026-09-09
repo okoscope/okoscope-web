@@ -6,11 +6,13 @@ import { useT } from '../i18n'
 export function ErrorState({
   error,
   title,
+  message,
   onRetry,
   headingLevel = 2,
 }: {
   error: unknown
   title?: string
+  message?: string
   onRetry?: () => void
   headingLevel?: 1 | 2
 }) {
@@ -22,7 +24,9 @@ export function ErrorState({
       <Heading className="text-lg font-semibold text-rose-200">
         {title ?? t('somethingWrong')}
       </Heading>
-      <p className="mt-2 text-sm text-slate-300">{detail?.message ?? t('unexpectedError')}</p>
+      <p className="mt-2 text-sm text-slate-300">
+        {message ?? detail?.message ?? t('unexpectedError')}
+      </p>
       {detail?.kind === 'api' && (
         <p className="mt-2 text-xs text-slate-400">{t('errorCode', { code: detail.code })}</p>
       )}

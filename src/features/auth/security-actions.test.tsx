@@ -16,9 +16,18 @@ afterEach(() => {
   window.history.replaceState(null, '', '/')
 })
 
-function renderWithApi(node: React.ReactNode) {
+function renderWithApi(
+  node: React.ReactNode,
+  policy = {
+    public_signup_enabled: false,
+    invitation_registration_enabled: true,
+    organization_mode: 'single',
+  },
+) {
   const api = new ApiClient({ apiBaseUrl: 'http://localhost' }, vi.fn())
   const post = vi.spyOn(api, 'post')
+  const get = vi.spyOn(api, 'get')
+  get.mockResolvedValue(policy)
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   render(
     <QueryClientProvider client={queryClient}>
@@ -27,18 +36,30 @@ function renderWithApi(node: React.ReactNode) {
       </ApiProvider>
     </QueryClientProvider>,
   )
-  return post
+  return { get, post }
 }
 
 describe('email security flows', () => {
+  it('hides uninvited account creation when public signup is disabled', async () => {
+    renderWithApi(<AuthenticationScreen expired={false} />)
+
+    expect(await screen.findAllByRole('button', { name: 'Sign in' })).toHaveLength(2)
+    expect(screen.queryByRole('button', { name: 'Create organization' })).not.toBeInTheDocument()
+  })
+
   it('registers with locale and shows the check-email state without authenticating', async () => {
     const user = userEvent.setup()
-    const post = renderWithApi(<AuthenticationScreen expired={false} />)
+    const { post } = renderWithApi(<AuthenticationScreen expired={false} />, {
+      public_signup_enabled: true,
+      invitation_registration_enabled: true,
+      organization_mode: 'multiple',
+    })
     post.mockResolvedValue({ status: 'accepted' })
 
-    await user.click(screen.getByRole('button', { name: 'Create organization' }))
+    await user.click(await screen.findByRole('button', { name: 'Create organization' }))
     await user.type(screen.getByLabelText('Email'), 'owner@example.com')
     await user.type(screen.getByLabelText('Password'), 'correct horse battery')
+    await user.type(screen.getByLabelText('Display name'), 'Owner Example')
     await user.type(screen.getByLabelText('Organization name'), 'Acme')
     await user.click(screen.getByRole('button', { name: 'Create account' }))
 
@@ -46,6 +67,7 @@ describe('email security flows', () => {
     expect(post).toHaveBeenCalledWith('/api/v1/auth/register', {
       body: expect.objectContaining({
         email: 'owner@example.com',
+        display_name: 'Owner Example',
         organization_name: 'Acme',
         organization_slug: 'acme',
         locale: 'en',
@@ -56,7 +78,7 @@ describe('email security flows', () => {
 
   it('uses the same accepted forgot-password state for any submitted address', async () => {
     const user = userEvent.setup()
-    const post = renderWithApi(<AuthenticationScreen expired={false} />)
+    const { post } = renderWithApi(<AuthenticationScreen expired={false} />)
     post.mockResolvedValue({ status: 'accepted' })
 
     await user.click(screen.getByRole('button', { name: 'Forgot password?' }))
@@ -74,7 +96,7 @@ describe('email security flows', () => {
     const user = userEvent.setup()
     const token = `verify_${'x'.repeat(40)}`
     window.history.replaceState(null, '', `/verify-email#token=${token}`)
-    const post = renderWithApi(<SecurityActionPage kind="verify" />)
+    const { post } = renderWithApi(<SecurityActionPage kind="verify" />)
     post.mockResolvedValue(undefined)
 
     expect(window.location.hash).toBe('')
@@ -94,7 +116,7 @@ describe('email security flows', () => {
     const user = userEvent.setup()
     const token = `reset_${'x'.repeat(40)}`
     window.history.replaceState(null, '', `/reset-password#token=${token}`)
-    const post = renderWithApi(<SecurityActionPage kind="reset" />)
+    const { post } = renderWithApi(<SecurityActionPage kind="reset" />)
     post.mockResolvedValue(undefined)
 
     await user.type(screen.getByLabelText('New password'), 'correct horse battery')

@@ -10,18 +10,25 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AccessRouteImport } from './routes/access'
+import { Route as InviteRouteImport } from './routes/invite'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as OrganizationsRouteImport } from './routes/organizations'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as DocsIndexRouteImport } from './routes/docs.index'
 import { Route as DocsSlugRouteImport } from './routes/docs.$slug'
+import { Route as PlatformIndexRouteImport } from './routes/platform.index'
 import { Route as ProjectsIndexRouteImport } from './routes/projects.index'
+import { Route as PlatformOrganizationsOrganizationIdRouteImport } from './routes/platform.organizations.$organizationId'
 import { Route as ProjectsProjectIdIndexRouteImport } from './routes/projects.$projectId.index'
+import { Route as ProjectsProjectIdAccessRouteImport } from './routes/projects.$projectId.access'
 import { Route as ProjectsProjectIdNotificationsRouteImport } from './routes/projects.$projectId.notifications'
 import { Route as ProjectsProjectIdApplicationsApplicationIdRouteImport } from './routes/projects.$projectId.applications.$applicationId'
 import { Route as ProjectsProjectIdNotificationsRecoveryRouteImport } from './routes/projects.$projectId.notifications.recovery'
 import { Route as AdminProjectsProjectIdApplicationsApplicationIdRouteImport } from './routes/admin.projects.$projectId.applications.$applicationId'
+import { Route as PlatformOrganizationsOrganizationIdProjectsProjectIdRouteImport } from './routes/platform.organizations.$organizationId.projects.$projectId'
 import { Route as ProjectsProjectIdApplicationsApplicationIdAttentionRouteImport } from './routes/projects.$projectId.applications.$applicationId.attention'
 import { Route as ProjectsProjectIdApplicationsApplicationIdPoliciesRouteImport } from './routes/projects.$projectId.applications.$applicationId.policies'
 import { Route as ProjectsProjectIdApplicationsApplicationIdReleasesRouteImport } from './routes/projects.$projectId.applications.$applicationId.releases'
@@ -40,9 +47,24 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AccessRoute = AccessRouteImport.update({
+  id: '/access',
+  path: '/access',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InviteRoute = InviteRouteImport.update({
+  id: '/invite',
+  path: '/invite',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrganizationsRoute = OrganizationsRouteImport.update({
+  id: '/organizations',
+  path: '/organizations',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -70,14 +92,30 @@ const DocsSlugRoute = DocsSlugRouteImport.update({
   path: '/docs/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlatformIndexRoute = PlatformIndexRouteImport.update({
+  id: '/platform/',
+  path: '/platform/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProjectsIndexRoute = ProjectsIndexRouteImport.update({
   id: '/projects/',
   path: '/projects/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlatformOrganizationsOrganizationIdRoute =
+  PlatformOrganizationsOrganizationIdRouteImport.update({
+    id: '/platform/organizations/$organizationId',
+    path: '/platform/organizations/$organizationId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ProjectsProjectIdIndexRoute = ProjectsProjectIdIndexRouteImport.update({
   id: '/projects/$projectId/',
   path: '/projects/$projectId/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjectsProjectIdAccessRoute = ProjectsProjectIdAccessRouteImport.update({
+  id: '/projects/$projectId/access',
+  path: '/projects/$projectId/access',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProjectsProjectIdNotificationsRoute =
@@ -103,6 +141,12 @@ const AdminProjectsProjectIdApplicationsApplicationIdRoute =
     id: '/admin/projects/$projectId/applications/$applicationId',
     path: '/admin/projects/$projectId/applications/$applicationId',
     getParentRoute: () => rootRouteImport,
+  } as any)
+const PlatformOrganizationsOrganizationIdProjectsProjectIdRoute =
+  PlatformOrganizationsOrganizationIdProjectsProjectIdRouteImport.update({
+    id: '/projects/$projectId',
+    path: '/projects/$projectId',
+    getParentRoute: () => PlatformOrganizationsOrganizationIdRoute,
   } as any)
 const ProjectsProjectIdApplicationsApplicationIdAttentionRoute =
   ProjectsProjectIdApplicationsApplicationIdAttentionRouteImport.update({
@@ -188,18 +232,25 @@ const ProjectsProjectIdApplicationsApplicationIdReleasesTargetReleaseIdRuntimeDi
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/access': typeof AccessRoute
+  '/invite': typeof InviteRoute
   '/onboarding': typeof OnboardingRoute
+  '/organizations': typeof OrganizationsRoute
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/verify-email': typeof VerifyEmailRoute
   '/docs/$slug': typeof DocsSlugRoute
   '/docs/': typeof DocsIndexRoute
+  '/platform/': typeof PlatformIndexRoute
   '/projects/': typeof ProjectsIndexRoute
+  '/platform/organizations/$organizationId': typeof PlatformOrganizationsOrganizationIdRouteWithChildren
+  '/projects/$projectId/access': typeof ProjectsProjectIdAccessRoute
   '/projects/$projectId/notifications': typeof ProjectsProjectIdNotificationsRouteWithChildren
   '/projects/$projectId/': typeof ProjectsProjectIdIndexRoute
   '/projects/$projectId/applications/$applicationId': typeof ProjectsProjectIdApplicationsApplicationIdRouteWithChildren
   '/projects/$projectId/notifications/recovery': typeof ProjectsProjectIdNotificationsRecoveryRouteWithChildren
   '/admin/projects/$projectId/applications/$applicationId': typeof AdminProjectsProjectIdApplicationsApplicationIdRoute
+  '/platform/organizations/$organizationId/projects/$projectId': typeof PlatformOrganizationsOrganizationIdProjectsProjectIdRoute
   '/projects/$projectId/applications/$applicationId/attention': typeof ProjectsProjectIdApplicationsApplicationIdAttentionRoute
   '/projects/$projectId/applications/$applicationId/policies': typeof ProjectsProjectIdApplicationsApplicationIdPoliciesRoute
   '/projects/$projectId/applications/$applicationId/releases': typeof ProjectsProjectIdApplicationsApplicationIdReleasesRouteWithChildren
@@ -215,18 +266,25 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/access': typeof AccessRoute
+  '/invite': typeof InviteRoute
   '/onboarding': typeof OnboardingRoute
+  '/organizations': typeof OrganizationsRoute
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/verify-email': typeof VerifyEmailRoute
   '/docs/$slug': typeof DocsSlugRoute
   '/docs': typeof DocsIndexRoute
+  '/platform': typeof PlatformIndexRoute
   '/projects': typeof ProjectsIndexRoute
+  '/platform/organizations/$organizationId': typeof PlatformOrganizationsOrganizationIdRouteWithChildren
+  '/projects/$projectId/access': typeof ProjectsProjectIdAccessRoute
   '/projects/$projectId/notifications': typeof ProjectsProjectIdNotificationsRouteWithChildren
   '/projects/$projectId': typeof ProjectsProjectIdIndexRoute
   '/projects/$projectId/applications/$applicationId': typeof ProjectsProjectIdApplicationsApplicationIdRouteWithChildren
   '/projects/$projectId/notifications/recovery': typeof ProjectsProjectIdNotificationsRecoveryRouteWithChildren
   '/admin/projects/$projectId/applications/$applicationId': typeof AdminProjectsProjectIdApplicationsApplicationIdRoute
+  '/platform/organizations/$organizationId/projects/$projectId': typeof PlatformOrganizationsOrganizationIdProjectsProjectIdRoute
   '/projects/$projectId/applications/$applicationId/attention': typeof ProjectsProjectIdApplicationsApplicationIdAttentionRoute
   '/projects/$projectId/applications/$applicationId/policies': typeof ProjectsProjectIdApplicationsApplicationIdPoliciesRoute
   '/projects/$projectId/applications/$applicationId/releases': typeof ProjectsProjectIdApplicationsApplicationIdReleasesRouteWithChildren
@@ -243,18 +301,25 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/access': typeof AccessRoute
+  '/invite': typeof InviteRoute
   '/onboarding': typeof OnboardingRoute
+  '/organizations': typeof OrganizationsRoute
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/verify-email': typeof VerifyEmailRoute
   '/docs/$slug': typeof DocsSlugRoute
   '/docs/': typeof DocsIndexRoute
+  '/platform/': typeof PlatformIndexRoute
   '/projects/': typeof ProjectsIndexRoute
+  '/platform/organizations/$organizationId': typeof PlatformOrganizationsOrganizationIdRouteWithChildren
+  '/projects/$projectId/access': typeof ProjectsProjectIdAccessRoute
   '/projects/$projectId/notifications': typeof ProjectsProjectIdNotificationsRouteWithChildren
   '/projects/$projectId/': typeof ProjectsProjectIdIndexRoute
   '/projects/$projectId/applications/$applicationId': typeof ProjectsProjectIdApplicationsApplicationIdRouteWithChildren
   '/projects/$projectId/notifications/recovery': typeof ProjectsProjectIdNotificationsRecoveryRouteWithChildren
   '/admin/projects/$projectId/applications/$applicationId': typeof AdminProjectsProjectIdApplicationsApplicationIdRoute
+  '/platform/organizations/$organizationId/projects/$projectId': typeof PlatformOrganizationsOrganizationIdProjectsProjectIdRoute
   '/projects/$projectId/applications/$applicationId/attention': typeof ProjectsProjectIdApplicationsApplicationIdAttentionRoute
   '/projects/$projectId/applications/$applicationId/policies': typeof ProjectsProjectIdApplicationsApplicationIdPoliciesRoute
   '/projects/$projectId/applications/$applicationId/releases': typeof ProjectsProjectIdApplicationsApplicationIdReleasesRouteWithChildren
@@ -272,18 +337,25 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/access'
+    | '/invite'
     | '/onboarding'
+    | '/organizations'
     | '/profile'
     | '/reset-password'
     | '/verify-email'
     | '/docs/$slug'
     | '/docs/'
+    | '/platform/'
     | '/projects/'
+    | '/platform/organizations/$organizationId'
+    | '/projects/$projectId/access'
     | '/projects/$projectId/notifications'
     | '/projects/$projectId/'
     | '/projects/$projectId/applications/$applicationId'
     | '/projects/$projectId/notifications/recovery'
     | '/admin/projects/$projectId/applications/$applicationId'
+    | '/platform/organizations/$organizationId/projects/$projectId'
     | '/projects/$projectId/applications/$applicationId/attention'
     | '/projects/$projectId/applications/$applicationId/policies'
     | '/projects/$projectId/applications/$applicationId/releases'
@@ -299,18 +371,25 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/access'
+    | '/invite'
     | '/onboarding'
+    | '/organizations'
     | '/profile'
     | '/reset-password'
     | '/verify-email'
     | '/docs/$slug'
     | '/docs'
+    | '/platform'
     | '/projects'
+    | '/platform/organizations/$organizationId'
+    | '/projects/$projectId/access'
     | '/projects/$projectId/notifications'
     | '/projects/$projectId'
     | '/projects/$projectId/applications/$applicationId'
     | '/projects/$projectId/notifications/recovery'
     | '/admin/projects/$projectId/applications/$applicationId'
+    | '/platform/organizations/$organizationId/projects/$projectId'
     | '/projects/$projectId/applications/$applicationId/attention'
     | '/projects/$projectId/applications/$applicationId/policies'
     | '/projects/$projectId/applications/$applicationId/releases'
@@ -326,18 +405,25 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/access'
+    | '/invite'
     | '/onboarding'
+    | '/organizations'
     | '/profile'
     | '/reset-password'
     | '/verify-email'
     | '/docs/$slug'
     | '/docs/'
+    | '/platform/'
     | '/projects/'
+    | '/platform/organizations/$organizationId'
+    | '/projects/$projectId/access'
     | '/projects/$projectId/notifications'
     | '/projects/$projectId/'
     | '/projects/$projectId/applications/$applicationId'
     | '/projects/$projectId/notifications/recovery'
     | '/admin/projects/$projectId/applications/$applicationId'
+    | '/platform/organizations/$organizationId/projects/$projectId'
     | '/projects/$projectId/applications/$applicationId/attention'
     | '/projects/$projectId/applications/$applicationId/policies'
     | '/projects/$projectId/applications/$applicationId/releases'
@@ -354,13 +440,19 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AccessRoute: typeof AccessRoute
+  InviteRoute: typeof InviteRoute
   OnboardingRoute: typeof OnboardingRoute
+  OrganizationsRoute: typeof OrganizationsRoute
   ProfileRoute: typeof ProfileRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   DocsSlugRoute: typeof DocsSlugRoute
   DocsIndexRoute: typeof DocsIndexRoute
+  PlatformIndexRoute: typeof PlatformIndexRoute
   ProjectsIndexRoute: typeof ProjectsIndexRoute
+  PlatformOrganizationsOrganizationIdRoute: typeof PlatformOrganizationsOrganizationIdRouteWithChildren
+  ProjectsProjectIdAccessRoute: typeof ProjectsProjectIdAccessRoute
   ProjectsProjectIdNotificationsRoute: typeof ProjectsProjectIdNotificationsRouteWithChildren
   ProjectsProjectIdIndexRoute: typeof ProjectsProjectIdIndexRoute
   ProjectsProjectIdApplicationsApplicationIdRoute: typeof ProjectsProjectIdApplicationsApplicationIdRouteWithChildren
@@ -376,11 +468,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/access': {
+      id: '/access'
+      path: '/access'
+      fullPath: '/access'
+      preLoaderRoute: typeof AccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/invite': {
+      id: '/invite'
+      path: '/invite'
+      fullPath: '/invite'
+      preLoaderRoute: typeof InviteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/onboarding': {
       id: '/onboarding'
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/organizations': {
+      id: '/organizations'
+      path: '/organizations'
+      fullPath: '/organizations'
+      preLoaderRoute: typeof OrganizationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -418,6 +531,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/platform/': {
+      id: '/platform/'
+      path: '/platform'
+      fullPath: '/platform/'
+      preLoaderRoute: typeof PlatformIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/projects/': {
       id: '/projects/'
       path: '/projects'
@@ -425,11 +545,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/platform/organizations/$organizationId': {
+      id: '/platform/organizations/$organizationId'
+      path: '/platform/organizations/$organizationId'
+      fullPath: '/platform/organizations/$organizationId'
+      preLoaderRoute: typeof PlatformOrganizationsOrganizationIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/projects/$projectId/': {
       id: '/projects/$projectId/'
       path: '/projects/$projectId'
       fullPath: '/projects/$projectId/'
       preLoaderRoute: typeof ProjectsProjectIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/projects/$projectId/access': {
+      id: '/projects/$projectId/access'
+      path: '/projects/$projectId/access'
+      fullPath: '/projects/$projectId/access'
+      preLoaderRoute: typeof ProjectsProjectIdAccessRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/projects/$projectId/notifications': {
@@ -459,6 +593,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/projects/$projectId/applications/$applicationId'
       preLoaderRoute: typeof AdminProjectsProjectIdApplicationsApplicationIdRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/platform/organizations/$organizationId/projects/$projectId': {
+      id: '/platform/organizations/$organizationId/projects/$projectId'
+      path: '/projects/$projectId'
+      fullPath: '/platform/organizations/$organizationId/projects/$projectId'
+      preLoaderRoute: typeof PlatformOrganizationsOrganizationIdProjectsProjectIdRouteImport
+      parentRoute: typeof PlatformOrganizationsOrganizationIdRoute
     }
     '/projects/$projectId/applications/$applicationId/attention': {
       id: '/projects/$projectId/applications/$applicationId/attention'
@@ -546,6 +687,21 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface PlatformOrganizationsOrganizationIdRouteChildren {
+  PlatformOrganizationsOrganizationIdProjectsProjectIdRoute: typeof PlatformOrganizationsOrganizationIdProjectsProjectIdRoute
+}
+
+const PlatformOrganizationsOrganizationIdRouteChildren: PlatformOrganizationsOrganizationIdRouteChildren =
+  {
+    PlatformOrganizationsOrganizationIdProjectsProjectIdRoute:
+      PlatformOrganizationsOrganizationIdProjectsProjectIdRoute,
+  }
+
+const PlatformOrganizationsOrganizationIdRouteWithChildren =
+  PlatformOrganizationsOrganizationIdRoute._addFileChildren(
+    PlatformOrganizationsOrganizationIdRouteChildren,
+  )
 
 interface ProjectsProjectIdNotificationsRecoveryRouteChildren {
   ProjectsProjectIdNotificationsRecoveryOperationIdRoute: typeof ProjectsProjectIdNotificationsRecoveryOperationIdRoute
@@ -660,13 +816,20 @@ const ProjectsProjectIdApplicationsApplicationIdRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AccessRoute: AccessRoute,
+  InviteRoute: InviteRoute,
   OnboardingRoute: OnboardingRoute,
+  OrganizationsRoute: OrganizationsRoute,
   ProfileRoute: ProfileRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   DocsSlugRoute: DocsSlugRoute,
   DocsIndexRoute: DocsIndexRoute,
+  PlatformIndexRoute: PlatformIndexRoute,
   ProjectsIndexRoute: ProjectsIndexRoute,
+  PlatformOrganizationsOrganizationIdRoute:
+    PlatformOrganizationsOrganizationIdRouteWithChildren,
+  ProjectsProjectIdAccessRoute: ProjectsProjectIdAccessRoute,
   ProjectsProjectIdNotificationsRoute:
     ProjectsProjectIdNotificationsRouteWithChildren,
   ProjectsProjectIdIndexRoute: ProjectsProjectIdIndexRoute,

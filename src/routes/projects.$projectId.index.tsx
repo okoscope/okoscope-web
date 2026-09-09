@@ -1,11 +1,12 @@
 import { RuntimeRetention } from '../features/runtime-retention/settings'
 import { useQuery } from '@tanstack/react-query'
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { BellRing } from 'lucide-react'
+import { BellRing, UsersRound } from 'lucide-react'
 import { useEffect } from 'react'
 import { ApplicationList } from '../features/tenant/application-list'
 import { projectOptions } from '../shared/api/queries'
 import { useApi } from '../shared/api/context'
+import { useLocalization } from '../shared/i18n'
 import { Button } from '../shared/ui/button'
 import { Card } from '../shared/ui/card'
 import { ErrorState } from '../shared/ui/error-state'
@@ -15,6 +16,7 @@ export const Route = createFileRoute('/projects/$projectId/')({ component: Proje
 
 function ProjectPage() {
   const { projectId } = Route.useParams()
+  const { t } = useLocalization()
   const query = useQuery(projectOptions(useApi(), projectId))
   useEffect(() => {
     if (query.data) document.title = `${query.data.name} · Okoscope`
@@ -52,12 +54,22 @@ function ProjectPage() {
         </div>
       </Card>
       <nav aria-label="Project sections">
-        <Button asChild className="gap-2 px-5 py-2.5 shadow-lg shadow-cyan-950/40">
-          <Link to="/projects/$projectId/notifications" params={{ projectId }}>
-            <BellRing size={18} aria-hidden="true" />
-            Configure notifications
-          </Link>
-        </Button>
+        <div className="flex flex-wrap gap-3">
+          <Button asChild className="gap-2 px-5 py-2.5 shadow-lg shadow-cyan-950/40">
+            <Link to="/projects/$projectId/notifications" params={{ projectId }}>
+              <BellRing size={18} aria-hidden="true" />
+              Configure notifications
+            </Link>
+          </Button>
+          {query.data.capabilities.manage_project_members && (
+            <Button asChild variant="outline" className="gap-2 px-5 py-2.5">
+              <Link to="/projects/$projectId/access" params={{ projectId }}>
+                <UsersRound size={18} aria-hidden="true" />
+                {t('manageAccess')}
+              </Link>
+            </Button>
+          )}
+        </div>
       </nav>
       <ApplicationList projectId={projectId} />
       <RuntimeRetention projectId={projectId} />

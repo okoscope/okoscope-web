@@ -18,6 +18,14 @@ const project = {
   archived_at: null,
   application_count: 1,
   runtime_group_count: 3,
+  effective_project_role: 'admin',
+  effective_access_source: 'organization',
+  capabilities: {
+    manage_project_members: true,
+    create_application: true,
+    manage_credentials: true,
+    project_roles_grantable: ['admin', 'member'],
+  },
 }
 const application = {
   id: '00000000-0000-4000-8000-000000000003',
@@ -28,6 +36,14 @@ const application = {
   release_count: 2,
   runtime_group_count: 3,
   latest_observed_at: null,
+  effective_project_role: 'admin',
+  effective_access_source: 'organization',
+  capabilities: {
+    manage_project_members: true,
+    create_application: true,
+    manage_credentials: true,
+    project_roles_grantable: ['admin', 'member'],
+  },
 }
 const policyEvaluation = {
   state: 'current',
@@ -416,15 +432,36 @@ export async function mockApi(page: Page, role: 'owner' | 'member' = 'owner') {
         required_database_migration: 26,
       })
     if (path === '/api/v1/setup/status') return json(route, { state: 'ready' })
+    if (path === '/api/v1/auth/policy')
+      return json(route, {
+        public_signup_enabled: true,
+        invitation_registration_enabled: true,
+        organization_mode: 'multiple',
+      })
     const authContext = {
       user: {
         id: '00000000-0000-4000-8000-000000000020',
         email: 'owner@example.com',
+        display_name: 'Owner Example',
         email_verified: true,
         preferred_locale: preferredLocale,
       },
-      organization,
-      role,
+      platform_role: null,
+      organizations: [{ ...organization, role }],
+      active_organization: { ...organization, role },
+      active_role: role,
+      requires_organization_selection: false,
+      privileged_until: null,
+      capabilities: {
+        manage_platform: false,
+        manage_organization: role === 'owner',
+        create_project: role === 'owner',
+        manage_project_members: role === 'owner',
+        create_application: role === 'owner',
+        manage_credentials: role === 'owner',
+        organization_roles_grantable: role === 'owner' ? ['owner', 'admin', 'member'] : [],
+        project_roles_grantable: role === 'owner' ? ['admin', 'member'] : [],
+      },
     }
     if (path === '/api/v1/auth/me')
       return loggedIn

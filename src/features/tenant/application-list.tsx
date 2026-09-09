@@ -1,8 +1,8 @@
-import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Plus } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { applicationsOptions, queryKeys } from '../../shared/api/queries'
+import { applicationsOptions, projectOptions, queryKeys } from '../../shared/api/queries'
 import { useApi } from '../../shared/api/context'
 import { createApplication } from '../../shared/api/provisioning'
 import type { CreatedApplication } from '../../shared/api/types'
@@ -15,7 +15,6 @@ import { formatCount, formatTimestamp } from './format'
 import { NamedResourceForm } from '../provisioning/entity-form'
 import { ConnectAgent } from '../provisioning/connect-agent'
 import { useT } from '../../shared/i18n'
-import { useIsOwner } from '../../shared/auth/session'
 
 export function ApplicationList({ projectId }: { projectId: string }) {
   const api = useApi()
@@ -23,7 +22,8 @@ export function ApplicationList({ projectId }: { projectId: string }) {
   const queryClient = useQueryClient()
   const [created, setCreated] = useState<CreatedApplication | null>(null)
   const [creating, setCreating] = useState(false)
-  const isOwner = useIsOwner()
+  const project = useQuery(projectOptions(api, projectId))
+  const canProvision = project.data?.capabilities.create_application === true
   const query = useInfiniteQuery(applicationsOptions(api, projectId))
   const create = useMutation({
     retry: false,
@@ -95,7 +95,7 @@ export function ApplicationList({ projectId }: { projectId: string }) {
             </Card>
           </Link>
         ))}
-        {isOwner && (
+        {canProvision && (
           <button
             type="button"
             aria-label={t('createApplicationTitle')}
@@ -106,7 +106,7 @@ export function ApplicationList({ projectId }: { projectId: string }) {
           </button>
         )}
       </div>
-      {creating && isOwner && (
+      {creating && canProvision && (
         <Modal
           title={t('createApplicationTitle')}
           description={t('createApplicationHelp')}

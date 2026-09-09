@@ -46,7 +46,7 @@ export function OnboardingWizard() {
   const addProject = useMutation({
     mutationFn: (body: { name: string; slug: string }) => {
       if (auth.status !== 'authenticated') throw new Error('Authentication required')
-      return createProject(api, auth.context.organization.id, body)
+      return createProject(api, auth.context.active_organization!.id, body)
     },
     onSuccess: (item) => {
       setProject(item)

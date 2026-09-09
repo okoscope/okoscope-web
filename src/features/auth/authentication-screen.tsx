@@ -1,8 +1,9 @@
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import {
   login,
+  getAuthenticationPolicy,
   register,
   requestEmailVerification,
   requestPasswordReset,
@@ -24,10 +25,16 @@ export function AuthenticationScreen({ expired }: { expired: boolean }) {
   const { locale, t } = useLocalization()
   const api = useApi()
   const queryClient = useQueryClient()
+  const policy = useQuery({
+    queryKey: ['auth', 'policy'],
+    queryFn: () => getAuthenticationPolicy(api),
+    staleTime: 60_000,
+  })
   const headingRef = useRef<HTMLHeadingElement>(null)
   const [mode, setMode] = useState<AuthenticationMode>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [displayName, setDisplayName] = useState('')
   const [organizationName, setOrganizationName] = useState('')
   const [organizationSlug, setOrganizationSlug] = useState('')
   const [slugEdited, setSlugEdited] = useState(false)
@@ -63,6 +70,7 @@ export function AuthenticationScreen({ expired }: { expired: boolean }) {
       if (mode === 'register') {
         await register(api, {
           ...body,
+          display_name: displayName.trim(),
           organization_name: organizationName,
           organization_slug: organizationSlug,
           locale,
@@ -129,19 +137,31 @@ export function AuthenticationScreen({ expired }: { expired: boolean }) {
         <div className="mb-5 flex justify-end">
           <LanguageSelector />
         </div>
+        {policy.isError && (
+          <div className="mb-5">
+            <ErrorState
+              title={t('authenticationPolicyFailed')}
+              error={policy.error}
+              onRetry={() => void policy.refetch()}
+            />
+          </div>
+        )}
         {mode === 'login' || mode === 'register' ? (
           <AuthenticationForm
             mode={mode}
             email={email}
             password={password}
+            displayName={displayName}
             organizationName={organizationName}
             organizationSlug={organizationSlug}
             expired={expired}
             pending={pending}
+            publicSignupEnabled={policy.data?.public_signup_enabled === true}
             error={error}
             onMode={switchMode}
             onEmail={setEmail}
             onPassword={setPassword}
+            onDisplayName={setDisplayName}
             onOrganizationName={changeName}
             onOrganizationSlug={(value) => {
               setSlugEdited(true)
@@ -221,14 +241,17 @@ type AuthenticationFormProps = {
   mode: 'login' | 'register'
   email: string
   password: string
+  displayName: string
   organizationName: string
   organizationSlug: string
   expired: boolean
   pending: boolean
+  publicSignupEnabled: boolean
   error: unknown
   onMode: (mode: AuthenticationMode) => void
   onEmail: (value: string) => void
   onPassword: (value: string) => void
+  onDisplayName: (value: string) => void
   onOrganizationName: (value: string) => void
   onOrganizationSlug: (value: string) => void
   onForgot: () => void
@@ -240,7 +263,11 @@ function AuthenticationForm(props: AuthenticationFormProps) {
   const registerMode = props.mode === 'register'
   return (
     <>
-      <div className="grid grid-cols-2 gap-2" role="group" aria-label={t('authenticationMode')}>
+      <div
+        className={`grid gap-2 ${props.publicSignupEnabled ? 'grid-cols-2' : 'grid-cols-1'}`}
+        role="group"
+        aria-label={t('authenticationMode')}
+      >
         <Button
           type="button"
           variant={!registerMode ? 'default' : 'outline'}
@@ -248,13 +275,15 @@ function AuthenticationForm(props: AuthenticationFormProps) {
         >
           {t('signIn')}
         </Button>
-        <Button
-          type="button"
-          variant={registerMode ? 'default' : 'outline'}
-          onClick={() => props.onMode('register')}
-        >
-          {t('registerOrganization')}
-        </Button>
+        {props.publicSignupEnabled && (
+          <Button
+            type="button"
+            variant={registerMode ? 'default' : 'outline'}
+            onClick={() => props.onMode('register')}
+          >
+            {t('registerOrganization')}
+          </Button>
+        )}
       </div>
       <h2 className="mt-6 text-2xl font-semibold">
         {registerMode ? t('registerTitle') : t('signInTitle')}
@@ -296,6 +325,17 @@ function AuthenticationForm(props: AuthenticationFormProps) {
         </Field>
         {registerMode && (
           <>
+            <Field label={t('displayName')} id="display-name">
+              <input
+                id="display-name"
+                className="input"
+                autoComplete="name"
+                required
+                maxLength={120}
+                value={props.displayName}
+                onChange={(event) => props.onDisplayName(event.target.value)}
+              />
+            </Field>
             <Field label={t('organizationName')} id="organization-name">
               <input
                 id="organization-name"

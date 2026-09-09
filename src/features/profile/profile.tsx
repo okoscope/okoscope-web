@@ -28,7 +28,7 @@ export function Profile() {
     document.title = `${t('profileTitle')} · Okoscope`
   }, [t])
   if (auth.status !== 'authenticated') return null
-  const { user, organization, role } = auth.context
+  const { user, active_organization: organization, active_role: role, platform_role } = auth.context
 
   const signOut = async () => {
     setPending(true)
@@ -68,7 +68,10 @@ export function Profile() {
             </div>
             <div className="min-w-0">
               <p className="text-sm font-medium text-cyan-200">{t('profileAccount')}</p>
-              <h2 className="mt-1 truncate text-2xl font-semibold text-white">{user.email}</h2>
+              <h2 className="mt-1 truncate text-2xl font-semibold text-white">
+                {user.display_name}
+              </h2>
+              <p className="mt-1 truncate text-sm text-cyan-100">{user.email}</p>
               <p className="mt-2 text-sm text-slate-400">{t('profileAccountHelp')}</p>
               <EmailVerificationStatus email={user.email} verified={user.email_verified} />
             </div>
@@ -82,8 +85,12 @@ export function Profile() {
                 <Building2 aria-hidden="true" className="h-4 w-4 text-cyan-300" />
                 {t('organization')}
               </dt>
-              <dd className="mt-3 text-lg font-semibold text-slate-100">{organization.name}</dd>
-              <dd className="mt-1 font-mono text-xs text-slate-400">{organization.slug}</dd>
+              <dd className="mt-3 text-lg font-semibold text-slate-100">
+                {organization?.name ?? t('noOrganizations')}
+              </dd>
+              {organization && (
+                <dd className="mt-1 font-mono text-xs text-slate-400">{organization.slug}</dd>
+              )}
             </dl>
             <dl className="bg-[#08182b] p-6 sm:p-8">
               <dt className="flex items-center gap-2 text-sm text-slate-400">
@@ -91,7 +98,15 @@ export function Profile() {
                 {t('membershipRole')}
               </dt>
               <dd className="mt-3 text-lg font-semibold text-slate-100">
-                {role === 'owner' ? t('roleOwner') : t('roleMember')}
+                {role === 'owner'
+                  ? t('roleOwner')
+                  : role === 'admin'
+                    ? t('roleAdmin')
+                    : role === 'member'
+                      ? t('roleMember')
+                      : platform_role === 'super_admin'
+                        ? t('superAdministrator')
+                        : t('unavailable')}
               </dd>
               <dd className="mt-1 text-sm text-slate-400">{t('profileRoleHelp')}</dd>
             </dl>
@@ -121,8 +136,8 @@ export function Profile() {
         </div>
       </Card>
       <PasswordChange />
-      <NotificationRetention />
-      <RuntimeRetention />
+      {organization && <NotificationRetention />}
+      {organization && <RuntimeRetention />}
     </section>
   )
 }

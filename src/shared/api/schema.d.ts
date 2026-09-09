@@ -1597,33 +1597,732 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/policy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAuthenticationPolicy"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/organization-selections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["selectActiveOrganization"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/privilege-confirmations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["confirmPlatformPrivilege"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/invitations/inspections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["inspectInvitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/invitations/acceptances/new-user": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["acceptInvitationAsNewUser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/invitations/acceptances/existing-user": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["acceptInvitationAsExistingUser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listPlatformUsers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/users/{user_id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["setPlatformUserStatus"];
+        trace?: never;
+    };
+    "/api/v1/platform/users/{user_id}/roles/super-admin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: components["parameters"]["UserId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["grantSuperAdmin"];
+        post?: never;
+        delete: operations["revokeSuperAdmin"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/organizations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listPlatformOrganizations"];
+        put?: never;
+        post: operations["createPlatformOrganization"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/organizations/{organization_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: components["parameters"]["OrganizationId"];
+            };
+            cookie?: never;
+        };
+        get: operations["getPlatformOrganization"];
+        put?: never;
+        post?: never;
+        delete: operations["deletePlatformOrganization"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/organizations/{organization_id}/projects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: components["parameters"]["OrganizationId"];
+            };
+            cookie?: never;
+        };
+        get: operations["listPlatformOrganizationProjects"];
+        put?: never;
+        post: operations["createPlatformProject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/organizations/{organization_id}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listPlatformOrganizationMembers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/organizations/{organization_id}/members/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: components["parameters"]["OrganizationId"];
+                user_id: components["parameters"]["UserId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["removePlatformOrganizationMember"];
+        options?: never;
+        head?: never;
+        patch: operations["updatePlatformOrganizationMemberRole"];
+        trace?: never;
+    };
+    "/api/v1/platform/organizations/{organization_id}/invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: components["parameters"]["OrganizationId"];
+            };
+            cookie?: never;
+        };
+        get: operations["listPlatformOrganizationInvitations"];
+        put?: never;
+        post: operations["createPlatformOrganizationInvitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/organizations/{organization_id}/invitations/{invitation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: components["parameters"]["OrganizationId"];
+                invitation_id: components["parameters"]["InvitationId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["revokePlatformOrganizationInvitation"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/organizations/{organization_id}/invitations/{invitation_id}/resend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["resendPlatformOrganizationInvitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/projects/{project_id}/applications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+            };
+            cookie?: never;
+        };
+        get: operations["listPlatformProjectApplications"];
+        put?: never;
+        post: operations["createPlatformApplication"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/projects/{project_id}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+            };
+            cookie?: never;
+        };
+        get: operations["listPlatformProjectMembers"];
+        put?: never;
+        post: operations["addPlatformProjectMember"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/projects/{project_id}/members/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+                user_id: components["parameters"]["UserId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["removePlatformProjectMember"];
+        options?: never;
+        head?: never;
+        patch: operations["updatePlatformProjectMemberRole"];
+        trace?: never;
+    };
+    "/api/v1/platform/projects/{project_id}/eligible-organization-members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listEligiblePlatformProjectMembers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/projects/{project_id}/invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+            };
+            cookie?: never;
+        };
+        get: operations["listPlatformProjectInvitations"];
+        put?: never;
+        post: operations["createPlatformProjectInvitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/projects/{project_id}/invitations/{invitation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["revokePlatformProjectInvitation"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/projects/{project_id}/invitations/{invitation_id}/resend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["resendPlatformProjectInvitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/projects/{project_id}/applications/{application_id}/credentials": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+                application_id: components["parameters"]["ApplicationId"];
+            };
+            cookie?: never;
+        };
+        get: operations["listPlatformApplicationCredentials"];
+        put?: never;
+        post: operations["issuePlatformApplicationCredential"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/projects/{project_id}/applications/{application_id}/credentials/{credential_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["revokePlatformApplicationCredential"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listPlatformInvitations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listPlatformAccessAudit"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listOrganizationMembers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/members/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: components["parameters"]["OrganizationId"];
+                user_id: components["parameters"]["UserId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["removeOrganizationMember"];
+        options?: never;
+        head?: never;
+        patch: operations["updateOrganizationMemberRole"];
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: components["parameters"]["OrganizationId"];
+            };
+            cookie?: never;
+        };
+        get: operations["listOrganizationInvitations"];
+        put?: never;
+        post: operations["createOrganizationInvitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/invitations/{invitation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["revokeOrganizationInvitation"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/invitations/{invitation_id}/resend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["resendOrganizationInvitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listOrganizationAccessAudit"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+            };
+            cookie?: never;
+        };
+        get: operations["listProjectMembers"];
+        put?: never;
+        post: operations["addProjectMember"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/members/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+                user_id: components["parameters"]["UserId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["removeProjectMember"];
+        options?: never;
+        head?: never;
+        patch: operations["updateProjectMemberRole"];
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/eligible-organization-members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listEligibleProjectMembers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+            };
+            cookie?: never;
+        };
+        get: operations["listProjectInvitations"];
+        put?: never;
+        post: operations["createProjectInvitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/invitations/{invitation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["revokeProjectInvitation"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/invitations/{invitation_id}/resend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["resendProjectInvitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         SetupStatus: {
             /** @enum {unknown} */
-            state: "owner_required" | "ready" | "setup_unavailable";
+            state: "platform_admin_required" | "ready" | "setup_unavailable";
         };
         CompleteSetupRequest: {
             setup_token: string;
             /** Format: email */
             email: string;
             password: string;
-            organization_slug: string;
-            organization_name: string;
-            project_slug: string;
-            project_name: string;
+            display_name: string;
+            locale: components["schemas"]["SupportedLocale"];
         };
         CompleteSetupResponse: {
             /** Format: uuid */
             user_id: string;
-            /** Format: uuid */
-            organization_id: string;
-            /** Format: uuid */
-            project_id: string;
             /** @constant */
-            role: "owner";
+            platform_role: "super_admin";
+            active_organization_id: null;
+            privileged_until: components["schemas"]["Timestamp"];
+        };
+        AuthenticationPolicy: {
+            /** @default false */
+            public_signup_enabled: boolean;
+            /** @constant */
+            invitation_registration_enabled: true;
+            /**
+             * @default single
+             * @enum {string}
+             */
+            organization_mode: "single" | "multiple";
+        };
+        OrganizationSelectionRequest: {
+            organization_id: components["schemas"]["Uuid"];
+        };
+        OrganizationSelection: {
+            active_organization_id: components["schemas"]["Uuid"];
+            role: components["schemas"]["OrganizationRole"];
+        };
+        PrivilegeConfirmationRequest: {
+            /** Format: password */
+            current_password: string;
+        };
+        PrivilegeConfirmation: {
+            privileged_until: components["schemas"]["Timestamp"];
         };
         AgentInstallationMetadata: {
             chart_reference: string;
@@ -2052,12 +2751,39 @@ export interface components {
             next_cursor: components["schemas"]["NullableUuid"];
         };
         /** @enum {string} */
-        OrganizationRole: "owner" | "member";
+        PlatformRole: "super_admin";
+        /** @enum {string} */
+        OrganizationRole: "owner" | "admin" | "member";
+        /** @enum {string} */
+        ProjectRole: "admin" | "member";
+        /** @enum {string} */
+        EffectiveAccessSource: "platform" | "organization" | "project";
+        AccessCapabilities: {
+            manage_platform: boolean;
+            manage_organization: boolean;
+            create_project: boolean;
+            manage_project_members: boolean;
+            create_application: boolean;
+            manage_credentials: boolean;
+            organization_roles_grantable: components["schemas"]["OrganizationRole"][];
+            project_roles_grantable: components["schemas"]["ProjectRole"][];
+        };
+        /** @enum {string} */
+        InvitationScope: "organization" | "project";
+        /** @enum {string} */
+        InvitationStatus: "pending" | "accepted" | "expired" | "revoked" | "replaced";
+        /** @enum {string} */
+        AuditActorKind: "user" | "system_recovery";
+        /** @enum {string} */
+        AuditOutcome: "succeeded" | "rejected";
+        /** @enum {string} */
+        AuditAction: "setup.completed" | "platform_role.granted" | "platform_role.revoked" | "user.disabled" | "user.enabled" | "organization.created" | "organization.deleted" | "organization_member.role_changed" | "organization_member.removed" | "project.created" | "project_member.added" | "project_member.role_changed" | "project_member.removed" | "invitation.created" | "invitation.resent" | "invitation.revoked" | "invitation.accepted" | "privilege.confirmed" | "platform_recovery.completed" | "credential.issued" | "credential.revoked";
         RegisterRequest: {
             /** Format: email */
             email: string;
             /** Format: password */
             password: string;
+            display_name: string;
             organization_slug: string;
             organization_name: string;
             locale: components["schemas"]["SupportedLocale"];
@@ -2084,6 +2810,7 @@ export interface components {
         };
         UserPreferencesRequest: {
             locale: components["schemas"]["SupportedLocale"];
+            display_name?: string;
         };
         AcceptedSecurityAction: {
             /** @enum {string} */
@@ -2099,6 +2826,7 @@ export interface components {
             id: components["schemas"]["Uuid"];
             /** Format: email */
             email: string;
+            display_name: string;
             email_verified: boolean;
             preferred_locale: components["schemas"]["SupportedLocale"];
         };
@@ -2106,11 +2834,193 @@ export interface components {
             id: components["schemas"]["Uuid"];
             slug: string;
             name: string;
+            role: components["schemas"]["OrganizationRole"];
         };
         AuthContext: {
             user: components["schemas"]["AuthenticatedUser"];
-            organization: components["schemas"]["AuthenticatedOrganization"];
+            platform_role: components["schemas"]["PlatformRole"] | null;
+            organizations: components["schemas"]["AuthenticatedOrganization"][];
+            active_organization: components["schemas"]["AuthenticatedOrganization"] | null;
+            active_role: components["schemas"]["OrganizationRole"] | null;
+            requires_organization_selection: boolean;
+            privileged_until: components["schemas"]["NullableTimestamp"];
+            capabilities: components["schemas"]["AccessCapabilities"];
+        };
+        PlatformUser: {
+            id: components["schemas"]["Uuid"];
+            /** Format: email */
+            email: string;
+            display_name: string;
+            email_verified: boolean;
+            enabled: boolean;
+            is_super_admin: boolean;
+            created_at: components["schemas"]["Timestamp"];
+        };
+        PlatformUserPage: {
+            items: components["schemas"]["PlatformUser"][];
+            next_cursor: components["schemas"]["NullableUuid"];
+        };
+        UserStatusChangeRequest: {
+            /** @enum {string} */
+            status: "enabled" | "disabled";
+        };
+        PlatformOrganization: {
+            id: components["schemas"]["Uuid"];
+            slug: string;
+            name: string;
+            /** @enum {string} */
+            status: "pending_owner" | "active";
+            created_at: components["schemas"]["Timestamp"];
+            updated_at: components["schemas"]["Timestamp"];
+            current_owner_invitation: components["schemas"]["Invitation"] | null;
+        };
+        PlatformOrganizationPage: {
+            items: components["schemas"]["PlatformOrganization"][];
+            next_cursor: components["schemas"]["NullableUuid"];
+        };
+        CreatePlatformOrganizationRequest: {
+            slug: string;
+            name: string;
+            ownership: components["schemas"]["InvitedOwnership"] | components["schemas"]["SelfOwnership"];
+        };
+        InvitedOwnership: {
+            /** @constant */
+            kind: "invited_owner";
+            /** Format: email */
+            email: string;
+            locale: components["schemas"]["SupportedLocale"];
+        };
+        SelfOwnership: {
+            /** @constant */
+            kind: "self_owner";
+        };
+        ProvisionedOrganization: {
+            organization: components["schemas"]["PlatformOrganization"];
+            invitation: components["schemas"]["Invitation"] | null;
+        };
+        OrganizationMember: {
+            user_id: components["schemas"]["Uuid"];
+            /** Format: email */
+            email: string;
+            display_name: string;
             role: components["schemas"]["OrganizationRole"];
+            enabled: boolean;
+            email_verified: boolean;
+            created_at: components["schemas"]["Timestamp"];
+            can_change_role: boolean;
+            can_remove: boolean;
+        };
+        OrganizationMemberPage: {
+            items: components["schemas"]["OrganizationMember"][];
+            next_cursor: components["schemas"]["NullableUuid"];
+        };
+        OrganizationRoleChangeRequest: {
+            role: components["schemas"]["OrganizationRole"];
+        };
+        ProjectMember: {
+            user_id: components["schemas"]["Uuid"];
+            /** Format: email */
+            email: string;
+            display_name: string;
+            role: components["schemas"]["ProjectRole"];
+            access_source: components["schemas"]["EffectiveAccessSource"];
+            created_at: components["schemas"]["Timestamp"];
+            can_change_role: boolean;
+            can_remove: boolean;
+        };
+        ProjectMemberPage: {
+            items: components["schemas"]["ProjectMember"][];
+            next_cursor: components["schemas"]["NullableUuid"];
+        };
+        AddProjectMemberRequest: {
+            user_id: components["schemas"]["Uuid"];
+            role: components["schemas"]["ProjectRole"];
+        };
+        ProjectRoleChangeRequest: {
+            role: components["schemas"]["ProjectRole"];
+        };
+        InvitationTokenRequest: {
+            token: string;
+        };
+        NewUserInvitationAcceptanceRequest: {
+            token: string;
+            password: string;
+            display_name: string;
+            locale: components["schemas"]["SupportedLocale"];
+        };
+        InvitationInspection: {
+            scope: components["schemas"]["InvitationScope"];
+            organization_name: string;
+            project_name: string | null;
+            /** @enum {string} */
+            role: "owner" | "admin" | "member";
+            inviter_display_name: string;
+            expires_at: components["schemas"]["Timestamp"];
+            /** @enum {string} */
+            account_state: "new_user" | "existing_user";
+        };
+        InvitationAcceptance: {
+            /** @constant */
+            status: "accepted";
+            scope: components["schemas"]["InvitationScope"];
+            organization_id: components["schemas"]["Uuid"];
+            project_id: components["schemas"]["NullableUuid"];
+            /** @enum {string} */
+            role: "owner" | "admin" | "member";
+            user_id: components["schemas"]["Uuid"];
+        };
+        Invitation: {
+            id: components["schemas"]["Uuid"];
+            scope: components["schemas"]["InvitationScope"];
+            organization_id: components["schemas"]["Uuid"];
+            organization_name: string;
+            project_id: components["schemas"]["NullableUuid"];
+            project_name: string | null;
+            /** Format: email */
+            recipient_email: string;
+            /** @enum {string} */
+            role: "owner" | "admin" | "member";
+            inviter_display_name: string;
+            created_at: components["schemas"]["Timestamp"];
+            expires_at: components["schemas"]["Timestamp"];
+            status: components["schemas"]["InvitationStatus"];
+        };
+        InvitationPage: {
+            items: components["schemas"]["Invitation"][];
+            next_cursor: components["schemas"]["NullableUuid"];
+        };
+        CreateOrganizationInvitationRequest: {
+            /** Format: email */
+            email: string;
+            role: components["schemas"]["OrganizationRole"];
+            locale: components["schemas"]["SupportedLocale"];
+        };
+        CreateProjectInvitationRequest: {
+            /** Format: email */
+            email: string;
+            role: components["schemas"]["ProjectRole"];
+            locale: components["schemas"]["SupportedLocale"];
+        };
+        AccessAuditRecord: {
+            id: components["schemas"]["Uuid"];
+            actor_kind: components["schemas"]["AuditActorKind"];
+            actor_user_id: components["schemas"]["NullableUuid"];
+            action: components["schemas"]["AuditAction"];
+            organization_id: components["schemas"]["NullableUuid"];
+            project_id: components["schemas"]["NullableUuid"];
+            target_user_id: components["schemas"]["NullableUuid"];
+            invitation_id: components["schemas"]["NullableUuid"];
+            /** @enum {string|null} */
+            previous_role: "owner" | "admin" | "member" | "super_admin" | null;
+            /** @enum {string|null} */
+            new_role: "owner" | "admin" | "member" | "super_admin" | null;
+            outcome: components["schemas"]["AuditOutcome"];
+            request_id: string | null;
+            created_at: components["schemas"]["Timestamp"];
+        };
+        AccessAuditPage: {
+            items: components["schemas"]["AccessAuditRecord"][];
+            next_cursor: components["schemas"]["NullableUuid"];
         };
         /**
          * @default 24h
@@ -2407,8 +3317,8 @@ export interface components {
             recommendations: components["schemas"]["AttentionRecommendation"][];
         };
         Error: {
-            /** @example not_found */
-            error: string;
+            /** @enum {string} */
+            error: "validation_failed" | "unauthorized" | "invalid_credentials" | "email_verification_required" | "registration_disabled" | "registration_conflict" | "untrusted_origin" | "forbidden" | "not_found" | "organization_not_found" | "project_not_found" | "application_not_found" | "user_not_found" | "user_not_eligible" | "setup_already_completed" | "invalid_setup_token" | "setup_rate_limited" | "privilege_confirmation_required" | "current_password_invalid" | "self_promotion_forbidden" | "last_super_admin_required" | "last_organization_owner_required" | "organization_limit_reached" | "invitation_unusable" | "invitation_account_mismatch" | "invitation_exists" | "rate_limited" | "mail_unavailable" | "idempotency_key_reused" | "operation_already_completed" | "internal_error";
             /** @example resource not found */
             message: string;
             /** @example 0ec02ed2-8483-4981-893e-bffc535897d7 */
@@ -2427,7 +3337,7 @@ export interface components {
             api_version: "v1";
             /**
              * Format: int64
-             * @example 24
+             * @example 27
              */
             required_database_migration: number;
         };
@@ -2503,6 +3413,9 @@ export interface components {
             application_count: number;
             /** Format: int64 */
             runtime_group_count: number;
+            effective_project_role: components["schemas"]["ProjectRole"] | null;
+            effective_access_source: components["schemas"]["EffectiveAccessSource"] | null;
+            capabilities: components["schemas"]["AccessCapabilities"];
         };
         ProjectPage: {
             items: components["schemas"]["Project"][];
@@ -2519,6 +3432,9 @@ export interface components {
             /** Format: int64 */
             runtime_group_count: number;
             latest_observed_at: components["schemas"]["NullableTimestamp"];
+            effective_project_role: components["schemas"]["ProjectRole"] | null;
+            effective_access_source: components["schemas"]["EffectiveAccessSource"] | null;
+            capabilities: components["schemas"]["AccessCapabilities"];
         };
         ApplicationPage: {
             items: components["schemas"]["Application"][];
@@ -4371,6 +5287,8 @@ export interface components {
         };
     };
     parameters: {
+        UserId: string;
+        InvitationId: string;
         /** @description Opaque cursor scoped to the authenticated collection. */
         Cursor: string;
         /** @description Opaque cursor scoped to the authenticated collection; clients must not parse it. */
@@ -4417,6 +5335,8 @@ export interface components {
     headers: {
         /** @description Correlation identifier for the request. */
         RequestId: string;
+        /** @description Sensitive responses are never cached. */
+        NoStore: "no-store";
     };
     pathItems: never;
 }
@@ -6840,6 +7760,1575 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["RecoveryOperationDetail"];
+        };
+    };
+    getAuthenticationPolicy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Public authentication policy */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthenticationPolicy"];
+                };
+            };
+        };
+    };
+    selectActiveOrganization: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrganizationSelectionRequest"];
+            };
+        };
+        responses: {
+            /** @description Rotated active Organization session */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizationSelection"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    confirmPlatformPrivilege: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrivilegeConfirmationRequest"];
+            };
+        };
+        responses: {
+            /** @description Rotated privileged session */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrivilegeConfirmation"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    inspectInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InvitationTokenRequest"];
+            };
+        };
+        responses: {
+            /** @description Scanner-safe bounded invitation display */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvitationInspection"];
+                };
+            };
+            400: components["responses"]["Error"];
+            410: components["responses"]["Error"];
+        };
+    };
+    acceptInvitationAsNewUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewUserInvitationAcceptanceRequest"];
+            };
+        };
+        responses: {
+            /** @description Verified identity */
+            201: {
+                headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvitationAcceptance"];
+                };
+            };
+            400: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            410: components["responses"]["Error"];
+        };
+    };
+    acceptInvitationAsExistingUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InvitationTokenRequest"];
+            };
+        };
+        responses: {
+            /** @description Scoped grant accepted for current identity */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvitationAcceptance"];
+                };
+            };
+            401: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            410: components["responses"]["Error"];
+        };
+    };
+    listPlatformUsers: {
+        parameters: {
+            query?: {
+                /** @description Opaque cursor scoped to the authenticated collection. */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bounded global user page */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformUserPage"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    setPlatformUserStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: components["parameters"]["UserId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserStatusChangeRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated safe user */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformUser"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    grantSuperAdmin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: components["parameters"]["UserId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Role granted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    revokeSuperAdmin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: components["parameters"]["UserId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Role revoked */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    listPlatformOrganizations: {
+        parameters: {
+            query?: {
+                /** @description Opaque cursor scoped to the authenticated collection. */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bounded global Organization page */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformOrganizationPage"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    createPlatformOrganization: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePlatformOrganizationRequest"];
+            };
+        };
+        responses: {
+            /** @description Organization provisioned */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProvisionedOrganization"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    getPlatformOrganization: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: components["parameters"]["OrganizationId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Safe Organization detail */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformOrganization"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    deletePlatformOrganization: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: components["parameters"]["OrganizationId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Pending owner Organization deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    listPlatformOrganizationProjects: {
+        parameters: {
+            query?: {
+                /** @description Opaque cursor scoped to the authenticated collection. */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                organization_id: components["parameters"]["OrganizationId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bounded Project page */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectPage"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    createPlatformProject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: components["parameters"]["OrganizationId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateNamedResource"];
+            };
+        };
+        responses: {
+            /** @description Project created without membership */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Project"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    listPlatformOrganizationMembers: {
+        parameters: {
+            query?: {
+                /** @description Opaque cursor scoped to the authenticated collection. */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                organization_id: components["parameters"]["OrganizationId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bounded Organization member page */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizationMemberPage"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    removePlatformOrganizationMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: components["parameters"]["OrganizationId"];
+                user_id: components["parameters"]["UserId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Organization membership removed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    updatePlatformOrganizationMemberRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: components["parameters"]["OrganizationId"];
+                user_id: components["parameters"]["UserId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrganizationRoleChangeRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated member */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizationMember"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    listPlatformOrganizationInvitations: {
+        parameters: {
+            query?: {
+                /** @description Opaque cursor scoped to the authenticated collection. */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                organization_id: components["parameters"]["OrganizationId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bounded invitation page */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvitationPage"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    createPlatformOrganizationInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: components["parameters"]["OrganizationId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateOrganizationInvitationRequest"];
+            };
+        };
+        responses: {
+            /** @description Invitation created */
+            201: {
+                headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Invitation"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    revokePlatformOrganizationInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: components["parameters"]["OrganizationId"];
+                invitation_id: components["parameters"]["InvitationId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Invitation revoked */
+            204: {
+                headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    resendPlatformOrganizationInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: components["parameters"]["OrganizationId"];
+                invitation_id: components["parameters"]["InvitationId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Replacement invitation created */
+            201: {
+                headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Invitation"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    listPlatformProjectApplications: {
+        parameters: {
+            query?: {
+                /** @description Opaque cursor scoped to the authenticated collection. */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bounded Application page */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationPage"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    createPlatformApplication: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateNamedResource"];
+            };
+        };
+        responses: {
+            /** @description Application and one-time credential created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedApplication"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    listPlatformProjectMembers: {
+        parameters: {
+            query?: {
+                /** @description Opaque cursor scoped to the authenticated collection. */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bounded Project member page */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectMemberPage"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    addPlatformProjectMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddProjectMemberRequest"];
+            };
+        };
+        responses: {
+            /** @description Explicit Project membership created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectMember"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    removePlatformProjectMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+                user_id: components["parameters"]["UserId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Explicit Project membership removed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    updatePlatformProjectMemberRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+                user_id: components["parameters"]["UserId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectRoleChangeRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated member */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectMember"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    listEligiblePlatformProjectMembers: {
+        parameters: {
+            query?: {
+                /** @description Opaque cursor scoped to the authenticated collection. */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Enabled Organization members without explicit Project membership */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizationMemberPage"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    listPlatformProjectInvitations: {
+        parameters: {
+            query?: {
+                /** @description Opaque cursor scoped to the authenticated collection. */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bounded Project invitation page */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvitationPage"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    createPlatformProjectInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateProjectInvitationRequest"];
+            };
+        };
+        responses: {
+            /** @description Invitation created */
+            201: {
+                headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Invitation"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    revokePlatformProjectInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+                invitation_id: components["parameters"]["InvitationId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Invitation revoked */
+            204: {
+                headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    resendPlatformProjectInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+                invitation_id: components["parameters"]["InvitationId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Replacement invitation created */
+            201: {
+                headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Invitation"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    listPlatformApplicationCredentials: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+                application_id: components["parameters"]["ApplicationId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Secret-safe credential metadata */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationCredentialPage"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    issuePlatformApplicationCredential: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Canonical UUID. Reusing it with a different request returns idempotency_key_reused. Application and credential replays never return plaintext token material. */
+                "Idempotency-Key"?: components["parameters"]["ProvisioningIdempotencyKey"];
+            };
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+                application_id: components["parameters"]["ApplicationId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IssueCredentialRequest"];
+            };
+        };
+        responses: {
+            /** @description One-time Application credential */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssuedApplicationCredential"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    revokePlatformApplicationCredential: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+                application_id: components["parameters"]["ApplicationId"];
+                credential_id: components["parameters"]["CredentialId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Credential revoked */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    listPlatformInvitations: {
+        parameters: {
+            query?: {
+                /** @description Opaque cursor scoped to the authenticated collection. */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bounded global invitation page */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvitationPage"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    listPlatformAccessAudit: {
+        parameters: {
+            query?: {
+                /** @description Opaque cursor scoped to the authenticated collection. */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bounded global access audit page */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessAuditPage"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    listOrganizationMembers: {
+        parameters: {
+            query?: {
+                /** @description Opaque cursor scoped to the authenticated collection. */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                organization_id: components["parameters"]["OrganizationId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bounded Organization member page */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizationMemberPage"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    removeOrganizationMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: components["parameters"]["OrganizationId"];
+                user_id: components["parameters"]["UserId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Organization and descendant Project access removed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    updateOrganizationMemberRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: components["parameters"]["OrganizationId"];
+                user_id: components["parameters"]["UserId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrganizationRoleChangeRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated member */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizationMember"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    listOrganizationInvitations: {
+        parameters: {
+            query?: {
+                /** @description Opaque cursor scoped to the authenticated collection. */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                organization_id: components["parameters"]["OrganizationId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bounded invitation page */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvitationPage"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    createOrganizationInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: components["parameters"]["OrganizationId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateOrganizationInvitationRequest"];
+            };
+        };
+        responses: {
+            /** @description Invitation and mail intent created */
+            201: {
+                headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Invitation"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    revokeOrganizationInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: components["parameters"]["OrganizationId"];
+                invitation_id: components["parameters"]["InvitationId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Invitation revoked */
+            204: {
+                headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    resendOrganizationInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organization_id: components["parameters"]["OrganizationId"];
+                invitation_id: components["parameters"]["InvitationId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Replacement invitation created */
+            201: {
+                headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Invitation"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    listOrganizationAccessAudit: {
+        parameters: {
+            query?: {
+                /** @description Opaque cursor scoped to the authenticated collection. */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                organization_id: components["parameters"]["OrganizationId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bounded Organization audit page */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessAuditPage"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    listProjectMembers: {
+        parameters: {
+            query?: {
+                /** @description Opaque cursor scoped to the authenticated collection. */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bounded Project member page */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectMemberPage"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    addProjectMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddProjectMemberRequest"];
+            };
+        };
+        responses: {
+            /** @description Explicit Project membership created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectMember"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    removeProjectMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+                user_id: components["parameters"]["UserId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Explicit Project membership removed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    updateProjectMemberRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+                user_id: components["parameters"]["UserId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectRoleChangeRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated explicit Project member */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectMember"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    listEligibleProjectMembers: {
+        parameters: {
+            query?: {
+                /** @description Opaque cursor scoped to the authenticated collection. */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Enabled Organization members without explicit Project membership */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizationMemberPage"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    listProjectInvitations: {
+        parameters: {
+            query?: {
+                /** @description Opaque cursor scoped to the authenticated collection. */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bounded Project invitation page */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvitationPage"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    createProjectInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateProjectInvitationRequest"];
+            };
+        };
+        responses: {
+            /** @description Invitation and mail intent created */
+            201: {
+                headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Invitation"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    revokeProjectInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+                invitation_id: components["parameters"]["InvitationId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Invitation revoked */
+            204: {
+                headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    resendProjectInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+                invitation_id: components["parameters"]["InvitationId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Replacement invitation created */
+            201: {
+                headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Invitation"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            503: components["responses"]["Error"];
         };
     };
 }

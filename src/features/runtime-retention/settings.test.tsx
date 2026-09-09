@@ -5,18 +5,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ApiClient } from '../../shared/api/client'
 import { ApiProvider } from '../../shared/api/context'
 import { authenticationSession } from '../../shared/auth/session'
+import { createAuthContext } from '../../test/auth-context'
 import { RuntimeRetention } from './settings'
 
-const auth = {
-  user: {
-    id: 'user-1',
-    email: 'owner@example.com',
-    email_verified: true,
-    preferred_locale: 'en' as const,
-  },
-  organization: { id: 'org-1', name: 'Acme', slug: 'acme' },
-  role: 'owner' as const,
-}
+const auth = createAuthContext()
 
 afterEach(() => authenticationSession.reset())
 
@@ -86,7 +78,21 @@ describe('runtime retention policy controls', () => {
   })
 
   it('shows member read-only state and no anonymous request', async () => {
-    authenticationSession.authenticate({ ...auth, role: 'member' })
+    authenticationSession.authenticate(
+      createAuthContext({
+        organizations: [{ id: 'org-1', name: 'Acme', slug: 'acme', role: 'member' }],
+        activeRole: 'member',
+        capabilities: {
+          manage_organization: false,
+          create_project: false,
+          manage_project_members: false,
+          create_application: false,
+          manage_credentials: false,
+          organization_roles_grantable: [],
+          project_roles_grantable: [],
+        },
+      }),
+    )
     const { get, mount } = setup(<RuntimeRetention />)
     get.mockResolvedValue(finite)
     const view = mount()

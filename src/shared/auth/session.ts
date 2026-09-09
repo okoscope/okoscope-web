@@ -42,5 +42,12 @@ export function useAuthentication() {
 
 export function useIsOwner() {
   const authentication = useAuthentication()
-  return authentication.status === 'authenticated' && authentication.context.role === 'owner'
+  return authentication.status === 'authenticated' && authentication.context.active_role === 'owner'
+}
+
+export function useCanProvisionTenant() {
+  const authentication = useAuthentication()
+  return (
+    authentication.status === 'authenticated' && authentication.context.capabilities.create_project
+  )
 }

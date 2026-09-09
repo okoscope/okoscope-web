@@ -1,6 +1,33 @@
 # Okoscope Web UI
 
-Operator-facing React UI for Okoscope. The MVP verifies backend compatibility and provides Organization → Projects → Applications navigation.
+Web interface for [Okoscope](https://okoscope.com), a Kubernetes runtime observability
+platform. It turns observations collected by the Okoscope eBPF agent into application-level
+evidence that operators can inspect and compare.
+
+The UI supports:
+
+- organizations, projects, applications, clusters, and workloads;
+- runtime activity, grouped events, and inventory of executables, network destinations, and
+  file paths;
+- release history and behavioral comparisons between releases;
+- resource history and resource-impact comparisons;
+- attention queues and policy review;
+- notification destinations, delivery history, recovery, health, and retention settings;
+- tenant access, invitations, platform administration, and account security flows;
+- first-run setup, agent provisioning, and public English/Russian documentation.
+
+The application is a React single-page app. It validates backend compatibility at startup and
+uses the backend's opaque `HttpOnly` session cookie for authentication. Browser requests include
+credentials; session material is never read or persisted by the UI.
+
+## Technology
+
+- React 19 and TypeScript
+- Vite 8
+- TanStack Router and TanStack Query
+- Tailwind CSS 4
+- Vitest, Testing Library, and Playwright
+- OpenAPI-generated TypeScript definitions
 
 ## Local development
 
@@ -11,87 +38,134 @@ npm ci
 npm run dev
 ```
 
-`public/config.js` configures the local API base URL. Its default `/` is same-origin; use an absolute backend URL only when the backend allows the UI's exact origin through credentialed CORS. Human authentication uses the backend's opaque `HttpOnly` session cookie: the UI sends requests with browser credentials enabled and never reads or persists session material.
+The development server is available at `http://localhost:4173`. It proxies `/api` to
+`https://okoscope.com` by default. To use a local backend, override the proxy target:
+
+```sh
+OKOSCOPE_DEV_API_TARGET=http://127.0.0.1:18080 npm run dev
+```
+
+`public/config.js` contains the browser runtime API base URL. Its default value, `/`, uses the
+current origin. Use an absolute backend URL only when that backend allows the UI's exact origin
+through credentialed CORS.
+
+## Useful commands
+
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Start the development server |
+| `npm run build` | Type-check and create the production bundle |
+| `npm run preview` | Preview the production bundle locally |
+| `npm test` | Run the Vitest suite once |
+| `npm run test:watch` | Run Vitest in watch mode |
+| `npm run test:e2e` | Run the Playwright end-to-end suite |
+| `npm run lint` | Run ESLint with zero warnings allowed |
+| `npm run format:check` | Check formatting with Prettier |
+| `npm run check` | Run the complete non-container quality gate |
+| `npm run container:smoke` | Smoke-test the previously built `okoscope-web:smoke` image |
+
+Before running Playwright locally for the first time, install Chromium:
+
+```sh
+npx playwright install chromium
+```
 
 ## OpenAPI contract
 
-Generated TypeScript is committed at `src/shared/api/schema.d.ts`. The source contract is the backend repository's `openapi/okoscope-v1.yaml`; it can be supplied explicitly when generating or checking the frontend copy:
+The source contract is committed at `openapi/okoscope-v1.yaml`; generated TypeScript is committed
+at `src/shared/api/schema.d.ts`.
+
+```sh
+npm run api:generate
+npm run api:check
+```
+
+To generate or verify the types against a contract from another checkout or CI artifact, provide
+its path explicitly:
 
 ```sh
 OKOSCOPE_OPENAPI_SOURCE=/path/to/okoscope-v1.yaml npm run api:generate
 OKOSCOPE_OPENAPI_SOURCE=/path/to/okoscope-v1.yaml npm run api:check
 ```
 
-`api:check` fails on generated drift when the source is available. In isolated frontend CI, it verifies that committed generated output is present; release automation should provide the backend contract artifact through `OKOSCOPE_OPENAPI_SOURCE` for cross-repository drift detection.
-
-## Verification
-
-```sh
-npm run check
-npx playwright install chromium
-npm run test:e2e
-```
-
-The quality gate includes formatting, linting, strict type checking, contract freshness, Vitest, Playwright, and the production build.
+`api:check` fails when the generated definitions differ from the selected contract.
 
 ## Production image
 
+Build and run the nginx-based image:
+
 ```sh
-docker build --build-arg OKOSCOPE_WEB_GIT_COMMIT="$(git rev-parse HEAD)" -t okoscope-web:local .
-docker run --rm -p 8080:8080 --read-only --tmpfs /tmp:rw,noexec,nosuid,size=32m \
+docker build \
+  --build-arg OKOSCOPE_WEB_GIT_COMMIT="$(git rev-parse HEAD)" \
+  -t okoscope-web:local .
+
+docker run --rm -p 8080:8080 --read-only \
+  --tmpfs /tmp:rw,noexec,nosuid,size=32m \
   -e OKOSCOPE_API_BASE_URL=/ \
   -e OKOSCOPE_API_UPSTREAM=http://okoscope-server:8080 \
   okoscope-web:local
 ```
 
-`OKOSCOPE_API_BASE_URL` accepts a same-origin path or an absolute HTTP(S) URL without credentials. For the recommended same-origin mode, set it to `/` and set `OKOSCOPE_API_UPSTREAM` to the server's internal absolute HTTP(S) origin, for example `http://okoscope-server:8080`. The upstream must not contain credentials, a path, query, fragment or trailing slash. The container proxies `/api` before SPA routing and forwards the original host/protocol headers. When no upstream is configured, `/api` fails closed with `502` instead of returning `index.html`. Public ingresses that route `/api` directly to the server remain supported.
+Runtime configuration:
 
-`config.js` and `index.html` are not cached; hashed assets are immutable. `/healthz` is the health endpoint and client-side deep links use SPA fallback.
+| Variable | Default | Description |
+| --- | --- | --- |
+| `OKOSCOPE_API_BASE_URL` | `/` | Browser-facing same-origin path or absolute HTTP(S) API URL |
+| `OKOSCOPE_API_UPSTREAM` | empty | Internal HTTP(S) backend origin used to proxy `/api` |
 
-Prefer a same-origin deployment with `/api` reverse-proxied to the backend. For a separate origin, configure the backend's exact CORS allowlist entry for the UI origin; wildcard origins are unsupported and credentialed requests require the exact trusted origin.
+For the recommended same-origin deployment, keep `OKOSCOPE_API_BASE_URL=/` and set
+`OKOSCOPE_API_UPSTREAM` to the backend's internal origin. The upstream must not include
+credentials, a path, query, fragment, or trailing slash. If it is omitted, `/api` fails closed
+with `502`; public ingresses may instead route `/api` directly to the backend.
 
-Build and run the container smoke suite:
+The container runs as a non-root user and supports a read-only root filesystem. `/healthz` is its
+health endpoint. `config.js`, `index.html`, and SPA routes are served without caching; hashed assets
+are immutable.
+
+Build and exercise the full container smoke suite with:
 
 ```sh
 docker build -t okoscope-web:smoke .
 npm run container:smoke
 ```
 
-Images should be published by immutable digest with OCI version/commit labels added by release automation. Roll back by restoring the previous image digest; the Web UI performs no database migrations.
+## Continuous integration and releases
 
-On every successful GitHub `push`, CI publishes the tested image to GHCR as `ghcr.io/okoscope/okoscope-web:<commit-sha>`. Pushes to `main` also update `ghcr.io/okoscope/okoscope-web:main`. Kubernetes manifests should use the immutable commit SHA tag rather than the mutable alias.
+Pull requests run formatting, linting, strict type checking, OpenAPI drift detection, unit and
+component tests, the production build, Playwright E2E tests, and the container smoke suite.
 
-For a local backend, override the development proxy target:
+After a successful push to `main`, CI publishes:
 
-```sh
-OKOSCOPE_DEV_API_TARGET=http://127.0.0.1:18080 npm run dev
-```
+- `ghcr.io/okoscope/okoscope-web:<commit-sha>` as the immutable image;
+- `ghcr.io/okoscope/okoscope-web:main` as the mutable branch alias.
 
-This server-side development setting routes `/api` to the specified backend. It defaults to `https://okoscope.com`; production runtime configuration is unchanged.
+Deployments should pin the immutable commit SHA tag. The Web UI performs no database migrations,
+so rollback consists of restoring the previous image.
 
 ## Link previews
 
-The initial `index.html` includes English Open Graph and Twitter card metadata, so
-Telegram and other crawlers can read the product title, description, and image
-without running JavaScript or signing in. All routes share this product preview;
-private application data is never included. The metadata uses the public origin
-`https://okoscope.com/`; deployments on another domain should update these absolute
-URLs in `index.html` before building.
+`index.html` contains English Open Graph and Twitter Card metadata for the public
+`https://okoscope.com/` origin. All routes share this product preview; private application data is
+never included. Deployments on another domain should update the absolute metadata URLs before
+building.
 
-`public/social-preview.png` is a 1200 × 630 PNG based on the existing favicon. Its
-editable source is `public/social-preview.svg`. To regenerate it with librsvg:
+The preview image is `public/social-preview.png` (1200 x 630); its editable source is
+`public/social-preview.svg`. Regenerate it with librsvg:
 
 ```sh
 rsvg-convert public/social-preview.svg -o public/social-preview.png
 ```
 
-After deploying the frontend image, verify that a crawler receives the metadata
-and that the image returns `200` with `Content-Type: image/png` without authentication:
+After deployment, verify that metadata and the image are publicly accessible:
 
 ```sh
 curl -fsSL -A TelegramBot https://okoscope.com/
 curl -I https://okoscope.com/social-preview.png
 ```
 
-Messaging services may cache an earlier preview; a previously shared link may need
-a refresh through that service before the new card appears.
+Messaging services may cache older previews, so an already shared link may need to be refreshed
+through the relevant service.
+
+## License
+
+See [LICENSE](LICENSE).

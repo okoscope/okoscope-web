@@ -4,6 +4,8 @@ import type {
   Application,
   ApplicationPage,
   ApplicationWorkerPage,
+  ApplicationAgentHealthPage,
+  AgentHealthRange,
   BuildInfo,
   Organization,
   Project,
@@ -50,6 +52,8 @@ export const queryKeys = {
     ['projects', projectId, 'applications', applicationId, 'attention', { window }] as const,
   applicationWorkers: (projectId: string, applicationId: string) =>
     ['projects', projectId, 'applications', applicationId, 'workers'] as const,
+  applicationAgentHealth: (projectId: string, applicationId: string, range: AgentHealthRange) =>
+    ['projects', projectId, 'applications', applicationId, 'agent-health', { range }] as const,
   notificationHealth: (projectId: string) =>
     ['projects', projectId, 'notification-health'] as const,
   destinations: (projectId: string) => ['projects', projectId, 'destinations'] as const,
@@ -153,6 +157,30 @@ export const applicationWorkersOptions = (
         { protected: true },
       ),
     getNextPageParam: (page) => page.next_cursor ?? undefined,
+    refetchInterval: 30_000,
+    placeholderData: (previous) => previous,
+  })
+
+export const applicationAgentHealthOptions = (
+  api: ApiClient,
+  projectId: string,
+  applicationId: string,
+  range: AgentHealthRange = '1h',
+) =>
+  infiniteQueryOptions({
+    queryKey: queryKeys.applicationAgentHealth(projectId, applicationId, range),
+    initialPageParam: null as string | null,
+    queryFn: ({ pageParam }) => {
+      const params = new URLSearchParams({ range, limit: '20' })
+      if (pageParam) params.set('cursor', pageParam)
+      return api.get<ApplicationAgentHealthPage>(
+        `/api/v1/projects/${encodeURIComponent(projectId)}/applications/${encodeURIComponent(applicationId)}/agent-health?${params.toString()}`,
+        { protected: true },
+      )
+    },
+    getNextPageParam: (page) => page.next_cursor ?? undefined,
+    refetchInterval: 30_000,
+    placeholderData: (previous) => previous,
   })
 export const projectsOptions = (api: ApiClient) =>
   infiniteQueryOptions({

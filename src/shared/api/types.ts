@@ -52,6 +52,13 @@ export type ApplicationWorkerPage = components['schemas']['ApplicationWorkerPage
 export type ApplicationWorkerQuery = NonNullable<
   operations['listApplicationWorkers']['parameters']['query']
 >
+export type ApplicationAgentHealth = components['schemas']['ApplicationAgentHealth']
+export type ApplicationAgentHealthPage = components['schemas']['ApplicationAgentHealthPage']
+export type AgentHealthTimelinePoint = components['schemas']['AgentHealthTimelinePoint']
+export type AgentDiagnosticDelta = components['schemas']['AgentDiagnosticDelta']
+export type AgentHealthRange = NonNullable<
+  operations['listApplicationAgentHealth']['parameters']['query']
+>['range']
 export type AttentionWindowKind = components['schemas']['AttentionWindowKind']
 export type AttentionPriority = components['schemas']['AttentionPriority']
 export type AttentionItemKind = components['schemas']['AttentionItemKind']

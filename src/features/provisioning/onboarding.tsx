@@ -28,6 +28,7 @@ import { CodeExample } from '../../shared/ui/code-example'
 import { ErrorState } from '../../shared/ui/error-state'
 import { Loading } from '../../shared/ui/loading'
 import { NamedResourceForm } from './entity-form'
+import { getReadinessPresentation } from '../tenant/readiness-presentation'
 
 type Secret = { installation: ApplicationInstallation; credential: IssuedInstallationCredential }
 type WizardProject = { id: string; name: string; slug: string }
@@ -672,5 +673,5 @@ function readinessHelp(
         namespace: installation.workload_namespace,
         selector: installation.workload_name ?? JSON.stringify(installation.workload_labels),
       })
-    : t(`readinessHelp_${state.state}`)
+    : t(getReadinessPresentation(state).explanationKey)
 }

@@ -421,6 +421,32 @@ export const articles: Article[] = [
     },
     sections: [
       {
+        id: 'observation-health',
+        icon: 'review',
+        title: {
+          en: 'Check observation health first',
+          ru: 'Сначала проверьте состояние наблюдения',
+        },
+        paragraphs: [
+          {
+            en: 'The Application page shows whether Okoscope is receiving runtime events, how many nodes report status, and the first and latest accepted event times. When data is absent it keeps authentication, workload matching, Kubernetes permissions, kernel support, waiting for traffic, stale reporting and revoked credentials as separate states, with a next check for each.',
+            ru: 'Страница приложения показывает, получает ли Okoscope runtime-события, сколько узлов сообщает состояние, а также время первого и последнего принятого события. Если данных нет, она различает аутентификацию, совпадение нагрузки, разрешения Kubernetes, поддержку ядра, ожидание трафика, устаревшие отчёты и отозванный credential и предлагает следующую проверку для каждого состояния.',
+          },
+          {
+            en: 'A recent agent signal means only that the server heard from that worker inside its published freshness window. It is not a promise that the stream is connected at this instant, and a worker capability or heartbeat is not proof that a corresponding event was observed. If readiness cannot be refreshed, the page keeps the timestamps but marks freshness unknown instead of guessing.',
+            ru: 'Недавний сигнал агента означает только, что сервер слышал этот узел в пределах опубликованного окна свежести. Это не гарантирует, что stream подключён прямо сейчас, а capability или heartbeat не доказывает, что соответствующее событие наблюдалось. Если состояние не удаётся обновить, страница сохраняет timestamps, но помечает свежесть неизвестной вместо догадки.',
+          },
+          {
+            en: 'Agent cards retain bounded heartbeat coverage for 1, 6, or 24 hours. The timeline distinguishes received signals, missing signals inside known coverage, and history that is unavailable before collection or outside retention; it never fills gaps by interpolation. Capability labels describe only what the agent advertised. Accepted Application events remain a separate field, so a reporting agent with no events is still visible and points back to the readiness explanation.',
+            ru: 'Карточки агентов хранят ограниченную историю heartbeat за 1, 6 или 24 часа. Диаграмма различает полученные сигналы, пропуски внутри известного покрытия и историю, недоступную до начала сбора или за пределами хранения; пробелы не интерполируются. Capability описывает только заявленную агентом возможность. Принятые события приложения показаны отдельно, поэтому сообщающий данные агент без событий остаётся видимым и ссылается на объяснение readiness.',
+          },
+          {
+            en: 'Dropped, rate-limited, decode, attribution, capacity, kernel-loss, correlation, delivery-retry, and unsupported diagnostics are positive changes during the selected range, not lifetime totals. Resets are marked separately. These counters are node-wide: they can guide an agent-log or capacity investigation, but they do not establish which Application lost evidence. Health history is retained for at least 25 hours, and each response is limited to 20 agents and at most 96 timeline intervals per agent.',
+            ru: 'Диагностика потерь, rate limit, декодирования, атрибуции, ёмкости, потерь ядра, корреляции, повторов доставки и неподдерживаемых условий показывает положительные изменения за выбранный период, а не значения за всё время. Сбросы отмечены отдельно. Эти счётчики относятся ко всему узлу: они помогают проверить логи агента или ёмкость, но не доказывают, какое приложение потеряло данные. История здоровья хранится не менее 25 часов, а ответ ограничен 20 агентами и не более чем 96 интервалами на агента.',
+          },
+        ],
+      },
+      {
         id: 'processes',
         icon: 'processes',
         title: {

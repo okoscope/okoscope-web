@@ -149,27 +149,47 @@ test('navigates Organization → Projects → Applications and supports a deep l
   await expect(page.getByRole('navigation', { name: 'Breadcrumb' })).toContainText('Platform')
 })
 
-test('shows heterogeneous worker kernels on the Application overview at a narrow viewport', async ({
-  page,
-}) => {
+test('shows heterogeneous agent health at a narrow viewport', async ({ page }) => {
   const { project, application } = await mockApi(page)
   await page.setViewportSize({ width: 375, height: 812 })
   await page.goto(`/projects/${project.id}/applications/${application.id}`)
   await authenticate(page)
-  await expect(page.getByRole('heading', { name: 'Worker nodes' })).toBeVisible()
-  await page.getByText('Inactive (2)').click()
+  await expect(page.getByRole('heading', { name: 'Agent health and coverage' })).toBeVisible()
+  await expect(page.getByRole('status', { name: 'Agent reporting is stale' })).toBeVisible()
   await expect(page.getByText('worker-amd64-01')).toBeVisible()
-  await expect(page.getByText('6.9.2')).toBeVisible()
+  await expect(page.getByText(/6.9.2/)).toBeVisible()
+  await expect(page.getByText('Process execution')).toBeVisible()
+  await expect(page.getByText('future.signal/v2')).toBeVisible()
+  await expect(page.getByText('Rate limited: +2').first()).toBeVisible()
   await expect(page.getByText('worker-legacy-02')).toBeVisible()
-  await expect(page.getByText('Not reported')).toHaveCount(2)
+  await expect(page.getByText('Signal evidence unavailable')).toBeVisible()
+  await expect(
+    page.getByRole('img', { name: /1h: 57 received, 1 missing, 2 unavailable/ }).first(),
+  ).toBeVisible()
+  await page.getByRole('button', { name: '6 hours' }).click()
+  await expect(page.getByRole('button', { name: '6 hours' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
+  await expect(
+    page.getByRole('img', { name: /6h: 69 received, 1 missing, 2 unavailable/ }).first(),
+  ).toBeVisible()
+  await page.getByRole('button', { name: '24 hours' }).press('Enter')
+  await expect(page.getByRole('button', { name: '24 hours' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
+  await expect(
+    page.getByRole('img', { name: /24h: 93 received, 1 missing, 2 unavailable/ }).first(),
+  ).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375)
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
 })
 
-test('separates retention guidance from the empty worker state', async ({ page }) => {
+test('links an empty agent health state to localized readiness guidance', async ({ page }) => {
   const { project, application } = await mockApi(page)
   await page.route(
-    `**/api/v1/projects/${project.id}/applications/${application.id}/workers**`,
+    `**/api/v1/projects/${project.id}/applications/${application.id}/agent-health**`,
     (route) =>
       route.fulfill({
         status: 200,
@@ -177,11 +197,11 @@ test('separates retention guidance from the empty worker state', async ({ page }
         body: JSON.stringify({
           items: [],
           next_cursor: null,
-          coverage: {
-            closed_before: null,
-            history_expired_before: null,
-            detail_scope: 'raw',
-          },
+          range: '1h',
+          step_seconds: 60,
+          window_start: '2026-08-17T11:00:00Z',
+          window_end: '2026-08-17T12:00:00Z',
+          freshness_seconds: 300,
         }),
       }),
   )
@@ -191,23 +211,19 @@ test('separates retention guidance from the empty worker state', async ({ page }
   await page.evaluate(() => localStorage.setItem('okoscope.locale', 'ru'))
   await page.reload()
 
-  const guidance = page.getByText(
-    'Подробная активность учитывает только сохранённые исходные события. Сводки доступны отдельно в истории групп.',
+  const emptyState = page.getByText(
+    'Ни один агент ещё не сообщил данные о здоровье этого приложения.',
   )
-  const emptyState = page.getByText('Наблюдений рабочих узлов пока нет.')
+  const emptyCard = emptyState.locator('..')
+  const guidance = emptyCard.getByText('Свежие отчёты прекратились. Проверьте Pods агента и сеть.')
   await expect(guidance).toBeVisible()
   await expect(emptyState).toBeVisible()
 
-  const guidanceBox = await guidance.locator('..').boundingBox()
-  const emptyCardBox = await emptyState.locator('..').boundingBox()
-  expect(guidanceBox).not.toBeNull()
-  expect(emptyCardBox).not.toBeNull()
-  expect(emptyCardBox!.y - (guidanceBox!.y + guidanceBox!.height)).toBeGreaterThanOrEqual(12)
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375)
 
-  const connectAgent = page.getByRole('link', { name: 'Подключить агента' })
-  await expect(connectAgent).toBeVisible()
-  await connectAgent.click()
+  const reviewAgentSetup = page.getByRole('link', { name: 'Проверить настройку агента' }).first()
+  await expect(reviewAgentSetup).toBeVisible()
+  await reviewAgentSetup.click()
   await expect(page).toHaveURL('/onboarding')
   await expect(page.getByRole('heading', { name: 'Проект', level: 2 })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Приложение', level: 2 })).toHaveCount(0)

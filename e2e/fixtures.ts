@@ -653,6 +653,18 @@ export async function mockApi(page: Page, role: 'owner' | 'member' = 'owner') {
       })
     if (path === `/api/v1/projects/${project.id}/applications`)
       return json(route, { items: [application], next_cursor: null })
+    if (
+      path === `/api/v1/projects/${project.id}/applications/${application.id}/connection-readiness`
+    )
+      return json(route, {
+        state: 'stale',
+        reason: null,
+        credential_last_used_at: '2026-08-17T12:00:12Z',
+        first_event_at: '2026-08-17T10:00:00Z',
+        last_event_at: '2026-08-17T12:00:00Z',
+        reporting_nodes: 0,
+        stale_after_seconds: 300,
+      })
     if (path === `/api/v1/projects/${project.id}/applications/${application.id}/workers`)
       return json(route, {
         items: [
@@ -683,6 +695,64 @@ export async function mockApi(page: Page, role: 'owner' | 'member' = 'owner') {
         ],
         next_cursor: null,
       })
+    if (path === `/api/v1/projects/${project.id}/applications/${application.id}/agent-health`) {
+      const range = url.searchParams.get('range') ?? '1h'
+      const pointCount = range === '1h' ? 60 : range === '6h' ? 72 : 96
+      const stepSeconds = range === '1h' ? 60 : range === '6h' ? 300 : 900
+      const timeline = Array.from({ length: pointCount }, (_, index) => ({
+        start: new Date(Date.UTC(2026, 7, 17, 11, 0) + index * stepSeconds * 1_000).toISOString(),
+        end: new Date(
+          Date.UTC(2026, 7, 17, 11, 0) + (index + 1) * stepSeconds * 1_000,
+        ).toISOString(),
+        status: index === 4 ? 'missing' : index < 2 ? 'unavailable' : 'received',
+        diagnostics: index === 8 ? [{ category: 'rate_limited', delta: 2 }] : [],
+        reset: index === 10,
+      }))
+      return json(route, {
+        range,
+        step_seconds: stepSeconds,
+        window_start: timeline[0]?.start,
+        window_end: timeline.at(-1)?.end,
+        freshness_seconds: 300,
+        items: [
+          {
+            agent_id: '00000000-0000-4000-8000-000000000021',
+            cluster_id: group.cluster_id,
+            cluster_name: 'Production',
+            node_name: 'worker-amd64-01',
+            agent_version: '0.1.0',
+            architecture: 'x86_64',
+            kernel_release: '6.9.2',
+            capabilities: ['process.exec/v1', 'future.signal/v2'],
+            stream_state: 'reporting',
+            last_signal_at: '2026-08-17T12:00:12Z',
+            first_event_at: '2026-08-17T10:00:00Z',
+            last_event_at: '2026-08-17T12:00:00Z',
+            coverage: { available_from: timeline[2]?.start, complete: false },
+            node_diagnostics: [{ category: 'rate_limited', delta: 2 }],
+            timeline,
+          },
+          {
+            agent_id: '00000000-0000-4000-8000-000000000022',
+            cluster_id: group.cluster_id,
+            cluster_name: 'Production',
+            node_name: 'worker-legacy-02',
+            agent_version: '0.0.9',
+            architecture: null,
+            kernel_release: null,
+            capabilities: [],
+            stream_state: 'unknown',
+            last_signal_at: null,
+            first_event_at: null,
+            last_event_at: null,
+            coverage: { available_from: timeline[0]?.start, complete: true },
+            node_diagnostics: [],
+            timeline: timeline.map((point) => ({ ...point, status: 'unavailable' })),
+          },
+        ],
+        next_cursor: null,
+      })
+    }
     if (path === `/api/v1/projects/${project.id}/applications/${application.id}/attention-summary`)
       return json(route, {
         generated_at: attentionWindow.to,

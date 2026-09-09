@@ -651,6 +651,25 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/{project_id}/applications/{application_id}/agent-health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+                application_id: components["parameters"]["ApplicationId"];
+            };
+            cookie?: never;
+        };
+        get: operations["listApplicationAgentHealth"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{project_id}/applications/{application_id}/credentials": {
         parameters: {
             query?: never;
@@ -3337,7 +3356,7 @@ export interface components {
             api_version: "v1";
             /**
              * Format: int64
-             * @example 27
+             * @example 28
              */
             required_database_migration: number;
         };
@@ -3455,6 +3474,55 @@ export interface components {
         ApplicationWorkerPage: {
             coverage: components["schemas"]["RuntimeRetentionCoverage"];
             items: components["schemas"]["ApplicationWorker"][];
+            next_cursor: components["schemas"]["NullableOpaqueCursor"];
+        };
+        AgentDiagnosticDelta: {
+            /** @enum {string} */
+            category: "dropped" | "rate_limited" | "decode_failed" | "attribution_failed" | "capacity" | "kernel_lost" | "correlation" | "delivery_retry" | "unsupported";
+            /** Format: int64 */
+            delta: number;
+        };
+        AgentHealthTimelinePoint: {
+            start: components["schemas"]["Timestamp"];
+            end: components["schemas"]["Timestamp"];
+            /** @enum {string} */
+            status: "received" | "missing" | "unavailable";
+            diagnostics: components["schemas"]["AgentDiagnosticDelta"][];
+            reset: boolean;
+        };
+        AgentHealthCoverage: {
+            available_from: components["schemas"]["Timestamp"];
+            complete: boolean;
+        };
+        ApplicationAgentHealth: {
+            agent_id: components["schemas"]["Uuid"];
+            cluster_id: components["schemas"]["Uuid"];
+            cluster_name: string;
+            node_name: string;
+            agent_version: string;
+            architecture: string | null;
+            kernel_release: string | null;
+            capabilities: string[];
+            /** @enum {string} */
+            stream_state: "reporting" | "stale" | "authenticated" | "unknown";
+            last_signal_at: components["schemas"]["NullableTimestamp"];
+            first_event_at: components["schemas"]["NullableTimestamp"];
+            last_event_at: components["schemas"]["NullableTimestamp"];
+            coverage: components["schemas"]["AgentHealthCoverage"];
+            node_diagnostics: components["schemas"]["AgentDiagnosticDelta"][];
+            /** @description Exactly 60 points for 1h and 72 points for 6h; 24h may contain 96 points. */
+            timeline: components["schemas"]["AgentHealthTimelinePoint"][];
+        };
+        ApplicationAgentHealthPage: {
+            /** @enum {string} */
+            range: "1h" | "6h" | "24h";
+            /** @enum {integer} */
+            step_seconds: 60 | 300 | 900;
+            window_start: components["schemas"]["Timestamp"];
+            window_end: components["schemas"]["Timestamp"];
+            /** @constant */
+            freshness_seconds: 300;
+            items: components["schemas"]["ApplicationAgentHealth"][];
             next_cursor: components["schemas"]["NullableOpaqueCursor"];
         };
         RuntimeGroup: {
@@ -4965,6 +5033,16 @@ export interface components {
                 "application/json": components["schemas"]["ApplicationWorkerPage"];
             };
         };
+        /** @description Bounded Application-stream health and node-wide diagnostics */
+        ApplicationAgentHealthPage: {
+            headers: {
+                "X-Request-Id": components["headers"]["RequestId"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ApplicationAgentHealthPage"];
+            };
+        };
         /** @description Application runtime inventory aggregate */
         InventorySummary: {
             headers: {
@@ -6473,6 +6551,29 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["ApplicationWorkerPage"];
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    listApplicationAgentHealth: {
+        parameters: {
+            query?: {
+                range?: "1h" | "6h" | "24h";
+                /** @description Opaque cursor scoped to the authenticated collection; clients must not parse it. */
+                cursor?: components["parameters"]["OpaqueCursor"];
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+                application_id: components["parameters"]["ApplicationId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ApplicationAgentHealthPage"];
             400: components["responses"]["Error"];
             401: components["responses"]["Error"];
             404: components["responses"]["Error"];

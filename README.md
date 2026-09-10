@@ -51,17 +51,17 @@ through credentialed CORS.
 
 ## Useful commands
 
-| Command | Purpose |
-| --- | --- |
-| `npm run dev` | Start the development server |
-| `npm run build` | Type-check and create the production bundle |
-| `npm run preview` | Preview the production bundle locally |
-| `npm test` | Run the Vitest suite once |
-| `npm run test:watch` | Run Vitest in watch mode |
-| `npm run test:e2e` | Run the Playwright end-to-end suite |
-| `npm run lint` | Run ESLint with zero warnings allowed |
-| `npm run format:check` | Check formatting with Prettier |
-| `npm run check` | Run the complete non-container quality gate |
+| Command                   | Purpose                                                    |
+| ------------------------- | ---------------------------------------------------------- |
+| `npm run dev`             | Start the development server                               |
+| `npm run build`           | Type-check and create the production bundle                |
+| `npm run preview`         | Preview the production bundle locally                      |
+| `npm test`                | Run the Vitest suite once                                  |
+| `npm run test:watch`      | Run Vitest in watch mode                                   |
+| `npm run test:e2e`        | Run the Playwright end-to-end suite                        |
+| `npm run lint`            | Run ESLint with zero warnings allowed                      |
+| `npm run format:check`    | Check formatting with Prettier                             |
+| `npm run check`           | Run the complete non-container quality gate                |
 | `npm run container:smoke` | Smoke-test the previously built `okoscope-web:smoke` image |
 
 Before running Playwright locally for the first time, install Chromium:
@@ -108,10 +108,10 @@ docker run --rm -p 8080:8080 --read-only \
 
 Runtime configuration:
 
-| Variable | Default | Description |
-| --- | --- | --- |
-| `OKOSCOPE_API_BASE_URL` | `/` | Browser-facing same-origin path or absolute HTTP(S) API URL |
-| `OKOSCOPE_API_UPSTREAM` | empty | Internal HTTP(S) backend origin used to proxy `/api` |
+| Variable                | Default | Description                                                 |
+| ----------------------- | ------- | ----------------------------------------------------------- |
+| `OKOSCOPE_API_BASE_URL` | `/`     | Browser-facing same-origin path or absolute HTTP(S) API URL |
+| `OKOSCOPE_API_UPSTREAM` | empty   | Internal HTTP(S) backend origin used to proxy `/api`        |
 
 For the recommended same-origin deployment, keep `OKOSCOPE_API_BASE_URL=/` and set
 `OKOSCOPE_API_UPSTREAM` to the backend's internal origin. The upstream must not include

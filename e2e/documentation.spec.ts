@@ -921,7 +921,7 @@ test('highlighted Bash and YAML preserve exact source through locale changes and
 test('capability sections carry decorative icons without changing their names', async ({
   page,
 }) => {
-  const sections = ['processes', 'network', 'files', 'review'] as const
+  const sections = ['observation-health', 'processes', 'network', 'files', 'review'] as const
   for (const locale of ['en', 'ru'] as const) {
     await page.goto('/docs/capabilities')
     await page.getByLabel(/Language|Язык/).selectOption(locale)

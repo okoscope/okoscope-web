@@ -28,6 +28,10 @@ export default defineConfig({
         src: './src/assets/logo.svg',
         alt: '',
       },
+      components: {
+        Header: './src/components/Header.astro',
+        SiteTitle: './src/components/SiteTitle.astro',
+      },
       description: 'Okoscope documentation for Kubernetes runtime observability.',
       defaultLocale: 'en',
       locales: {

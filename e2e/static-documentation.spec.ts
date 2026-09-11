@@ -57,7 +57,7 @@ test('theme selector changes and persists the rendered palette accessibly', asyn
   const dark = await page.evaluate(() => ({
     surface: getComputedStyle(document.documentElement).getPropertyValue('--sl-color-bg').trim(),
     background: getComputedStyle(document.body).backgroundImage,
-    brand: getComputedStyle(document.querySelector<HTMLElement>('.site-title')!).color,
+    brand: getComputedStyle(document.querySelector<HTMLElement>('.okoscope-brand')!).color,
     current: (() => {
       const style = getComputedStyle(
         document.querySelector<HTMLElement>(".sidebar-content a[aria-current='page']")!,
@@ -81,7 +81,7 @@ test('theme selector changes and persists the rendered palette accessibly', asyn
   const light = await page.evaluate(() => ({
     surface: getComputedStyle(document.documentElement).getPropertyValue('--sl-color-bg').trim(),
     background: getComputedStyle(document.body).backgroundImage,
-    brand: getComputedStyle(document.querySelector<HTMLElement>('.site-title')!).color,
+    brand: getComputedStyle(document.querySelector<HTMLElement>('.okoscope-brand')!).color,
     current: (() => {
       const style = getComputedStyle(
         document.querySelector<HTMLElement>(".sidebar-content a[aria-current='page']")!,
@@ -141,9 +141,9 @@ test('Russian theme choices fit the visible selector at intermediate width', asy
 
 test('self-hosting flow is semantic, responsive, and accessible', async ({ page }) => {
   await page.goto('ru/self-hosting/')
-  const brand = page.getByRole('link', { name: 'Okoscope', exact: true }).first()
+  const brand = page.getByRole('link', { name: 'Вернуться в приложение Okoscope', exact: true })
   await expect(brand).toBeVisible()
-  await expect(brand.locator('img')).toHaveAttribute('alt', '')
+  await expect(brand).toHaveAttribute('href', '/')
   const flow = page.getByRole('navigation', { name: 'От базы данных до первого события' })
   await expect(flow.getByRole('link')).toHaveCount(6)
   await expect(flow.getByRole('link', { name: 'Secret базы данных' })).toHaveAttribute(
@@ -155,6 +155,57 @@ test('self-hosting flow is semantic, responsive, and accessible', async ({ page 
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
   }
+})
+
+test('header matches the application brand and exposes localized application links', async ({
+  page,
+}) => {
+  for (const [locale, brandLabel, appLabel] of [
+    ['en', 'Return to the Okoscope application', 'Open app'],
+    ['ru', 'Вернуться в приложение Okoscope', 'В приложение'],
+  ] as const) {
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await page.goto(`${locale}/`)
+    const brand = page.getByRole('link', { name: brandLabel, exact: true })
+    await expect(brand).toHaveAttribute('href', '/')
+    await expect(brand.locator('.okoscope-brand-name')).toHaveText('OKOSCOPE')
+    await expect(brand.locator('.okoscope-brand-name strong')).toHaveText('OKO')
+    await expect(brand.locator('.okoscope-brand-tagline')).toHaveText('Runtime observability')
+    const mark = brand.locator('svg')
+    await expect(mark).toHaveAttribute('viewBox', '0 0 96 72')
+    await expect(mark.locator('path').first()).toHaveAttribute(
+      'd',
+      'M8 36c11-15 24-23 40-23s29 8 40 23C77 51 64 59 48 59S19 51 8 36Z',
+    )
+    expect(
+      await brand
+        .locator('.okoscope-brand-name strong')
+        .evaluate((node) => getComputedStyle(node).fontWeight),
+    ).toBe('850')
+    expect(
+      await brand
+        .locator('.okoscope-brand-name')
+        .evaluate((node) => getComputedStyle(node).fontWeight),
+    ).toBe('300')
+    await expect(page.getByRole('link', { name: appLabel, exact: true })).toHaveAttribute(
+      'href',
+      '/',
+    )
+    await expect(page.locator('starlight-theme-select select').first()).toBeVisible()
+    await expect(page.locator('starlight-lang-select select').first()).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: locale === 'ru' ? 'Поиск' : 'Search' }),
+    ).toBeVisible()
+    await brand.click()
+    await expect(page).toHaveURL((url) => url.pathname === '/')
+  }
+
+  await page.setViewportSize({ width: 360, height: 800 })
+  await page.goto('en/')
+  await expect(page.getByRole('link', { name: 'Return to the Okoscope application' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Menu' })).toBeVisible()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
 })
 
 test('sitemap discovers both locales', async ({ request }) => {

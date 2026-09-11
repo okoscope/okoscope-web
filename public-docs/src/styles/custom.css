@@ -95,24 +95,49 @@ header.header {
   color: #087f8c;
 }
 
-.site-title {
+.okoscope-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
   color: #ffffff;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
 }
 
-:root[data-theme='light'] .site-title {
-  color: #071425;
-}
-
-.site-title img {
-  width: 2.75rem;
+.okoscope-brand-mark {
+  width: 3.5rem;
   height: 2.75rem;
+  flex: none;
+  overflow: visible;
   filter: drop-shadow(0 0 8px rgb(10 203 234 / 36%));
 }
 
-.site-title span {
-  font-weight: 750;
+.okoscope-brand-copy {
+  display: grid;
+  line-height: 1;
+}
+
+.okoscope-brand-name {
+  font-size: 1.05rem;
+  font-weight: 300;
+  letter-spacing: 0.08em;
+}
+
+.okoscope-brand-name strong {
+  font-weight: 850;
+}
+
+.okoscope-brand-tagline {
+  margin-top: 0.36rem;
+  color: #8ba8cf;
+  font-size: 0.52rem;
+  font-weight: 650;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+}
+
+:root[data-theme='light'] .okoscope-brand {
+  color: #071425;
 }
 
 .search-input,

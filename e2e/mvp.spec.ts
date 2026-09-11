@@ -39,6 +39,26 @@ test('keeps the application header language selector compact and accessible', as
   await expect(russianSelect).toHaveValue('ru')
 })
 
+test('keeps the Russian connect-agent navigation label on one line', async ({ page }) => {
+  await page.setViewportSize({ width: 1024, height: 768 })
+  await mockApi(page)
+  await page.goto('/')
+  await authenticate(page)
+  await page.getByLabel('Language').selectOption('ru')
+
+  const connectAgent = page.getByRole('link', { name: 'Подключение агента', exact: true })
+  await expect(connectAgent).toBeVisible()
+  await expect
+    .poll(() =>
+      connectAgent.evaluate((link) => {
+        const range = document.createRange()
+        range.selectNodeContents(link)
+        return range.getClientRects().length
+      }),
+    )
+    .toBe(1)
+})
+
 test('renders tenant, runtime, and notification surfaces fully in Russian', async ({ page }) => {
   test.setTimeout(60_000)
   const expectNoEnglishUi = async () =>

@@ -132,6 +132,7 @@ nav.app-navigation.is-open {
 .app-navigation .nav-link {
   min-height: 2.75rem;
   align-items: center;
+  white-space: nowrap;
 }
 .app-navigation-language {
   justify-content: space-between;

@@ -1,5 +1,4 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Link } from '@tanstack/react-router'
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import {
   login,
@@ -129,9 +128,9 @@ export function AuthenticationScreen({ expired }: { expired: boolean }) {
           {t('authProductTitle')}
         </h1>
         <p className="mt-5 max-w-lg text-lg text-slate-300">{t('authProductHelp')}</p>
-        <Link to="/docs" className="mt-6 inline-block text-cyan-300 underline">
+        <a href={`/docs/${locale}/`} className="mt-6 inline-block text-cyan-300 underline">
           {t('documentation')}
-        </Link>
+        </a>
       </section>
       <Card className="w-full max-w-md self-center">
         <div className="mb-5 flex justify-end">

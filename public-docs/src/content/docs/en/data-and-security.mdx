@@ -1,0 +1,87 @@
+---
+title: 'Data and security'
+description: 'What leaves the node, who can see it, and what disappears over time.'
+head:
+  - tag: link
+    attrs: { 'rel': 'canonical', 'href': 'https://okoscope.com/docs/en/data-and-security/' }
+  - tag: link
+    attrs:
+      {
+        'rel': 'alternate',
+        'hreflang': 'en',
+        'href': 'https://okoscope.com/docs/en/data-and-security/',
+      }
+  - tag: link
+    attrs:
+      {
+        'rel': 'alternate',
+        'hreflang': 'ru',
+        'href': 'https://okoscope.com/docs/ru/data-and-security/',
+      }
+  - tag: link
+    attrs:
+      {
+        'rel': 'alternate',
+        'hreflang': 'x-default',
+        'href': 'https://okoscope.com/docs/en/data-and-security/',
+      }
+  - tag: meta
+    attrs: { 'property': 'og:type', 'content': 'article' }
+  - tag: meta
+    attrs: { 'property': 'og:title', 'content': 'Data and security' }
+  - tag: meta
+    attrs:
+      {
+        'property': 'og:description',
+        'content': 'What leaves the node, who can see it, and what disappears over time.',
+      }
+  - tag: meta
+    attrs: { 'property': 'og:url', 'content': 'https://okoscope.com/docs/en/data-and-security/' }
+  - tag: meta
+    attrs: { 'property': 'og:locale', 'content': 'en_US' }
+  - tag: meta
+    attrs: { 'name': 'twitter:title', 'content': 'Data and security' }
+  - tag: meta
+    attrs:
+      {
+        'name': 'twitter:description',
+        'content': 'What leaves the node, who can see it, and what disappears over time.',
+      }
+---
+
+What leaves the node, who can see it, and what disappears over time.
+
+<a id="collection"></a>
+## Collected and excluded data
+
+Depending on which profiles are enabled, an observation can carry workload and process identity, executable names, syscall identities, network addresses and ports, DNS names with bounded answers, file path metadata, timestamps and termination evidence. None of that includes payloads, and yet names, paths and addresses can still say a great deal about your business. That is the reason to keep selectors and path prefixes narrow.
+
+File contents, write buffers, environment variables and unrestricted command arguments are not collected. DNS observation exports no raw packets and decrypts nothing. This is neither packet capture nor a filesystem backup. Access to the web interface and the API is scoped to your organization, and this public documentation contains no observations from it: its screenshots are produced from example data.
+
+<a id="permissions"></a>
+## Agent permissions and credentials
+
+The reference agent runs with hostPID, read-only host mounts of /proc and cgroup, and a writable tracefs so it can attach probes at all. It runs as root with an explicit set of capabilities — BPF, NET_ADMIN, PERFMON, SYS_ADMIN and SYS_RESOURCE — rather than in blanket privileged mode. Its Kubernetes RBAC reads Pods, ReplicaSets, Deployments and the kube-system namespace identity; it cannot change workloads or read Secrets through the API. These are node-level privileges, so go through them with your operator before anything is installed.
+
+People sign in with individual sessions. Agents use separate versioned Application tokens, and the server stores only their digests. Rotation goes like this: issue an additional credential, update the mounted Secret, roll out the DaemonSet, confirm the new credential shows a recent last-used value, and only then revoke the old one. There is no hot reload. Revoking a token stops that one stream and leaves other Applications alone.
+
+<a id="runtime-retention"></a>
+## Runtime details and numerical history
+
+Retention for runtime evidence is set by organization owners; a Project either inherits the whole policy or overrides it, and members can read the effective values. A fresh installation has cleanup disabled, with 30 days of details and 365 days of total history. raw_days is how long details are kept; history_days is the total age an observation may reach, not an extra period on top of it. Setting history to forever keeps the numbers forever, not the raw details.
+
+Cleanup runs on its own, in bounded batches, over whole UTC days. What survives is a summary: counts and first and last times per group, release and day — not event payloads and not Pod-level detail. Enabling cleanup, shortening a window or going back to an enabled inherited policy can delete evidence you still have. It does not work in reverse: longer retention or disabled cleanup will not bring deleted details back or reopen closed history.
+
+<a id="notification-retention"></a>
+## Notification history
+
+Notification history has its own retention, independent of the runtime one: a new Organization starts with cleanup disabled and a 90-day window. Owners manage it in Profile, Projects can override it in Notifications, and members have read-only access. Only deliveries that reached a final state expire, counted from their latest terminal transition — anything pending, retryable or in flight is preserved.
+
+When a delivery expires, its attempts and the linked recovery details go with it, and raising the history period afterwards will not bring them back. So before you enable or shorten either retention policy, look at the effective settings and at what you actually need to keep. Notification cleanup and webhook sending are independent of each other.
+
+## Continue reading
+
+- [Application resources](/docs/en/application-resources/)
+- [Compatibility and limits](/docs/en/compatibility-and-limits/)
+- [Self-hosted — Deployment](/docs/en/self-hosting/)
+- [Troubleshooting and FAQ](/docs/en/troubleshooting/)

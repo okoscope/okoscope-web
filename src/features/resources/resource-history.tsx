@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query'
-import { Link } from '@tanstack/react-router'
 import { AlertTriangle, CircleGauge, Database, MemoryStick } from 'lucide-react'
 import { useMemo } from 'react'
 import { useApi } from '../../shared/api/context'
@@ -183,13 +182,12 @@ export function ResourceHistory({
         </>
       )}
       <ResourceSemantics metric={search.metric} locale={locale} />
-      <Link
+      <a
         className="inline-flex text-sm font-semibold text-cyan-300 underline"
-        to="/docs/$slug"
-        params={{ slug: 'application-resources' }}
+        href={`/docs/${locale}/application-resources/`}
       >
         {text.docs}
-      </Link>
+      </a>
     </section>
   )
 }

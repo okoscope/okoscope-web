@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://okoscope.com/docs/sitemap-index.xml

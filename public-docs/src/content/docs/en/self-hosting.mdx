@@ -1,0 +1,432 @@
+---
+title: 'Self-hosted — Deployment'
+description: 'Deploy Okoscope in your own Kubernetes cluster. You operate the server, web interface and external PostgreSQL database; agents connect to your server.'
+head:
+  - tag: link
+    attrs: { 'rel': 'canonical', 'href': 'https://okoscope.com/docs/en/self-hosting/' }
+  - tag: link
+    attrs:
+      { 'rel': 'alternate', 'hreflang': 'en', 'href': 'https://okoscope.com/docs/en/self-hosting/' }
+  - tag: link
+    attrs:
+      { 'rel': 'alternate', 'hreflang': 'ru', 'href': 'https://okoscope.com/docs/ru/self-hosting/' }
+  - tag: link
+    attrs:
+      {
+        'rel': 'alternate',
+        'hreflang': 'x-default',
+        'href': 'https://okoscope.com/docs/en/self-hosting/',
+      }
+  - tag: meta
+    attrs: { 'property': 'og:type', 'content': 'article' }
+  - tag: meta
+    attrs: { 'property': 'og:title', 'content': 'Self-hosted — Deployment' }
+  - tag: meta
+    attrs:
+      {
+        'property': 'og:description',
+        'content': 'Deploy Okoscope in your own Kubernetes cluster. You operate the server, web interface and external PostgreSQL database; agents connect to your server.',
+      }
+  - tag: meta
+    attrs: { 'property': 'og:url', 'content': 'https://okoscope.com/docs/en/self-hosting/' }
+  - tag: meta
+    attrs: { 'property': 'og:locale', 'content': 'en_US' }
+  - tag: meta
+    attrs: { 'name': 'twitter:title', 'content': 'Self-hosted — Deployment' }
+  - tag: meta
+    attrs:
+      {
+        'name': 'twitter:description',
+        'content': 'Deploy Okoscope in your own Kubernetes cluster. You operate the server, web interface and external PostgreSQL database; agents connect to your server.',
+      }
+---
+
+import SetupFlow from '../../../components/SetupFlow.astro'
+
+Deploy Okoscope in your own Kubernetes cluster.
+You operate the **server**, **web interface** and external **PostgreSQL** database; agents connect to your server.
+
+<a id="components"></a>
+## Before you start
+
+The **okoscope** Helm chart installs the server, web interface and a database migration Job. Ingress and a local agent are optional.
+
+Provision **PostgreSQL** separately. You manage its availability, security, capacity and backups.
+
+Chart migrations update the database schema; the chart does not provision or delete the database infrastructure.
+
+To use our server and install only agents, follow [Okoscope Cloud — Quick start](/docs/en/quick-start/).
+
+- A **Kubernetes** cluster and permission to create the chart resources. Check the target context with `kubectl config current-context`.
+- **Helm 3**, **kubectl** and a published chart version. Replace `<OKOSCOPE_VERSION>` in every example with that exact version; it is a placeholder, not an environment variable.
+- A supported **PostgreSQL** database reachable from the installation namespace, with credentials that can run schema migrations.
+- For remote access: separate Web/API and gRPC hostnames, an ingress controller and TLS certificates. This guide also shows local Web access through port-forward.
+- Before installing agents, review [Compatibility and limits](/docs/en/compatibility-and-limits/) and [Data and security](/docs/en/data-and-security/) for node requirements and eBPF permissions.
+
+<SetupFlow kind="self-hosting" locale="en" />
+
+<a id="database"></a>
+## Prepare the database Secret
+
+Create the installation namespace and a Kubernetes **Secret** holding the PostgreSQL connection URL before running Helm. The examples use `okoscope-system`, Secret `okoscope-database` and key `database-url`.
+
+Run the command in **Bash** or **zsh**. At the prompt, paste the connection URL and press **Enter**; input is hidden. Continue only after the Secret is created successfully.
+
+Pass only the Secret name and key to Helm through `database.existingSecret` and `database.urlKey`. Keep the connection URL out of values files, Git and logs.
+
+```bash
+kubectl create namespace okoscope-system --dry-run=client -o yaml | kubectl apply -f -
+printf "PostgreSQL URL: " >&2
+IFS= read -rs OKOSCOPE_DATABASE_URL
+printf '\n' >&2
+kubectl -n okoscope-system create secret generic okoscope-database \
+  --from-literal=database-url="$OKOSCOPE_DATABASE_URL" \
+  --dry-run=client -o yaml | kubectl apply -f -
+unset OKOSCOPE_DATABASE_URL
+```
+
+<a id="production-values"></a>
+## Configure access and agent connection
+
+Create **values.yaml** using the example below. It contains references to Secrets and non-secret settings.
+
+The example publishes Web/API and gRPC through **ingress-nginx**. Replace both example domains, point their DNS records at your ingress controller and create the matching TLS Secrets in `okoscope-system` before installation. Use your controller’s ingress class.
+
+For local-only Web access, leave `ingress.web.enabled: false` and use port-forward later. Keep the gRPC route available for agents; Web port-forward does not expose gRPC.
+
+Set `agentInstallation.publicGrpcEndpoint` to your reachable **TLS gRPC** address. Publishing this metadata does not create a network route: configure gRPC ingress or your own proxy as well.
+
+A published server chart supplies matching agent versions. Keep them unless you deliberately configure another compatible agent release. If the endpoint is left empty, the server can start but the wizard cannot offer agent installation commands.
+
+:::caution[GitOps and recovery]
+For offline GitOps rendering, configure externally managed internal keys and setup authorization before the first install. See the production routing and Secrets section below. Ordinary Helm installs generate these Secrets and reuse them on upgrades; back them up separately from PostgreSQL.
+:::
+
+```yaml
+# values.yaml
+database:
+  existingSecret: okoscope-database
+  urlKey: database-url
+server:
+  registrationEnabled: false
+  corsOrigins:
+    - http://127.0.0.1:8080
+agentInstallation:
+  publicGrpcEndpoint: https://agents.okoscope.example.com:443
+ingress:
+  web:
+    enabled: true
+    className: nginx
+    host: okoscope.example.com
+    tlsSecret: okoscope-web-tls
+  grpc:
+    enabled: true
+    className: nginx
+    host: agents.okoscope.example.com
+    tlsSecret: okoscope-grpc-tls
+```
+
+<a id="rollout"></a>
+## Install the server and web interface
+
+Run Helm with the prepared **values.yaml** and a pinned published chart version. The release name `okoscope` determines the resource names used in the following commands.
+
+A migration **Job** runs before installation and each upgrade. It reads the database Secret and updates the schema. If it fails, Helm stops before rolling out the new server.
+
+If migrations fail, inspect the migration Job and its Pod logs, fix database access or permissions, then retry the same release. Do not delete migration records to force an install.
+
+```bash
+helm upgrade --install okoscope \
+  oci://ghcr.io/okoscope/charts/okoscope \
+  --version <OKOSCOPE_VERSION> \
+  --namespace okoscope-system \
+  -f values.yaml \
+  --wait --timeout 10m
+```
+
+<a id="verify"></a>
+## Verify readiness and open the interface
+
+Wait for both **Deployments**, then run `helm test`. The chart test checks the server’s `/readyz`, build information and required database migration.
+
+For local access, keep the port-forward command running and open `http://127.0.0.1:8080` in your browser. The Web service also proxies `/api` to the server, so no separate API port-forward is needed.
+
+If you configured Web ingress, use your HTTPS Web address. Check that `[Self-hosted — Deployment](/docs/en/self-hosting/)` opens and still works after a browser refresh.
+
+```bash
+kubectl -n okoscope-system rollout status deployment/okoscope-server --timeout=5m
+kubectl -n okoscope-system rollout status deployment/okoscope-web --timeout=5m
+helm test okoscope --namespace okoscope-system
+kubectl -n okoscope-system port-forward service/okoscope-web 8080:80
+```
+
+<a id="claim"></a>
+## Create the first owner
+
+In a fresh private installation, open **/setup** on your own Web address. This creates the first **owner**, **Organization** and named **Project** in one operation.
+
+Retrieve the **setup token** in a separate terminal using the command from Helm NOTES. You can view those instructions again with `helm get notes okoscope -n okoscope-system`; Helm prints the retrieval command, not the token.
+
+1. For the default release, run the example below. If you use an external setup Secret or custom key, use the names from your NOTES.
+2. Paste the token into the setup form and enter the owner, Organization and Project details. Do not put the token in a URL, values file, Git or screenshots.
+3. Complete setup and continue into the application. Once any owner exists, setup closes; subsequent access uses the normal sign-in flow.
+
+:::caution[Public registration]
+`server.registrationEnabled` is `false` by default. Enable it only if you want public signup: each registration creates a new Organization and its owner, rather than membership in an existing Organization.
+:::
+
+```bash
+kubectl get secret -n okoscope-system okoscope-setup \
+  -o jsonpath='{.data.setup-token}' | base64 --decode
+printf '\n'
+```
+
+<a id="connect-agents"></a>
+## Connect agents and receive an event
+
+Open **Connect agent** on your own server at `/onboarding`. Select the Project created during setup or create another, then select or create an **Application**.
+
+If the wizard cannot load installation metadata, check `agentInstallation.publicGrpcEndpoint` and the agent release settings in your server values before continuing.
+
+1. Enter the cluster name, workload namespace and exactly one **Deployment**, selected by name or labels.
+2. Create the installation and copy the one-time Application token. Run the generated Secret command in the observed cluster; the Secret belongs in the agent namespace.
+3. Run the generated Helm command. Its endpoint must point to your server. Cloud credentials and self-hosted credentials belong to different servers.
+4. Check the agent DaemonSet and logs, generate normal activity in the selected workload and wait for the wizard to report **Receiving runtime events**. Open the Application and confirm the event.
+
+:::caution[Certificate trust]
+Use system trust for public TLS certificates. For a private CA, create the CA Secret in the agent namespace using the name and key shown by the wizard. Keep `server.developmentPlaintext` disabled outside isolated development. If observations do not appear, see [Troubleshooting and FAQ](/docs/en/troubleshooting/).
+:::
+
+<a id="external-secrets"></a>
+## Production routing and external Secrets
+
+Merge the relevant settings below into **values.yaml** before installing or upgrading. Replace the example hosts and Secret names with your own.
+
+Web/API and gRPC use independent ingress routes. The chart supports **ingress-nginx** and **Traefik** gRPC settings; supply the class, host and TLS Secret for each enabled route.
+
+Pre-create TLS Secrets, or enable `certManager` with an existing `ClusterIssuer` to issue them. Controller-specific annotations belong under the corresponding ingress route.
+
+The chart trusts its Web ingress Origin automatically: HTTPS when a TLS Secret is configured, otherwise HTTP. For another proxy or browser address, add its exact Origin to `server.corsOrigins`: scheme, host and optional port, without a path, query, fragment, wildcard or trailing slash.
+
+- `internalSecret.existingSecret` — an external Secret containing the keys configured by `adminCredentialKey`, `webhookEncryptionKey` and `identityTokenKey`. Keep these stable and backed up.
+- `setupAuthorization.existingSecret` — an external setup Secret with `setup-token` and optional `setup-token-expires-at` (RFC 3339), unless you override those key names. An expired token prevents activation of an ownerless installation.
+- `imagePullSecrets` — existing credentials for a private image registry. Server and Web resource requests and limits are configured under `server.resources` and `web.resources`.
+- `agentInstallation.tlsMode: custom_ca` — for private CA trust, also set `caSecret.name` and `caSecret.key`. These refer to a Secret in the future agent namespace.
+
+```yaml
+ingress:
+  web:
+    enabled: true
+    className: nginx
+    host: okoscope.example.com
+    tlsSecret: okoscope-web-tls
+  grpc:
+    enabled: true
+    className: nginx
+    host: agents.okoscope.example.com
+    tlsSecret: okoscope-grpc-tls
+```
+
+<a id="backups"></a>
+## Backups, upgrades and removal
+
+Okoscope does not schedule PostgreSQL backups or verify restores. Maintain a tested backup and recovery procedure for the database and separate copies of internal keys and externally managed Secrets.
+
+1. Before upgrading, back up PostgreSQL and test recovery into a separate database. Read the target release notes and check migration compatibility.
+2. Upgrade to an explicit chart version using your saved values. Migration hooks run again; repeat the rollout and `helm test` checks after upgrading.
+3. `helm rollback` does not reverse schema migrations. Use it only if the older server version supports the current schema.
+4. `helm uninstall` removes chart-managed workloads, but leaves external PostgreSQL and pre-existing Secrets. Generated internal and setup Secrets have a keep policy; account for them separately during decommissioning.
+
+<a id="helm-values"></a>
+## Helm values for both charts
+
+**okoscope** installs the server and web interface; **okoscope-agent** installs the node agent. Published charts share a release version.
+
+Run `helm show values` for the exact defaults of your selected version. The examples below illustrate configuration choices; they are not a complete copy of release defaults. The repository reference `docs/helm-values.md` lists all settings and validation limits.
+
+Both charts accept **Secret references** in values. Keep database URLs and Application tokens out of values because Helm stores supplied values in its release Secret.
+
+Published charts pin component images and provide resource requests and limits. The examples omit these overrides to preserve release settings. Change images only to verified versions and adjust resources based on measured load.
+
+```bash
+helm show values oci://ghcr.io/okoscope/charts/okoscope --version <OKOSCOPE_VERSION>
+helm show values oci://ghcr.io/okoscope/charts/okoscope-agent --version <OKOSCOPE_VERSION>
+```
+
+<a id="values-server"></a>
+### okoscope: server and web
+
+Adapt the relevant settings to your installation and pass the file with `-f values.yaml`. Keep the database Secret reference and the ingress, Origin and agent metadata settings consistent with the main installation steps.
+
+```yaml
+# values.yaml - chart okoscope: server, web interface and migration hook.
+# Configuration example. Read release defaults with helm show values.
+# Image and resource overrides are omitted to preserve the published chart settings.
+#
+# helm upgrade --install okoscope oci://ghcr.io/okoscope/charts/okoscope \
+#   --version <OKOSCOPE_VERSION> --namespace okoscope-system -f values.yaml
+
+database:
+  existingSecret: okoscope-database # required - Secret that already holds the PostgreSQL URL
+  urlKey: database-url # required - key inside it; the chart has no value for the URL
+
+# Internal keys. Left empty, Helm generates them and keeps them across upgrades.
+# Name your own Secrets when templates are rendered offline for GitOps,
+# where generated values cannot survive.
+internalSecret:
+  existingSecret: '' # empty: Helm generates internal keys
+setupAuthorization:
+  existingSecret: '' # empty: Helm generates the setup token
+
+server:
+  registrationEnabled: false # public signup, off with or without ingress
+  sessionLifetimeSeconds: 43200 # session lifetime, twelve hours
+  corsOrigins: [] # chart trusts the Web ingress Origin
+    # https with tlsSecret, otherwise http; add exact external Origins
+  replicas: 1 # more replicas need a PostgreSQL topology built for it
+
+web:
+  replicas: 1
+
+# Public routing. Both routes are off by default and independent of each other:
+# browsers arrive through web, agents through grpc.
+ingress:
+  web:
+    enabled: false # turn on for browser and API access
+    className: '' # the cluster default; or nginx, traefik
+    host: '' # required when enabled, e.g. okoscope.example.com
+    tlsSecret: '' # required when enabled, unless cert-manager creates it
+  grpc:
+    enabled: false # turn on for agents outside the cluster
+    className: ''
+    host: '' # required when enabled, e.g. agents.okoscope.example.com
+    tlsSecret: '' # required when enabled
+
+certManager:
+  enabled: false # on: cert-manager issues the TLS Secrets above
+  clusterIssuer: '' # required when certManager is enabled
+
+podDisruptionBudget:
+  enabled: true # blocks voluntary eviction while you run one replica
+  minAvailable: 1
+
+migration:
+  backoffLimit: 2 # retries of the migration hook
+  activeDeadlineSeconds: 300 # and its deadline
+
+# Delivery worker for notifications. Saving a destination does not start it.
+notifications:
+  enabled: false
+  pollMilliseconds: 1000
+  claimSize: 50
+  concurrency: 8
+  leaseSeconds: 30
+  drainSeconds: 15
+
+# What the Connect agent wizard offers. It installs no agent by itself, and an
+# empty publicGrpcEndpoint omits this metadata entirely.
+agentInstallation:
+  publicGrpcEndpoint: '' # example: empty, e.g. https://agents.okoscope.example.com:443
+  chartReference: oci://ghcr.io/okoscope/charts/okoscope-agent # required with an endpoint
+  chartVersion: <OKOSCOPE_VERSION> # required with an endpoint
+  recommendedAgentVersion: <OKOSCOPE_VERSION> # required with an endpoint
+  minimumAgentVersion: <OKOSCOPE_VERSION> # required with an endpoint
+  tlsMode: system # or custom_ca with the CA Secret below
+  caSecret:
+    name: '' # required when tlsMode is custom_ca
+    key: '' # required when tlsMode is custom_ca
+
+imagePullSecrets: [] # existing private-registry credentials
+
+okoscope-agent:
+  enabled:
+    false # on: install the agent chart as a dependency;
+    # its settings nest here and inherit nothing from the parent
+```
+
+<a id="values-agent"></a>
+### okoscope-agent: the node agent
+
+Configure the **TLS endpoint**, **cluster name**, **Deployment selector** and **Application Secret reference**. Use the values shown by your server’s connection wizard.
+
+Add optional observation settings after receiving your first event. The agent can also be installed as a server-chart dependency under `okoscope-agent`; its settings and Application Secret are still required.
+
+```yaml
+# values.yaml - chart okoscope-agent: the DaemonSet with the eBPF agent.
+# Configuration example. Read release defaults with helm show values.
+#
+# helm upgrade --install okoscope-agent oci://ghcr.io/okoscope/charts/okoscope-agent \
+#   --version <OKOSCOPE_VERSION> --namespace okoscope-system -f values.yaml
+
+server:
+  endpoint: https://agents.example.com:443 # required - TLS gRPC address, https:// included
+  developmentPlaintext: false # true turns TLS off, isolated development only
+  caSecret:
+    name: '' # required for a private CA; only the reference travels through values
+    key: '' # required for a private CA - the key holding the certificate
+
+identity:
+  clusterName: production # required - saved installation name passed to the agent
+
+# One entry per Application, 1 to 32 of them. Each entry selects exactly one
+# Deployment, by name or by a bounded labels map, never by both.
+workloads:
+  - namespace: production # required
+    kind: Deployment # required - the only supported kind
+    name: payment-api # required unless you select by labels instead
+    credentialSecret:
+      name: okoscope-application-credentials # required - existing Secret in the agent namespace
+      key: payment-api # required - the key holding that Application token
+
+observation:
+  processExec: true # which executables ran
+  processExit: true # and how they ended
+  syscalls: [] # example: empty allowlist - nothing until you name calls, e.g. [ptrace, setns]
+  network:
+    connect: true # outbound attempts
+    listen: true # TCP listening endpoints
+    accept: true # accepted inbound activity
+    maxAcceptedEventsPerSecond: 25 # the rate bound for accept
+    dns:
+      enabled: false # once on, udp and tcp are both enabled
+  files:
+    enabled: false # experimental
+    operations: [create, modify, delete, rename] # required when files are enabled
+    includePaths: [/app/data] # required when files are enabled - absolute paths only
+    excludePaths: [/app/data/private] # optional - exclusions take precedence over inclusions
+
+safety:
+  queueCapacity: 4096 # the bounds on collection
+  batchSize: 256
+  maxEventsPerSecond: 1000
+  maxApplicationStreams: 32
+
+# Keep published image and resource settings; override only after verification and sizing.
+imagePullSecrets: []
+nodeSelector: {}
+tolerations: []
+affinity: {}
+podAnnotations: {}
+```
+
+<a id="values-validation"></a>
+### When values are wrong
+
+**Helm** validates values against the chart schema. The agent also checks its configuration at startup; fix the reported field before retrying.
+
+Valid syntax does not prove network access, Secret availability, kernel compatibility or that a selector matches a workload. Verify rollout and the first event as described above.
+
+<a id="existing-installations"></a>
+## Existing releases and legacy installations
+
+In the backend repository, `make deploy-preview VERSION=<chart-version>` and `make deploy VERSION=<chart-version>` update an existing release. They default to the `aliens` context, release `okoscope` and namespace `okoscope`; check this target before using them.
+
+Set `KUBE_NAMESPACE`, `HELM_RELEASE` and optionally `VALUES=production-values.yaml` for your release. These commands merge chart defaults, saved overrides and supplied values; manually pinned image tags or digests remain pinned. Preview hides Secret manifests, while deployment runs migration hooks.
+
+Automatic adoption of old **Kustomize** resources is not supported. Back up data and Secrets, compare rendered names and selectors, and plan the ownership transition before installing Helm over existing resources.
+
+## Continue reading
+
+- [Okoscope Cloud — Quick start](/docs/en/quick-start/)
+- [Data and security](/docs/en/data-and-security/)
+- [Troubleshooting and FAQ](/docs/en/troubleshooting/)

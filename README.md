@@ -16,7 +16,8 @@ The UI supports:
 - tenant access, invitations, platform administration, and account security flows;
 - first-run setup, agent provisioning, and public English/Russian documentation.
 
-The application is a React single-page app. It validates backend compatibility at startup and
+The product interface is a React single-page app. Public documentation is a statically generated
+Astro and Starlight site at `/docs/en/` and `/docs/ru/`. The application validates backend compatibility at startup and
 uses the backend's opaque `HttpOnly` session cookie for authentication. Browser requests include
 credentials; session material is never read or persisted by the UI.
 
@@ -24,6 +25,7 @@ credentials; session material is never read or persisted by the UI.
 
 - React 19 and TypeScript
 - Vite 8
+- Astro and Starlight
 - TanStack Router and TanStack Query
 - Tailwind CSS 4
 - Vitest, Testing Library, and Playwright
@@ -49,16 +51,28 @@ OKOSCOPE_DEV_API_TARGET=http://127.0.0.1:18080 npm run dev
 current origin. Use an absolute backend URL only when that backend allows the UI's exact origin
 through credentialed CORS.
 
+Run the documentation site separately during content work:
+
+```sh
+npm run docs:dev
+```
+
+Documentation sources live in `public-docs/src/content/docs/en/` and
+`public-docs/src/content/docs/ru/`. Each article must have a file in both locale directories.
+
 ## Useful commands
 
 | Command                   | Purpose                                                    |
 | ------------------------- | ---------------------------------------------------------- |
 | `npm run dev`             | Start the development server                               |
 | `npm run build`           | Type-check and create the production bundle                |
+| `npm run docs:dev`        | Start the Starlight documentation development server       |
+| `npm run docs:build`      | Build and validate both localized documentation trees      |
 | `npm run preview`         | Preview the production bundle locally                      |
 | `npm test`                | Run the Vitest suite once                                  |
 | `npm run test:watch`      | Run Vitest in watch mode                                   |
 | `npm run test:e2e`        | Run the Playwright end-to-end suite                        |
+| `npm run test:docs`       | Run static documentation and SEO browser tests             |
 | `npm run lint`            | Run ESLint with zero warnings allowed                      |
 | `npm run format:check`    | Check formatting with Prettier                             |
 | `npm run check`           | Run the complete non-container quality gate                |
@@ -119,8 +133,9 @@ credentials, a path, query, fragment, or trailing slash. If it is omitted, `/api
 with `502`; public ingresses may instead route `/api` directly to the backend.
 
 The container runs as a non-root user and supports a read-only root filesystem. `/healthz` is its
-health endpoint. `config.js`, `index.html`, and SPA routes are served without caching; hashed assets
-are immutable.
+health endpoint. `config.js`, `index.html`, SPA routes, and documentation HTML are served without
+caching; hashed application and documentation assets are immutable. `/docs` redirects to
+`/docs/en/`; localized articles use `/docs/en/<slug>/` and `/docs/ru/<slug>/`.
 
 Build and exercise the full container smoke suite with:
 
@@ -165,6 +180,12 @@ curl -I https://okoscope.com/social-preview.png
 
 Messaging services may cache older previews, so an already shared link may need to be refreshed
 through the relevant service.
+
+Documentation screenshots are generated from Playwright fixtures and contain no production data:
+
+```sh
+npm run docs:screenshots
+```
 
 ## License
 

@@ -346,17 +346,16 @@ test('missing installation metadata gives localized operator guidance and self-h
     page.getByText(/Ask the Okoscope operator to configure agentInstallation\.publicGrpcEndpoint/),
   ).toBeVisible()
   const docs = page.getByRole('link', { name: 'Open self-hosting configuration' })
-  await expect(docs).toHaveAttribute('href', '/docs/self-hosting')
+  await expect(docs).toHaveAttribute('href', '/docs/en/self-hosting/')
   await page.getByLabel('Language').selectOption('ru')
   await expect(
     page.getByText(/Попросите оператора Okoscope настроить agentInstallation\.publicGrpcEndpoint/),
   ).toBeVisible()
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
-  await page.getByRole('link', { name: 'Открыть настройку self-hosting' }).click()
-  await expect(page).toHaveURL('/docs/self-hosting')
-  await expect(
-    page.getByRole('heading', { level: 1, name: 'Самостоятельное развёртывание' }),
-  ).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Открыть настройку self-hosting' })).toHaveAttribute(
+    'href',
+    '/docs/ru/self-hosting/',
+  )
 })
 
 test('other installation metadata failures do not show operator configuration guidance', async ({
@@ -502,26 +501,15 @@ test('owner gets secret-safe commands, resume/replacement/revision and every rea
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
   await page.setViewportSize({ width: 1280, height: 720 })
   const installGuide = page.getByRole('link', { name: 'Installation guide', exact: true })
-  await expect(installGuide).toHaveAttribute('href', '/docs/quick-start#deploy')
+  await expect(installGuide).toHaveAttribute('href', '/docs/en/quick-start/#deploy')
   await expect(installGuide).toHaveAttribute('target', '_blank')
   await expect(installGuide).toHaveAttribute('rel', 'noopener noreferrer')
   await expect(page.getByText(/For a separate installation in another namespace/)).toBeVisible()
-  const guideOpened = page.waitForEvent('popup')
-  await installGuide.click()
-  const guidePage = await guideOpened
-  await expect(guidePage).toHaveURL(/\/docs\/quick-start#deploy$/)
-  await expect(
-    guidePage.getByRole('heading', { name: 'Install the agent', exact: true }),
-  ).toBeVisible()
-  await expect(page).toHaveURL('/onboarding')
-  await expect(page.getByText(token, { exact: true })).toBeVisible()
-  expect((await page.locator('pre').allTextContents()).slice(1).join('\n')).toBe(commands)
-  await guidePage.close()
   await page.getByLabel('Language').selectOption('ru')
   await expect(page.getByText(/Для отдельной установки в другом namespace/)).toBeVisible()
   await expect(
     page.getByRole('link', { name: 'Инструкция по установке', exact: true }),
-  ).toHaveAttribute('href', '/docs/quick-start#deploy')
+  ).toHaveAttribute('href', '/docs/ru/quick-start/#deploy')
   await page.getByLabel('Язык').selectOption('en')
   expect(commands).toContain("--version '1.2.3'")
   expect(commands).toContain("server.caSecret.name='okoscope-ca'")

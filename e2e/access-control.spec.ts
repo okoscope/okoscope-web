@@ -174,6 +174,91 @@ test('keeps zero-tenant super-administrator identity explicit in platform naviga
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
 })
 
+test('keeps platform organization submit buttons compact on desktop and full width on mobile', async ({
+  page,
+}) => {
+  const organizationId = 'org-1'
+  const context = {
+    user: {
+      id: 'admin-1',
+      email: 'admin@example.com',
+      display_name: 'Platform Admin',
+      email_verified: true,
+      preferred_locale: 'en',
+    },
+    platform_role: 'super_admin',
+    organizations: [],
+    active_organization: null,
+    active_role: null,
+    requires_organization_selection: false,
+    privileged_until: null,
+    capabilities: { ...capabilities, manage_platform: true },
+  }
+  await page.route('**/api/v1/**', (route) => {
+    const path = new URL(route.request().url()).pathname
+    if (path === '/api/v1/build-info')
+      return json(route, {
+        service_version: '1',
+        git_commit: 'test',
+        api_version: 'v1',
+        required_database_migration: 26,
+      })
+    if (path === '/api/v1/setup/status') return json(route, { state: 'ready' })
+    if (path === '/api/v1/auth/me') return json(route, context)
+    if (path === `/api/v1/platform/organizations/${organizationId}`)
+      return json(route, {
+        id: organizationId,
+        name: 'Acme',
+        slug: 'acme',
+        status: 'active',
+        created_at: '2026-09-10T00:00:00Z',
+      })
+    if (path.startsWith(`/api/v1/platform/organizations/${organizationId}/`))
+      return json(route, { items: [], next_cursor: null })
+    return json(route, {}, 404)
+  })
+
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.goto(`/platform/organizations/${organizationId}`)
+
+  const invitationButton = page.getByRole('button', { name: 'Send invitation' })
+  const createButton = page.getByRole('button', { name: 'Create', exact: true })
+  await expect(invitationButton).toBeVisible()
+  await expect(createButton).toBeVisible()
+  await expect(invitationButton).toHaveJSProperty('type', 'submit')
+  await expect(createButton).toHaveJSProperty('type', 'submit')
+
+  for (const [button, input] of [
+    [invitationButton, page.getByLabel('Email', { exact: true })],
+    [createButton, page.getByLabel('Name', { exact: true })],
+  ] as const) {
+    const buttonBox = await button.boundingBox()
+    const inputBox = await input.boundingBox()
+    const formBox = await button.locator('xpath=ancestor::form').boundingBox()
+    expect(buttonBox).not.toBeNull()
+    expect(inputBox).not.toBeNull()
+    expect(formBox).not.toBeNull()
+    expect(buttonBox!.width).toBeLessThan(formBox!.width / 3)
+    expect(
+      Math.abs(buttonBox!.y + buttonBox!.height - (inputBox!.y + inputBox!.height)),
+    ).toBeLessThan(1)
+  }
+
+  await page.setViewportSize({ width: 375, height: 812 })
+  for (const button of [invitationButton, createButton]) {
+    const buttonBox = await button.boundingBox()
+    const formBox = await button.locator('xpath=ancestor::form').boundingBox()
+    expect(buttonBox).not.toBeNull()
+    expect(formBox).not.toBeNull()
+    expect(Math.abs(buttonBox!.width - formBox!.width)).toBeLessThan(1)
+  }
+
+  await page.evaluate(() => localStorage.setItem('okoscope.locale', 'ru'))
+  await page.reload()
+  await expect(page.getByRole('button', { name: 'Отправить приглашение' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Создать', exact: true })).toBeVisible()
+})
+
 test('adds an eligible Organization member through server-derived Project grants', async ({
   page,
 }) => {

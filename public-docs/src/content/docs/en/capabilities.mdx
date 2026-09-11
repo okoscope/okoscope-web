@@ -1,0 +1,103 @@
+---
+title: 'Capabilities'
+description: 'What each kind of observation tells you, and when it is worth turning on.'
+head:
+  - tag: link
+    attrs: { 'rel': 'canonical', 'href': 'https://okoscope.com/docs/en/capabilities/' }
+  - tag: link
+    attrs:
+      { 'rel': 'alternate', 'hreflang': 'en', 'href': 'https://okoscope.com/docs/en/capabilities/' }
+  - tag: link
+    attrs:
+      { 'rel': 'alternate', 'hreflang': 'ru', 'href': 'https://okoscope.com/docs/ru/capabilities/' }
+  - tag: link
+    attrs:
+      {
+        'rel': 'alternate',
+        'hreflang': 'x-default',
+        'href': 'https://okoscope.com/docs/en/capabilities/',
+      }
+  - tag: meta
+    attrs: { 'property': 'og:type', 'content': 'article' }
+  - tag: meta
+    attrs: { 'property': 'og:title', 'content': 'Capabilities' }
+  - tag: meta
+    attrs:
+      {
+        'property': 'og:description',
+        'content': 'What each kind of observation tells you, and when it is worth turning on.',
+      }
+  - tag: meta
+    attrs: { 'property': 'og:url', 'content': 'https://okoscope.com/docs/en/capabilities/' }
+  - tag: meta
+    attrs: { 'property': 'og:locale', 'content': 'en_US' }
+  - tag: meta
+    attrs: { 'name': 'twitter:title', 'content': 'Capabilities' }
+  - tag: meta
+    attrs:
+      {
+        'name': 'twitter:description',
+        'content': 'What each kind of observation tells you, and when it is worth turning on.',
+      }
+---
+
+What each kind of observation tells you, and when it is worth turning on.
+
+<a id="observation-health"></a>
+## Check observation health first
+
+The Application page shows whether Okoscope is receiving runtime events, how many nodes report status, and the first and latest accepted event times. When data is absent it keeps authentication, workload matching, Kubernetes permissions, kernel support, waiting for traffic, stale reporting and revoked credentials as separate states, with a next check for each.
+
+A recent agent signal means only that the server heard from that worker inside its published freshness window. It is not a promise that the stream is connected at this instant, and a worker capability or heartbeat is not proof that a corresponding event was observed. If readiness cannot be refreshed, the page keeps the timestamps but marks freshness unknown instead of guessing.
+
+Agent cards retain bounded heartbeat coverage for 1, 6, or 24 hours. The timeline distinguishes received signals, missing signals inside known coverage, and history that is unavailable before collection or outside retention; it never fills gaps by interpolation. Capability labels describe only what the agent advertised. Accepted Application events remain a separate field, so a reporting agent with no events is still visible and points back to the readiness explanation.
+
+Dropped, rate-limited, decode, attribution, capacity, kernel-loss, correlation, delivery-retry, and unsupported diagnostics are positive changes during the selected range, not lifetime totals. Resets are marked separately. These counters are node-wide: they can guide an agent-log or capacity investigation, but they do not establish which Application lost evidence. Health history is retained for at least 25 hours, and each response is limited to 20 agents and at most 96 timeline intervals per agent.
+
+<a id="processes"></a>
+## Processes, system calls and termination
+
+Process execution tells you which executables ran inside the workloads you selected. Turn on processExit if you also want to see processes ending, and list the system calls you care about explicitly, ptrace and setns for example. This is a profile you configure, not a recording of every system call the kernel handled.
+
+The termination and restart views put kernel evidence and Kubernetes evidence side by side: the process, the container it belonged to, the exit code or signal, the reported reason and any related observations. Read them together. A SIGKILL on its own does not mean the process was killed for memory — that conclusion needs evidence that says so. And a container restarting is a different event from a child process exiting.
+
+<a id="network"></a>
+## Outbound, inbound and DNS
+
+Outbound connect observations give you the destination address and port, the address family and how the syscall ended. They say nothing about the transport, so do not read TCP or UDP into them, and an attempt is not proof that a connection was established. Listen and accept observations are optional and describe the other direction: TCP listening endpoints and inbound activity that was accepted. Check which direction an observation describes before you compare it with another one.
+
+DNS is off by default. Switch it on and you get bounded observations of plaintext UDP and TCP traffic on port 53: names, A and AAAA addresses, CNAME relationships, the response code and the TTL. A recent matching answer can annotate a connection with a name, which is convenient, but one shared IP can belong to several names, and correlation is not causation. Encrypted DNS stays encrypted, and Okoscope never fills a gap with a reverse lookup.
+
+<a id="files"></a>
+## Experimental file activity
+
+File observation is opt-in, and you have to say what you want: which operations, and at least one normalized absolute prefix to include. Exclusions always win over inclusions. The syscall-path profile reports the successful operations it supports, using the paths the process passed in and the descriptor mappings it kept. It does not read file contents and does not resolve a canonical inode identity.
+
+Relative paths, symbolic-link aliases and memory-mapped writes fall outside what this profile promises to see. Modifications are aggregated over a fixed five-second window, so rapid writes collapse into one observation. A successful open with O_CREAT does not prove a file was created; only O_CREAT together with O_EXCL does. Start with one narrow path that holds nothing sensitive.
+
+```yaml
+observation:
+  files:
+    enabled: true
+    operations: [create, modify, delete, rename]
+    includePaths: [/app/data]
+    excludePaths: [/app/data/private]
+```
+
+<a id="review"></a>
+## Inventory, releases, policies and notifications
+
+Inventory is where you browse what was seen — executables, network identities, file paths — together with the evidence still stored for each. Release comparison puts a baseline next to a target and shows how their behavior differs; where coverage has expired, the answer is unknown rather than no. So look at coverage first, then decide what a missing behavior means.
+
+Runtime policies record how you decided to treat a behavior when you reviewed it. They are a review tool: they do not install a kernel firewall and they do not block a syscall. Project notifications forward supported findings to the destinations you configured. Delivery is tracked separately from the finding itself, so check the delivery record and its attempts — an event in the interface does not mean a webhook arrived.
+
+![Application Activity showing observed behavior by kind and the most observed DNS requests for an example Application.](/documentation/application-activity.en.png)
+
+_Application Activity is where inventory is browsed. Shares describe recorded observations, not traffic volume or risk._
+
+## Continue reading
+
+- [Application resources](/docs/en/application-resources/)
+- [Practical workflows](/docs/en/workflows/)
+- [Compatibility and limits](/docs/en/compatibility-and-limits/)
+- [Data and security](/docs/en/data-and-security/)

@@ -17,8 +17,6 @@ import { Route as OrganizationsRouteImport } from './routes/organizations'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
-import { Route as DocsIndexRouteImport } from './routes/docs.index'
-import { Route as DocsSlugRouteImport } from './routes/docs.$slug'
 import { Route as PlatformIndexRouteImport } from './routes/platform.index'
 import { Route as ProjectsIndexRouteImport } from './routes/projects.index'
 import { Route as PlatformOrganizationsOrganizationIdRouteImport } from './routes/platform.organizations.$organizationId'
@@ -80,16 +78,6 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
   id: '/verify-email',
   path: '/verify-email',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DocsIndexRoute = DocsIndexRouteImport.update({
-  id: '/docs/',
-  path: '/docs/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DocsSlugRoute = DocsSlugRouteImport.update({
-  id: '/docs/$slug',
-  path: '/docs/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PlatformIndexRoute = PlatformIndexRouteImport.update({
@@ -239,8 +227,6 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/verify-email': typeof VerifyEmailRoute
-  '/docs/$slug': typeof DocsSlugRoute
-  '/docs/': typeof DocsIndexRoute
   '/platform/': typeof PlatformIndexRoute
   '/projects/': typeof ProjectsIndexRoute
   '/platform/organizations/$organizationId': typeof PlatformOrganizationsOrganizationIdRouteWithChildren
@@ -273,8 +259,6 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/verify-email': typeof VerifyEmailRoute
-  '/docs/$slug': typeof DocsSlugRoute
-  '/docs': typeof DocsIndexRoute
   '/platform': typeof PlatformIndexRoute
   '/projects': typeof ProjectsIndexRoute
   '/platform/organizations/$organizationId': typeof PlatformOrganizationsOrganizationIdRouteWithChildren
@@ -308,8 +292,6 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/verify-email': typeof VerifyEmailRoute
-  '/docs/$slug': typeof DocsSlugRoute
-  '/docs/': typeof DocsIndexRoute
   '/platform/': typeof PlatformIndexRoute
   '/projects/': typeof ProjectsIndexRoute
   '/platform/organizations/$organizationId': typeof PlatformOrganizationsOrganizationIdRouteWithChildren
@@ -344,8 +326,6 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reset-password'
     | '/verify-email'
-    | '/docs/$slug'
-    | '/docs/'
     | '/platform/'
     | '/projects/'
     | '/platform/organizations/$organizationId'
@@ -378,8 +358,6 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reset-password'
     | '/verify-email'
-    | '/docs/$slug'
-    | '/docs'
     | '/platform'
     | '/projects'
     | '/platform/organizations/$organizationId'
@@ -412,8 +390,6 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reset-password'
     | '/verify-email'
-    | '/docs/$slug'
-    | '/docs/'
     | '/platform/'
     | '/projects/'
     | '/platform/organizations/$organizationId'
@@ -447,8 +423,6 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
-  DocsSlugRoute: typeof DocsSlugRoute
-  DocsIndexRoute: typeof DocsIndexRoute
   PlatformIndexRoute: typeof PlatformIndexRoute
   ProjectsIndexRoute: typeof ProjectsIndexRoute
   PlatformOrganizationsOrganizationIdRoute: typeof PlatformOrganizationsOrganizationIdRouteWithChildren
@@ -515,20 +489,6 @@ declare module '@tanstack/react-router' {
       path: '/verify-email'
       fullPath: '/verify-email'
       preLoaderRoute: typeof VerifyEmailRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/docs/': {
-      id: '/docs/'
-      path: '/docs'
-      fullPath: '/docs/'
-      preLoaderRoute: typeof DocsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/docs/$slug': {
-      id: '/docs/$slug'
-      path: '/docs/$slug'
-      fullPath: '/docs/$slug'
-      preLoaderRoute: typeof DocsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/platform/': {
@@ -823,8 +783,6 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   VerifyEmailRoute: VerifyEmailRoute,
-  DocsSlugRoute: DocsSlugRoute,
-  DocsIndexRoute: DocsIndexRoute,
   PlatformIndexRoute: PlatformIndexRoute,
   ProjectsIndexRoute: ProjectsIndexRoute,
   PlatformOrganizationsOrganizationIdRoute:

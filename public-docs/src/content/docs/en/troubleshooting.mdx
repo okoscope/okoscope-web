@@ -1,0 +1,92 @@
+---
+title: 'Troubleshooting and FAQ'
+description: 'Check access, readiness, collection and stored evidence one at a time.'
+head:
+  - tag: link
+    attrs: { 'rel': 'canonical', 'href': 'https://okoscope.com/docs/en/troubleshooting/' }
+  - tag: link
+    attrs:
+      {
+        'rel': 'alternate',
+        'hreflang': 'en',
+        'href': 'https://okoscope.com/docs/en/troubleshooting/',
+      }
+  - tag: link
+    attrs:
+      {
+        'rel': 'alternate',
+        'hreflang': 'ru',
+        'href': 'https://okoscope.com/docs/ru/troubleshooting/',
+      }
+  - tag: link
+    attrs:
+      {
+        'rel': 'alternate',
+        'hreflang': 'x-default',
+        'href': 'https://okoscope.com/docs/en/troubleshooting/',
+      }
+  - tag: meta
+    attrs: { 'property': 'og:type', 'content': 'article' }
+  - tag: meta
+    attrs: { 'property': 'og:title', 'content': 'Troubleshooting and FAQ' }
+  - tag: meta
+    attrs:
+      {
+        'property': 'og:description',
+        'content': 'Check access, readiness, collection and stored evidence one at a time.',
+      }
+  - tag: meta
+    attrs: { 'property': 'og:url', 'content': 'https://okoscope.com/docs/en/troubleshooting/' }
+  - tag: meta
+    attrs: { 'property': 'og:locale', 'content': 'en_US' }
+  - tag: meta
+    attrs: { 'name': 'twitter:title', 'content': 'Troubleshooting and FAQ' }
+  - tag: meta
+    attrs:
+      {
+        'name': 'twitter:description',
+        'content': 'Check access, readiness, collection and stored evidence one at a time.',
+      }
+---
+
+Check access, readiness, collection and stored evidence one at a time.
+
+<a id="connection"></a>
+## The agent does not connect
+
+Start with the plumbing: the configured gRPC endpoint, name resolution, network reachability from the cluster and TLS trust. Then the credential — the token file exists at the configured path, holds the one-time value you saved, and has not been revoked. Never paste that value into a support ticket. After a rotation or any configuration change, roll out the DaemonSet: this release does not reload tokens on the fly.
+
+If the agent reports "no native certs found", its container has no usable system CA trust store. Use an agent image containing the ca-certificates package and a nonempty /etc/ssl/certs/ca-certificates.crt bundle, then roll out the DaemonSet. Keep TLS verification enabled; Okoscope Cloud does not require a private CA Secret.
+
+A running Pod proves neither that probes attached nor that the stream authenticated. Read the agent logs and the capability and loss counters it reports. If attachment failed, check BTF, cgroup v2, the kernel version and architecture, the host mounts and the explicit capabilities. A missing required hook is something to fix, not something to hide by switching readiness checks off.
+
+<a id="empty"></a>
+## No events or missing details
+
+First make sure you are looking in the right place: organization, project, application and the time window. Then compare namespace, Deployment name and labels with the configured selector. Generate fresh activity after the stream is connected — a process that was already sitting idle produces no new execution observation. Only then check that the event class is enabled at all, and look at the filtering, rate, queue and kernel-loss counters.
+
+If the counts are there but the examples are not, the answer is usually coverage and retention: numeric history cannot rebuild event payloads. Missing file observations often come from relative paths, unsupported calls, a lost descriptor mapping or an excluded prefix; missing DNS often comes from encryption, a cache hit, an expired TTL or traffic that never matched. In both cases, an absence of evidence is not evidence of absence.
+
+<a id="web"></a>
+## The web interface cannot start
+
+A protected page checks backend compatibility first and the user session second, so the error you get depends on which check failed. Look at /readyz and /api/v1/build-info, at how the reverse proxy routes the API, at the database migration status and at the configured browser origin. If the session simply expired, sign in again — and note that retrying an operation will never turn an organization member into an owner or a system administrator.
+
+If logout or a state-changing POST or PUT fails with untrusted_origin while pages and GET requests still work, compare the browser’s Origin with the trusted value character for character. A chart-managed ingress trusts the derived Origin automatically — https with ingress.web.tlsSecret, otherwise http; external ingress and alternate browser addresses must appear in server.corsOrigins. Match the scheme, host and non-default port, and remove any wildcard, path, query, fragment or trailing slash.
+
+Documentation stays available without a login and without a working API, which makes it a useful signal by itself. If refreshing a direct URL such as [Okoscope Cloud — Quick start](/docs/en/quick-start/) fails at the web server, it is missing the SPA fallback the other frontend routes use. And if registration is unavailable, ask the installation operator for access instead of assuming your password is wrong.
+
+<a id="delivery"></a>
+## A notification did not arrive
+
+Work through it in order: is there a delivery for that finding, are its destination and rule enabled, and what does worker health say — disabled, retrying or failing? Then read the bounded attempt results for receiver errors, timeouts, DNS or TLS problems and signature validation failures. Delivery trouble does not make the core ingestion API unready, so do not read one as the other.
+
+Use the recovery flow only once you know what it will do. A retry keeps the delivery ID and can send the receiver another request, so it relies on the receiver deduplicating; a cancel can collide with work that is already running. When you ask for support, bring versions, timestamps, non-secret configuration and a bounded excerpt of errors and counters — with tokens, private URLs and sensitive workload data removed.
+
+## Continue reading
+
+- [Application resources](/docs/en/application-resources/)
+- [Okoscope Cloud — Quick start](/docs/en/quick-start/)
+- [Compatibility and limits](/docs/en/compatibility-and-limits/)
+- [Data and security](/docs/en/data-and-security/)
+- [Self-hosted — Deployment](/docs/en/self-hosting/)

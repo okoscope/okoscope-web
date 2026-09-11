@@ -1,0 +1,69 @@
+---
+interface Props {
+  kind: 'quick-start' | 'self-hosting'
+  locale: 'en' | 'ru'
+}
+
+const { kind, locale } = Astro.props
+const flows = {
+  'quick-start': {
+    en: {
+      label: 'From access to the first event',
+      steps: [
+        ['access', 'Access & Application'],
+        ['workload', 'Kubernetes workload'],
+        ['secret', 'Token Secret'],
+        ['deploy', 'Install agent'],
+        ['check-agent', 'Check startup'],
+        ['first-event', 'First observation'],
+      ],
+    },
+    ru: {
+      label: 'От доступа до первого события',
+      steps: [
+        ['access', 'Доступ и приложение'],
+        ['workload', 'Нагрузка Kubernetes'],
+        ['secret', 'Secret с токеном'],
+        ['deploy', 'Установка агента'],
+        ['check-agent', 'Проверка запуска'],
+        ['first-event', 'Первое наблюдение'],
+      ],
+    },
+  },
+  'self-hosting': {
+    en: {
+      label: 'From database to the first event',
+      steps: [
+        ['database', 'Database Secret'],
+        ['production-values', 'Access & settings'],
+        ['rollout', 'Install server'],
+        ['verify', 'Check readiness'],
+        ['claim', 'First owner'],
+        ['connect-agents', 'Agents & first event'],
+      ],
+    },
+    ru: {
+      label: 'От базы данных до первого события',
+      steps: [
+        ['database', 'Secret базы данных'],
+        ['production-values', 'Доступ и настройки'],
+        ['rollout', 'Установка сервера'],
+        ['verify', 'Проверка готовности'],
+        ['claim', 'Первый владелец'],
+        ['connect-agents', 'Агенты и событие'],
+      ],
+    },
+  },
+} as const
+const flow = flows[kind][locale]
+---
+
+<nav class="okoscope-setup-flow" aria-label={flow.label}>
+  <ol>
+    {flow.steps.map(([id, label]) => (
+      <li>
+        <a href={`#${id}`}>{label}</a>
+      </li>
+    ))}
+  </ol>
+</nav>

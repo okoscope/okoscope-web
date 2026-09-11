@@ -7,6 +7,11 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- Kept organization invitation and project creation buttons compact and aligned with their
+  adjacent fields on wider screens.
+
 ## [0.2.1] - 2026-09-09
 
 ### Added

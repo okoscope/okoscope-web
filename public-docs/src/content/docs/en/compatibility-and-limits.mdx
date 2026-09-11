@@ -1,0 +1,87 @@
+---
+title: 'Compatibility and limits'
+description: 'What the agent needs in order to run, and what its evidence can and cannot tell you.'
+head:
+  - tag: link
+    attrs: { 'rel': 'canonical', 'href': 'https://okoscope.com/docs/en/compatibility-and-limits/' }
+  - tag: link
+    attrs:
+      {
+        'rel': 'alternate',
+        'hreflang': 'en',
+        'href': 'https://okoscope.com/docs/en/compatibility-and-limits/',
+      }
+  - tag: link
+    attrs:
+      {
+        'rel': 'alternate',
+        'hreflang': 'ru',
+        'href': 'https://okoscope.com/docs/ru/compatibility-and-limits/',
+      }
+  - tag: link
+    attrs:
+      {
+        'rel': 'alternate',
+        'hreflang': 'x-default',
+        'href': 'https://okoscope.com/docs/en/compatibility-and-limits/',
+      }
+  - tag: meta
+    attrs: { 'property': 'og:type', 'content': 'article' }
+  - tag: meta
+    attrs: { 'property': 'og:title', 'content': 'Compatibility and limits' }
+  - tag: meta
+    attrs:
+      {
+        'property': 'og:description',
+        'content': 'What the agent needs in order to run, and what its evidence can and cannot tell you.',
+      }
+  - tag: meta
+    attrs:
+      { 'property': 'og:url', 'content': 'https://okoscope.com/docs/en/compatibility-and-limits/' }
+  - tag: meta
+    attrs: { 'property': 'og:locale', 'content': 'en_US' }
+  - tag: meta
+    attrs: { 'name': 'twitter:title', 'content': 'Compatibility and limits' }
+  - tag: meta
+    attrs:
+      {
+        'name': 'twitter:description',
+        'content': 'What the agent needs in order to run, and what its evidence can and cannot tell you.',
+      }
+---
+
+What the agent needs in order to run, and what its evidence can and cannot tell you.
+
+<a id="platform"></a>
+## Supported agent platform
+
+The supported baseline is Kubernetes 1.32 or newer, containerd 2.x through CRI, cgroup v2 in unified mode, Linux 6.1 LTS or newer with BTF, and x86_64 nodes. Workload ownership has to run Pod → ReplicaSet → Deployment. The server images being available for ARM64 says nothing about the agent: that is a separate question, and the answer is no.
+
+The checks below run on a candidate Linux node, but they cover only part of the requirements: the operator still has to confirm the Kubernetes and runtime versions, the permissions needed to attach probes, and the workload ownership chain. Other runtimes, cgroup v1, unsupported owners and hardened managed-node configurations are not claimed as supported — they may happen to work, but nothing is promised.
+
+```bash
+test -e /sys/kernel/btf/vmlinux
+test "$(stat -fc %T /sys/fs/cgroup)" = cgroup2fs
+uname -m
+```
+
+<a id="profiles"></a>
+## Enablement and resource bounds
+
+Configuration controls every observation profile. processExec is set explicitly; processExit is false whenever you leave it out. In the parser, network connect, listen and accept as well as DNS all default to disabled — but the reference deployment turns several network probes on, so a sample is not the same thing as a default. File observation is off and experimental. When in doubt, read the ConfigMap that is actually running.
+
+Collection is bounded from several sides at once: queue capacity, batch size, events per second, and how many Application streams a single agent keeps. DNS adds its own limits on transactions, reassembly and captured bytes, and inbound accept has a separate rate bound. If a required probe cannot attach, the agent stays unready instead of pretending otherwise. Watch the loss and capacity counters and measure your own workload — there is no universal number for overhead and no promise of completeness.
+
+<a id="evidence"></a>
+## Evidence boundaries
+
+A connect attempt does not always end in a connection. DNS correlation is a recent observation that happens to fit, not proof of cause; encrypted, cached or simply unmatched DNS leaves an IP without a name. File paths describe the arguments that supported calls passed in, not every change the filesystem saw. And a SIGKILL on its own does not prove an out-of-memory kill.
+
+Filtering, gaps in attribution, queue and ring-buffer loss, rate limits, time windows and retention all remove evidence along the way. That is why an absence of findings cannot certify that nothing happened or that a workload is secure. Comparisons and inventory tell you what coverage they rest on, and a numeric summary can never bring back the Pod or container detail behind it.
+
+## Continue reading
+
+- [Application resources](/docs/en/application-resources/)
+- [Okoscope Cloud — Quick start](/docs/en/quick-start/)
+- [Capabilities](/docs/en/capabilities/)
+- [Data and security](/docs/en/data-and-security/)

@@ -1,0 +1,235 @@
+---
+title: 'Okoscope Cloud — Quick start'
+description: 'Connect an application in your Kubernetes cluster to Okoscope Cloud. You install the agent in your cluster; we operate the server, web interface and database.'
+head:
+  - tag: link
+    attrs: { 'rel': 'canonical', 'href': 'https://okoscope.com/docs/en/quick-start/' }
+  - tag: link
+    attrs:
+      { 'rel': 'alternate', 'hreflang': 'en', 'href': 'https://okoscope.com/docs/en/quick-start/' }
+  - tag: link
+    attrs:
+      { 'rel': 'alternate', 'hreflang': 'ru', 'href': 'https://okoscope.com/docs/ru/quick-start/' }
+  - tag: link
+    attrs:
+      {
+        'rel': 'alternate',
+        'hreflang': 'x-default',
+        'href': 'https://okoscope.com/docs/en/quick-start/',
+      }
+  - tag: meta
+    attrs: { 'property': 'og:type', 'content': 'article' }
+  - tag: meta
+    attrs: { 'property': 'og:title', 'content': 'Okoscope Cloud — Quick start' }
+  - tag: meta
+    attrs:
+      {
+        'property': 'og:description',
+        'content': 'Connect an application in your Kubernetes cluster to Okoscope Cloud. You install the agent in your cluster; we operate the server, web interface and database.',
+      }
+  - tag: meta
+    attrs: { 'property': 'og:url', 'content': 'https://okoscope.com/docs/en/quick-start/' }
+  - tag: meta
+    attrs: { 'property': 'og:locale', 'content': 'en_US' }
+  - tag: meta
+    attrs: { 'name': 'twitter:title', 'content': 'Okoscope Cloud — Quick start' }
+  - tag: meta
+    attrs:
+      {
+        'name': 'twitter:description',
+        'content': 'Connect an application in your Kubernetes cluster to Okoscope Cloud. You install the agent in your cluster; we operate the server, web interface and database.',
+      }
+---
+
+import SetupFlow from '../../../components/SetupFlow.astro'
+
+Connect an application in your Kubernetes cluster to Okoscope Cloud.
+You install the **agent** in your cluster; we operate the **server**, **web interface** and **database**.
+
+<a id="before-you-start"></a>
+## Before you start
+
+This guide uses Okoscope Cloud. To deploy your own server, follow [Self-hosted — Deployment](/docs/en/self-hosting/).
+
+Prepare the following before installing the agent:
+
+- A Kubernetes cluster that meets the requirements in [Compatibility and limits](/docs/en/compatibility-and-limits/), with the **Deployment** you want to observe already running.
+- **kubectl** and **Helm**, with access to the target cluster and permission to install the chart resources. Check your current context with the command below.
+- Outbound TLS access from the agent to `https://grpc.okoscope.com:443`.
+- Review [Data and security](/docs/en/data-and-security/): the eBPF agent needs node-level permissions and access to host resources. Its Kubernetes API permissions are read-only.
+
+```bash
+kubectl config current-context
+```
+
+<SetupFlow kind="quick-start" locale="en" />
+
+<a id="access"></a>
+## Obtain access and create an Application
+
+Open https://okoscope.com and sign in or register. Registration sends a welcome verification email and creates no session until you explicitly confirm the link and sign in.
+
+Registration creates your **Organization** and makes you its owner. Projects and Applications are created within it:
+
+**Organization** → **Project** → **Application**
+
+A **Project** groups related Applications.
+
+An **Application** in Okoscope is where observations from your selected Kubernetes workload will appear.
+
+If you already have access to an Organization, use it. If access or resource creation is unavailable, contact its owner.
+
+1. Open **Connect agent** in the main navigation, or go to https://okoscope.com/onboarding.
+2. Select an existing **Project** or create one in the wizard, for example `Production`.
+3. Select an existing **Application** or create one, for example `payment-api`. The next screen lets you configure its connection to a Kubernetes workload.
+
+:::caution[Another way to open the wizard]
+If an Application has no worker observations yet, its **Worker nodes** section offers a **Connect agent** button. This opens the same wizard, where you select the Project and Application.
+:::
+
+<a id="workload"></a>
+## Select the Kubernetes workload
+
+Specify which workload the agent should observe. The Application name in Okoscope does not have to match the Deployment name; enter the actual Kubernetes resource details.
+
+1. **Cluster name** — a readable name, for example `production`. It is saved with the installation and passed to the agent as `identity.clusterName`.
+2. **Workload namespace** — the namespace containing your Deployment, for example `production`. This can differ from the namespace where you install the agent and its Secret.
+3. **Deployment name** or **Label selector** — enter the exact Deployment name, for example `payment-api`, or labels such as `app=payment-api,environment=production`. Labels must match exactly one Deployment in the selected namespace.
+4. Review **Advanced observation settings**. This is an explanation of the chart defaults, with no editable fields: process lifecycle and core network activity are enabled; file observation and experimental features remain off.
+5. Click **Create installation**. The wizard shows a one-time Application token and the commands for creating its Secret and installing the agent.
+
+<a id="secret"></a>
+## Create the credential Secret
+
+The **Application token** authenticates the agent. Copy it from the wizard before closing or reloading the page: the original token cannot be displayed again.
+
+The chart reads the token from an existing Kubernetes **Secret**. Use the Secret command shown in the wizard: it contains the correct namespace, Secret name and key.
+
+Do not put the token in Helm values, a ConfigMap, Git, screenshots or logs.
+
+1. Run the command from the wizard in **Bash** or **zsh**, with the intended Kubernetes context selected.
+2. When prompted, paste the token and press **Enter**. Input is hidden. The command creates or updates the Secret and then clears the shell variable.
+3. Confirm that the command succeeded before continuing with Helm. The sample below uses `okoscope-system` for the agent namespace and `payment-api` as the Secret key; use the values from your wizard.
+
+:::caution[If you reload the page]
+Select the same Project and Application to return to the saved installation. If the token is lost, use the credential replacement button. This revokes the previous credential: update the Kubernetes Secret with the new token before continuing.
+:::
+
+```bash
+kubectl create namespace okoscope-system --dry-run=client -o yaml | kubectl apply -f -
+printf "Okoscope Application token: " >&2
+IFS= read -rs OKOSCOPE_TOKEN
+printf '\n' >&2
+kubectl -n okoscope-system create secret generic okoscope-application-credentials \
+  --from-literal=payment-api="$OKOSCOPE_TOKEN" \
+  --dry-run=client -o yaml | kubectl apply -f -
+unset OKOSCOPE_TOKEN
+```
+
+<a id="deploy"></a>
+## Install the agent
+
+Run the **Helm** command from the wizard after creating the Secret. It includes the compatible chart version, Cloud address, workload selection and reference to your Secret.
+
+The `okoscope-agent` chart creates the agent configuration, a **DaemonSet**, a **ServiceAccount** and read-only Kubernetes API permissions (**RBAC**).
+
+Okoscope Cloud uses a publicly trusted TLS certificate; keep system trust and leave `server.developmentPlaintext` disabled. A private CA Secret is not needed.
+
+The command below illustrates an installation for the `payment-api` Deployment in the `production` namespace. Both the Helm command and the Secret command must reference the same Secret name and key.
+
+For separate installations, use unique Helm release names even across namespaces: the default ClusterRole and ClusterRoleBinding names derive from the release name and must be unique across the cluster. Change the first release argument (`okoscope-agent`) and `--namespace` in the Helm command, and create the credential Secret in that same agent namespace. Use the matching release name and namespace in the verification commands too.
+
+:::caution[Replace the example values]
+`<OKOSCOPE_VERSION>` is a placeholder, not an environment variable. Replace it with the version from the wizard and use your cluster and workload values. Prefer copying the complete generated command. If Cloud configuration is unavailable, contact the Okoscope operator.
+:::
+
+```bash
+helm upgrade --install okoscope-agent \
+  oci://ghcr.io/okoscope/charts/okoscope-agent \
+  --version <OKOSCOPE_VERSION> \
+  --namespace okoscope-system \
+  --set server.endpoint=https://grpc.okoscope.com:443 \
+  --set identity.clusterName=production \
+  --set 'workloads[0].namespace=production' \
+  --set 'workloads[0].kind=Deployment' \
+  --set 'workloads[0].name=payment-api' \
+  --set 'workloads[0].credentialSecret.name=okoscope-application-credentials' \
+  --set 'workloads[0].credentialSecret.key=payment-api'
+```
+
+<a id="check-agent"></a>
+## Check the agent startup
+
+Wait for the **DaemonSet** rollout to complete, then review the agent logs for startup or connection errors. These commands use the release name and namespace from the example above.
+
+Return to **Connection progress** in the wizard.
+
+As soon as the agents connect to the server, they should appear automatically in the Application’s **Worker nodes** section.
+
+A running Pod confirms startup; successful installation also requires the server to receive an event from your selected workload.
+
+```bash
+kubectl -n okoscope-system rollout status daemonset/okoscope-agent-okoscope-agent --timeout=5m
+kubectl -n okoscope-system logs daemonset/okoscope-agent-okoscope-agent --tail=100
+```
+
+<a id="first-event"></a>
+## Confirm the first observation
+
+Once the agent is connected, generate activity in the selected Deployment.
+
+Process execution events describe new starts; processes that were already running do not produce past execution events retroactively.
+
+1. Send a normal application request or run a controlled test that starts a process or opens a network connection.
+2. Wait for **Receiving runtime events** in the wizard. If it reports a missing workload or an access error, follow its diagnostic message.
+3. Click **Open application**, select a recent time window and find an event with the expected workload and timestamp in **Runtime groups** or **Inventory**.
+
+:::caution[If no events appear]
+Use [Troubleshooting and FAQ](/docs/en/troubleshooting/) to check the workload selector, agent logs and connection status. Enable additional observation features only after this basic scenario works.
+:::
+
+<a id="agent-variants"></a>
+## Optional: more Applications and private registries
+
+After receiving your first event, you can extend the configuration. One agent release supports up to **32 Applications**.
+
+- Add one `workloads` entry per Application. Each entry must select exactly one **Deployment**, by name or labels, and reference the Secret name and key containing that Application’s token.
+- For images in a private registry, reference an existing pull Secret through `imagePullSecrets`.
+- Keep token values out of Helm values files. For private CA configuration with your own server, follow [Self-hosted — Deployment](/docs/en/self-hosting/).
+
+<a id="uninstall"></a>
+## Uninstall Okoscope from your cluster
+
+To undo this installation, first check the current Kubernetes context and substitute your actual Helm release and agent namespace in the commands below. Uninstalling a shared release stops observation for **all Applications** configured in it.
+
+`helm uninstall` removes the release’s DaemonSet and agent Pods, ConfigMap, ServiceAccount, ClusterRole and ClusterRoleBinding. The credential Secret was created separately and remains: delete it only if no other installation uses it. Use its actual name: the wizard uses `okoscope-agent-credentials`, while the example in this guide uses `okoscope-application-credentials`.
+
+If keeping the agent namespace, remove any unused pull or private CA Secrets created solely for this installation. Do not delete shared Secrets or unrelated resources.
+
+Cluster cleanup does not revoke the Application token or delete data already sent to Okoscope Cloud. Revoke unused credentials in Cloud separately; contact your Okoscope operator if you also want stored data removed.
+
+:::caution[Agents in different namespaces]
+Find your Okoscope releases with `helm list --all-namespaces` and repeat uninstall and cleanup for each release in its agent namespace. Deleting one namespace does not remove installations in others.
+:::
+
+```bash
+kubectl config current-context
+helm uninstall okoscope-agent --namespace okoscope-system --wait
+kubectl -n okoscope-system delete secret okoscope-application-credentials
+```
+
+<a id="remove-agent-namespace"></a>
+### Optional: remove the agent namespace
+
+After uninstalling the Helm release, delete its namespace only if you created it exclusively for the agent and it contains no resources you need. This removes everything inside it: keep your observed Deployment and its workload namespace. Replace the example namespace with your actual agent namespace.
+
+```bash
+kubectl delete namespace okoscope-system
+```
+
+## Continue reading
+
+- [Compatibility and limits](/docs/en/compatibility-and-limits/)
+- [Self-hosted — Deployment](/docs/en/self-hosting/)
+- [Troubleshooting and FAQ](/docs/en/troubleshooting/)
+- [Data and security](/docs/en/data-and-security/)

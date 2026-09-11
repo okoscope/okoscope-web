@@ -1,0 +1,107 @@
+---
+title: 'Accounts, roles, and invitations'
+description: 'How Okoscope separates personal identity, platform administration, Organization membership, and Project access.'
+head:
+  - tag: link
+    attrs: { 'rel': 'canonical', 'href': 'https://okoscope.com/docs/en/access-control/' }
+  - tag: link
+    attrs:
+      {
+        'rel': 'alternate',
+        'hreflang': 'en',
+        'href': 'https://okoscope.com/docs/en/access-control/',
+      }
+  - tag: link
+    attrs:
+      {
+        'rel': 'alternate',
+        'hreflang': 'ru',
+        'href': 'https://okoscope.com/docs/ru/access-control/',
+      }
+  - tag: link
+    attrs:
+      {
+        'rel': 'alternate',
+        'hreflang': 'x-default',
+        'href': 'https://okoscope.com/docs/en/access-control/',
+      }
+  - tag: meta
+    attrs: { 'property': 'og:type', 'content': 'article' }
+  - tag: meta
+    attrs: { 'property': 'og:title', 'content': 'Accounts, roles, and invitations' }
+  - tag: meta
+    attrs:
+      {
+        'property': 'og:description',
+        'content': 'How Okoscope separates personal identity, platform administration, Organization membership, and Project access.',
+      }
+  - tag: meta
+    attrs: { 'property': 'og:url', 'content': 'https://okoscope.com/docs/en/access-control/' }
+  - tag: meta
+    attrs: { 'property': 'og:locale', 'content': 'en_US' }
+  - tag: meta
+    attrs: { 'name': 'twitter:title', 'content': 'Accounts, roles, and invitations' }
+  - tag: meta
+    attrs:
+      {
+        'name': 'twitter:description',
+        'content': 'How Okoscope separates personal identity, platform administration, Organization membership, and Project access.',
+      }
+---
+
+How Okoscope separates personal identity, platform administration, Organization membership, and Project access.
+
+<a id="accounts"></a>
+## Registration follows deployment policy
+
+Every person uses one personal account. Private installations disable public signup by default: sign in with an existing account or open an invitation sent to your email. Invitation registration stays available even when public signup is off, and the invitation supplies the email and exact access scope.
+
+When an operator deliberately enables public signup in multi-Organization mode, a verified signup creates a new Organization and makes that user its owner. It never grants platform super-administrator access.
+
+<a id="roles"></a>
+## Roles have separate scopes
+
+A platform super administrator can manage users and every tenant without becoming an Organization member or impersonating someone else. Platform access is shown in the interface and actions remain attributed to that personal account. Sensitive changes require a recent password confirmation.
+
+**Organization owner** — manages every Organization role and inherits access to every Project.
+
+**Organization administrator** — manages members except owners and inherits access to every Project.
+
+**Organization member** — sees only Projects assigned directly through a Project role.
+
+**Project administrator** — operates one Project and can manage its members, but cannot grant Project administrator.
+
+**Project member** — uses that Project and its Applications without managing access.
+
+<a id="invitations"></a>
+## Invitations are explicit grants
+
+An invitation names one Organization or Project and one role. Review those details before accepting. Opening the link does not accept it; the browser removes the one-time token from history and waits for explicit confirmation. Links expire, can be revoked, and are replaced when resent.
+
+An existing user signs in with the same verified email before accepting. A Project invitation adds the required base Organization membership when needed, but grants no other Project and never upgrades an existing Organization role.
+
+<a id="working-alone"></a>
+## An owner can work alone
+
+A sole Organization owner can create and operate Projects and Applications immediately. Inherited owner access means no invitation and no Project-membership row is required. Invite colleagues only when you are ready to share access.
+
+<a id="organization-context"></a>
+## Choose the active Organization
+
+If your account belongs to several Organizations, Okoscope asks which tenant to open instead of guessing from membership order. Switching rotates the session and changes the tenant context; your platform role and memberships in other Organizations remain unchanged.
+
+<a id="security-boundary"></a>
+## Application and infrastructure trust
+
+Application RBAC limits what authenticated users can do through Okoscope. Even a super administrator cannot read stored passwords, invitation or session tokens, encrypted mail payloads, or historical plaintext credentials; newly issued Application credentials are shown once. A self-hosted Kubernetes, database, or Secret administrator controls the underlying infrastructure and therefore remains outside this application-level boundary.
+
+:::caution[Last-authority protection]
+Okoscope rejects changes that would remove the final usable super administrator or the final usable Organization owner. Access changes and recovery are audited.
+:::
+
+## Continue reading
+
+- [Okoscope Cloud — Quick start](/docs/en/quick-start/)
+- [Self-hosted — Deployment](/docs/en/self-hosting/)
+- [Account email and passwords](/docs/en/account-email/)
+- [Data and security](/docs/en/data-and-security/)

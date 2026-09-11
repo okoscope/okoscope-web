@@ -4,6 +4,8 @@ COPY package.json package-lock.json ./
 RUN npm ci
 COPY tsconfig*.json vite.config.ts index.html ./
 COPY public ./public
+COPY public-docs ./public-docs
+COPY scripts ./scripts
 COPY src ./src
 ARG OKOSCOPE_WEB_GIT_COMMIT=unknown
 ENV OKOSCOPE_WEB_GIT_COMMIT=$OKOSCOPE_WEB_GIT_COMMIT

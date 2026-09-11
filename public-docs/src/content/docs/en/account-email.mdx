@@ -1,0 +1,89 @@
+---
+title: 'Account email and passwords'
+description: 'How Okoscope verifies email ownership, recovers access, and sends creation notifications.'
+head:
+  - tag: link
+    attrs: { 'rel': 'canonical', 'href': 'https://okoscope.com/docs/en/account-email/' }
+  - tag: link
+    attrs:
+      {
+        'rel': 'alternate',
+        'hreflang': 'en',
+        'href': 'https://okoscope.com/docs/en/account-email/',
+      }
+  - tag: link
+    attrs:
+      {
+        'rel': 'alternate',
+        'hreflang': 'ru',
+        'href': 'https://okoscope.com/docs/ru/account-email/',
+      }
+  - tag: link
+    attrs:
+      {
+        'rel': 'alternate',
+        'hreflang': 'x-default',
+        'href': 'https://okoscope.com/docs/en/account-email/',
+      }
+  - tag: meta
+    attrs: { 'property': 'og:type', 'content': 'article' }
+  - tag: meta
+    attrs: { 'property': 'og:title', 'content': 'Account email and passwords' }
+  - tag: meta
+    attrs:
+      {
+        'property': 'og:description',
+        'content': 'How Okoscope verifies email ownership, recovers access, and sends creation notifications.',
+      }
+  - tag: meta
+    attrs: { 'property': 'og:url', 'content': 'https://okoscope.com/docs/en/account-email/' }
+  - tag: meta
+    attrs: { 'property': 'og:locale', 'content': 'en_US' }
+  - tag: meta
+    attrs: { 'name': 'twitter:title', 'content': 'Account email and passwords' }
+  - tag: meta
+    attrs:
+      {
+        'name': 'twitter:description',
+        'content': 'How Okoscope verifies email ownership, recovers access, and sends creation notifications.',
+      }
+---
+
+How Okoscope verifies email ownership, recovers access, and sends creation notifications.
+
+<a id="registration"></a>
+## Verify a new account
+
+Registration creates your Organization and owner identity but does not sign you in. Open the verification link from the branded welcome email, then explicitly confirm on the page. Loading the link alone does not change the account, which makes mail-scanner previews safe. Sign in normally after confirmation.
+
+If the message is delayed, use resend from the check-email screen. Okoscope always gives a generic accepted response and applies a cooldown; this does not reveal whether an address is registered. Old, expired, or already used links cannot be reused—request a new one.
+
+<a id="recovery"></a>
+## Recover a forgotten password
+
+Choose Forgot password on the sign-in screen and submit your email. The result is deliberately identical for existing and unknown accounts. An eligible verified account receives an expiring, one-time reset link.
+
+Choose and confirm a password of 12–256 characters. A successful reset revokes every active session and does not sign you in; return to sign-in with the new password. An unusable link can be replaced by making another generic reset request.
+
+<a id="profile"></a>
+## Profile security and email language
+
+In Profile, password change requires the current password and a new 12–256-character password. Okoscope rotates the current session and revokes sessions on every other device. The page shows email verification status.
+
+The English/Russian choice in Profile is saved to the account and controls subsequent security and Application-created email, as well as the interface. It is not only a browser preference.
+
+<a id="creation-notifications"></a>
+## Creation notifications
+
+The branded welcome email verifies the registrant’s address and includes the Organization name only as registration context. Okoscope does not send a separate Organization-created email during registration or administrative creation. Whenever an Application is created, every currently verified Organization owner receives one localized message. Members do not receive it; per-notification preferences and tenant-visible email history are not available in this release.
+
+<a id="delivery"></a>
+## When mail is delayed
+
+Okoscope durably queues transactional messages and retries temporary SMTP failures, but SMTP acceptance does not guarantee inbox delivery. Check spam filtering and try the supported resend after its cooldown. Self-hosted operators own mailbox availability, provider limits, SPF/DKIM/DMARC alignment, and queue troubleshooting.
+
+## Continue reading
+
+- [Okoscope Cloud — Quick start](/docs/en/quick-start/)
+- [Self-hosted — Deployment](/docs/en/self-hosting/)
+- [Data and security](/docs/en/data-and-security/)

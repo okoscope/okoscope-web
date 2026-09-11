@@ -7,7 +7,7 @@ import { useApi } from '../shared/api/context'
 import { buildInfoOptions } from '../shared/api/queries'
 import { setupStatusOptions } from '../shared/api/onboarding'
 import { authenticationSession, useAuthentication } from '../shared/auth/session'
-import { useT } from '../shared/i18n'
+import { useLocalization, useT } from '../shared/i18n'
 import { LanguageSelector } from '../shared/i18n/language-selector'
 import { Brand } from '../shared/ui/brand'
 import { Card } from '../shared/ui/card'
@@ -45,8 +45,7 @@ function RootComponent() {
     location.pathname === '/reset-password' ||
     location.pathname === '/invite'
   if (!isSecurityAction) captureSetupTokenFragment()
-  const isPublicRoute =
-    location.pathname === '/docs' || location.pathname.startsWith('/docs/') || isSecurityAction
+  const isPublicRoute = isSecurityAction
   const content = isPublicRoute ? <Outlet /> : <ProtectedRoot />
   const pageHref = location.href.split('#', 1)[0]
   return (
@@ -170,7 +169,7 @@ function AuthenticatedShell() {
 }
 
 function ApplicationHeader() {
-  const t = useT()
+  const { locale, t } = useLocalization()
   const [menuOpen, setMenuOpen] = useState(false)
   const auth = useAuthentication()
   const context = auth.status === 'authenticated' ? auth.context : null
@@ -272,9 +271,9 @@ function ApplicationHeader() {
           >
             {t('connectAgent')}
           </Link>
-          <Link to="/docs" className="nav-link">
+          <a href={`/docs/${locale}/`} className="nav-link">
             {t('documentation')}
-          </Link>
+          </a>
           <LanguageSelector className="app-navigation-language" showLabel={false} />
         </nav>
       </div>

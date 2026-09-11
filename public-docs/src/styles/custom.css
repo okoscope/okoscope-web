@@ -1,0 +1,255 @@
+:root {
+  color-scheme: dark;
+  --sl-color-accent-low: #0b3850;
+  --sl-color-accent: #31e6d0;
+  --sl-color-accent-high: #d8fff8;
+  --sl-color-white: #edf5ff;
+  --sl-color-gray-1: #d8e4f2;
+  --sl-color-gray-2: #b8cbe2;
+  --sl-color-gray-3: #8ba8cf;
+  --sl-color-gray-4: #47688f;
+  --sl-color-gray-5: #193c5c;
+  --sl-color-gray-6: #0b1d33;
+  --sl-color-black: #040c17;
+  --sl-color-bg: #06111f;
+  --sl-color-bg-nav: rgb(4 14 27 / 82%);
+  --sl-color-bg-sidebar: rgb(5 17 32 / 78%);
+  --sl-color-hairline-light: rgb(50 112 168 / 30%);
+  --sl-color-hairline: rgb(50 112 168 / 42%);
+  --sl-font: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --sl-color-accent-low: #d9f7f2;
+  --sl-color-accent: #087f8c;
+  --sl-color-accent-high: #064e5b;
+  --sl-color-white: #071425;
+  --sl-color-gray-1: #102a43;
+  --sl-color-gray-2: #334e68;
+  --sl-color-gray-3: #526d82;
+  --sl-color-gray-4: #829ab1;
+  --sl-color-gray-5: #bcccdc;
+  --sl-color-gray-6: #e6f0f5;
+  --sl-color-black: #f8fbfd;
+  --sl-color-bg: #f8fbfd;
+  --sl-color-bg-nav: rgb(255 255 255 / 84%);
+  --sl-color-bg-sidebar: rgb(241 247 250 / 86%);
+  --sl-color-hairline-light: rgb(42 105 145 / 16%);
+  --sl-color-hairline: rgb(42 105 145 / 26%);
+}
+
+body {
+  background:
+    radial-gradient(circle at 82% -8%, rgb(0 240 190 / 12%) 0, transparent 28rem),
+    radial-gradient(circle at 8% 15%, rgb(52 88 255 / 14%) 0, transparent 32rem),
+    linear-gradient(145deg, #071425 0%, #06111f 48%, #040c17 100%);
+  background-attachment: fixed;
+}
+
+body::before {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  content: '';
+  pointer-events: none;
+  opacity: 0.18;
+  background-image:
+    linear-gradient(rgb(91 139 191 / 10%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(91 139 191 / 10%) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: linear-gradient(to bottom, black, transparent 75%);
+}
+
+:root[data-theme='light'] body {
+  background:
+    radial-gradient(circle at 82% -8%, rgb(21 240 189 / 13%) 0, transparent 28rem),
+    radial-gradient(circle at 8% 15%, rgb(52 88 255 / 9%) 0, transparent 32rem),
+    linear-gradient(145deg, #ffffff 0%, #f8fbfd 48%, #edf5f8 100%);
+}
+
+:root[data-theme='light'] body::before {
+  opacity: 0.24;
+  background-image:
+    linear-gradient(rgb(42 105 145 / 9%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(42 105 145 / 9%) 1px, transparent 1px);
+}
+
+header.header {
+  border-bottom-color: rgb(50 112 168 / 30%);
+  box-shadow: 0 12px 36px rgb(0 0 0 / 24%);
+  backdrop-filter: blur(18px);
+}
+
+.sidebar-pane {
+  backdrop-filter: blur(16px);
+}
+
+.sidebar-content a[aria-current='page'] {
+  border-color: transparent;
+  color: #67e8f9;
+  background: transparent;
+}
+
+:root[data-theme='light'] .sidebar-content a[aria-current='page'] {
+  color: #087f8c;
+}
+
+.site-title {
+  color: #ffffff;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+:root[data-theme='light'] .site-title {
+  color: #071425;
+}
+
+.site-title img {
+  width: 2.75rem;
+  height: 2.75rem;
+  filter: drop-shadow(0 0 8px rgb(10 203 234 / 36%));
+}
+
+.site-title span {
+  font-weight: 750;
+}
+
+.search-input,
+starlight-menu-button button,
+starlight-lang-select select,
+starlight-theme-select select {
+  border-color: rgb(71 104 143 / 65%);
+  background: rgb(5 18 34 / 72%);
+}
+
+:root:lang(ru) starlight-theme-select label {
+  --sl-select-width: 8em !important;
+}
+
+.sl-markdown-content a:not([class]) {
+  color: #52ded1;
+  text-decoration-color: rgb(82 222 209 / 45%);
+  text-underline-offset: 0.2em;
+}
+
+.sl-markdown-content a:not([class]):hover {
+  color: #8effe8;
+  text-decoration-color: currentColor;
+}
+
+.sl-markdown-content h1,
+.sl-markdown-content h2,
+.sl-markdown-content h3 {
+  color: #edf5ff;
+}
+
+.sl-markdown-content blockquote,
+.sl-markdown-content .starlight-aside {
+  border-color: rgb(22 211 208 / 34%);
+  background: linear-gradient(145deg, rgb(11 29 51 / 88%), rgb(5 17 32 / 92%));
+  box-shadow: inset 0 1px rgb(137 210 255 / 6%);
+}
+
+.sl-markdown-content img {
+  border: 1px solid rgb(53 110 163 / 48%);
+  border-radius: 0.75rem;
+  box-shadow:
+    0 18px 55px rgb(0 0 0 / 25%),
+    0 0 36px rgb(20 168 238 / 7%);
+}
+
+.sl-markdown-content pre {
+  max-width: 100%;
+}
+
+.expressive-code pre,
+.expressive-code code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.expressive-code .frame.has-title > figcaption {
+  border-color: rgb(53 110 163 / 48%);
+  background: #0b1d33;
+}
+
+.expressive-code .frame.has-title > figcaption > .title {
+  color: #d8e4f2;
+  background: #0b1d33;
+}
+
+.okoscope-setup-flow ol {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  padding: 0;
+  list-style: none;
+}
+
+.okoscope-setup-flow a {
+  display: block;
+  height: 100%;
+  padding: 0.8rem;
+  border: 1px solid rgb(53 110 163 / 38%);
+  border-radius: 0.65rem;
+  color: #d8e4f2;
+  background: linear-gradient(145deg, rgb(11 29 51 / 88%), rgb(5 17 32 / 92%));
+  box-shadow:
+    0 18px 55px rgb(0 0 0 / 20%),
+    inset 0 1px rgb(137 210 255 / 6%);
+  text-decoration: none;
+  transition: 160ms ease;
+}
+
+.okoscope-setup-flow a:hover {
+  border-color: rgb(22 211 208 / 48%);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+:root[data-theme='light'] .sl-markdown-content a:not([class]) {
+  color: #087f8c;
+  text-decoration-color: rgb(8 127 140 / 42%);
+}
+
+:root[data-theme='light'] .search-input,
+:root[data-theme='light'] starlight-menu-button button,
+:root[data-theme='light'] starlight-lang-select select,
+:root[data-theme='light'] starlight-theme-select select {
+  border-color: rgb(42 105 145 / 24%);
+  color: #334e68;
+  background: rgb(255 255 255 / 78%);
+}
+
+:root[data-theme='light'] .sl-markdown-content a:not([class]):hover {
+  color: #064e5b;
+}
+
+:root[data-theme='light'] .sl-markdown-content h1,
+:root[data-theme='light'] .sl-markdown-content h2,
+:root[data-theme='light'] .sl-markdown-content h3 {
+  color: #071425;
+}
+
+:root[data-theme='light'] .sl-markdown-content blockquote,
+:root[data-theme='light'] .sl-markdown-content .starlight-aside,
+:root[data-theme='light'] .okoscope-setup-flow a {
+  border-color: rgb(42 105 145 / 22%);
+  color: #334e68;
+  background: linear-gradient(145deg, rgb(255 255 255 / 92%), rgb(238 246 249 / 94%));
+  box-shadow: inset 0 1px rgb(255 255 255 / 75%);
+}
+
+:root[data-theme='light'] .expressive-code .frame.has-title > figcaption,
+:root[data-theme='light'] .expressive-code .frame.has-title > figcaption > .title {
+  border-color: rgb(42 105 145 / 28%);
+  color: #102a43;
+  background: #e6f0f5;
+}
+
+@media (max-width: 50rem) {
+  .okoscope-setup-flow ol {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "skipLink.label": "Перейти к содержимому",
+  "search.label": "Поиск",
+  "search.cancelLabel": "Отмена",
+  "tableOfContents.onThisPage": "На этой странице",
+  "tableOfContents.overview": "Обзор",
+  "i18n.untranslatedContent": "Эта страница ещё не переведена.",
+  "page.editLink": "Редактировать страницу",
+  "page.lastUpdated": "Последнее обновление:",
+  "page.previousLink": "Назад",
+  "page.nextLink": "Далее"
+}

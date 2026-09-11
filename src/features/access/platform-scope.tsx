@@ -522,7 +522,9 @@ function InvitationManager({
             <option>{locale}</option>
           </select>
         </label>
-        <Button disabled={pending}>{pending ? ui.pending : ui.invite}</Button>
+        <Button className="self-end sm:w-fit" disabled={pending}>
+          {pending ? ui.pending : ui.invite}
+        </Button>
       </form>
       {(failure !== null || error != null) && (
         <div className="mt-4">
@@ -727,7 +729,9 @@ function ResourceCreator({
             onChange={(event) => setSlug(event.target.value)}
           />
         </label>
-        <Button disabled={pending}>{pending ? ui.pending : ui.create}</Button>
+        <Button className="self-end sm:w-fit" disabled={pending}>
+          {pending ? ui.pending : ui.create}
+        </Button>
       </form>
       {error !== null && <ErrorState title={ui.failed} error={error} />} {children}
     </Card>

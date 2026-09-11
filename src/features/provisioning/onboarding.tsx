@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Link, useNavigate } from '@tanstack/react-router'
+import { useNavigate } from '@tanstack/react-router'
 import { useEffect, useId, useState } from 'react'
 import { useApi } from '../../shared/api/context'
 import { ApiClientError } from '../../shared/api/client'
@@ -21,7 +21,7 @@ import type {
   IssuedInstallationCredential,
 } from '../../shared/api/types'
 import { useAuthentication } from '../../shared/auth/session'
-import { useT } from '../../shared/i18n'
+import { useLocalization, useT } from '../../shared/i18n'
 import { Button } from '../../shared/ui/button'
 import { Card } from '../../shared/ui/card'
 import { CodeExample } from '../../shared/ui/code-example'
@@ -174,6 +174,7 @@ function InstallationStep({
 }) {
   const api = useApi(),
     t = useT(),
+    locale = useLocalization().locale,
     client = useQueryClient()
   const metadata = useQuery(installationMetadataOptions(api)),
     installations = useQuery(installationsOptions(api, projectId, application.id))
@@ -224,9 +225,7 @@ function InstallationStep({
           <Card>
             <p className="text-sm text-slate-300">{t('installationMetadataOperatorHelp')}</p>
             <Button asChild className="mt-4" variant="outline">
-              <Link to="/docs/$slug" params={{ slug: 'self-hosting' }}>
-                {t('installationMetadataDocs')}
-              </Link>
+              <a href={`/docs/${locale}/self-hosting/`}>{t('installationMetadataDocs')}</a>
             </Button>
           </Card>
         )}
@@ -450,6 +449,7 @@ function InstallCommands({
   metadata: AgentInstallationMetadata
 }) {
   const t = useT(),
+    locale = useLocalization().locale,
     [announcement, setAnnouncement] = useState(''),
     item = secret.installation
   const selector = item.workload_name
@@ -502,16 +502,14 @@ function InstallCommands({
         </div>
         <p className="mt-4 text-sm text-slate-300">
           {t('separateAgentInstallationHelp')}{' '}
-          <Link
-            to="/docs/$slug"
-            params={{ slug: 'quick-start' }}
-            hash="deploy"
+          <a
+            href={`/docs/${locale}/quick-start/#deploy`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-cyan-300 underline underline-offset-4"
           >
             {t('separateAgentInstallationDocs')}
-          </Link>
+          </a>
         </p>
         <div className="mt-5 min-w-0">
           <h2 className="font-medium">{t('installWithHelm')}</h2>

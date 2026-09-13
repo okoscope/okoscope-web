@@ -12,8 +12,8 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Kept organization invitation and project creation buttons compact and aligned with their
   adjacent fields on wider screens.
 - Limited Application health diagnostics to losses and delivery outcomes assigned to the selected
-  workload, removed node-wide counters from Application pages, and made unavailable scoped
-  diagnostics explicit during older-agent upgrades.
+  workload, removed node-wide counters from Application pages, and removed compatibility UI for
+  agents that omit the now-required scoped diagnostic snapshot.
 
 ## [0.2.1] - 2026-09-09
 

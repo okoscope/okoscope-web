@@ -203,11 +203,7 @@ function AgentCard({
               : t('agentCoveragePartial', { time: formatTimestamp(agent.coverage.available_from) })}
           </p>
         </div>
-        <AgentHealthTimeline
-          points={agent.timeline}
-          range={range}
-          diagnosticsAvailable={agent.diagnostics_available}
-        />
+        <AgentHealthTimeline points={agent.timeline} range={range} />
       </div>
     </Card>
   )

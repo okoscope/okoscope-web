@@ -3489,8 +3489,6 @@ export interface components {
             /** @enum {string} */
             status: "received" | "missing" | "unavailable";
             diagnostics: components["schemas"]["AgentDiagnosticDelta"][];
-            /** @description True only when the agent reported an Application-scoped diagnostic snapshot for this interval. False is unavailable */
-            diagnostics_available: boolean;
             reset: boolean;
         };
         AgentHealthCoverage: {
@@ -3512,9 +3510,7 @@ export interface components {
             first_event_at: components["schemas"]["NullableTimestamp"];
             last_event_at: components["schemas"]["NullableTimestamp"];
             coverage: components["schemas"]["AgentHealthCoverage"];
-            /** @description True after this agent has reported scoped diagnostics for the selected Application in the requested window. False is unavailable */
-            diagnostics_available: boolean;
-            /** @description Application-scoped diagnostic summary retained under its legacy field name for wire compatibility. It never contains node-wide or pre-attribution counters. */
+            /** @description Application-scoped diagnostic summary. It never contains node-wide or pre-attribution counters. */
             node_diagnostics: components["schemas"]["AgentDiagnosticDelta"][];
             /** @description Exactly 60 points for 1h and 72 points for 6h; 24h may contain 96 points. */
             timeline: components["schemas"]["AgentHealthTimelinePoint"][];

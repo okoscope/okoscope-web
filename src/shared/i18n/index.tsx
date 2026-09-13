@@ -319,18 +319,11 @@ export const englishMessages = {
   agentTimeline_unavailable: 'history unavailable',
   agentTimelineResetPresent: 'counter reset',
   agentTimelineResetAbsent: 'no counter reset',
-  agentTimelineDiagnosticsAvailable: 'Application diagnostics available',
-  agentTimelineDiagnosticsUnavailable: 'Application diagnostics unavailable',
-  agentTimelinePointDetails:
-    '{start}–{end}: {status}; {diagnosticsAvailability}; diagnostic increase {diagnostics}; {reset}.',
+  agentTimelinePointDetails: '{start}–{end}: {status}; diagnostic increase {diagnostics}; {reset}.',
   agentApplicationDiagnostics: 'Application diagnostics',
   agentRecentApplicationDiagnostics: 'Recent Application diagnostic changes',
   agentApplicationDiagnosticScope:
     'These counters describe losses or delivery outcomes assigned to this Application workload.',
-  agentDiagnosticsUnavailable:
-    'Application diagnostics are unavailable from this agent. This does not mean that zero losses occurred.',
-  agentDiagnosticsHistoryPartial:
-    'Application diagnostics are unavailable for part of this heartbeat history; those intervals do not imply zero losses.',
   agentNoRecentDiagnostics: 'No Application diagnostic counter increased in the selected range.',
   agentResetCount: '{count} counter resets',
   agentDiagnostic_dropped: 'Dropped evidence',
@@ -1001,18 +994,11 @@ export const russianMessages = {
   agentTimeline_unavailable: 'история недоступна',
   agentTimelineResetPresent: 'сброс счётчика',
   agentTimelineResetAbsent: 'без сброса счётчика',
-  agentTimelineDiagnosticsAvailable: 'диагностика приложения доступна',
-  agentTimelineDiagnosticsUnavailable: 'диагностика приложения недоступна',
-  agentTimelinePointDetails:
-    '{start}–{end}: {status}; {diagnosticsAvailability}; рост диагностики — {diagnostics}; {reset}.',
+  agentTimelinePointDetails: '{start}–{end}: {status}; рост диагностики — {diagnostics}; {reset}.',
   agentApplicationDiagnostics: 'Диагностика приложения',
   agentRecentApplicationDiagnostics: 'Недавние изменения диагностики приложения',
   agentApplicationDiagnosticScope:
     'Эти счётчики описывают потери или результаты доставки, отнесённые к нагрузке этого приложения.',
-  agentDiagnosticsUnavailable:
-    'Диагностика приложения недоступна от этого агента. Это не означает, что потерь не было.',
-  agentDiagnosticsHistoryPartial:
-    'Диагностика приложения недоступна для части этой истории сигналов; такие интервалы не означают отсутствие потерь.',
   agentNoRecentDiagnostics: 'За выбранный период диагностические счётчики приложения не росли.',
   agentResetCount: 'Сбросов счётчиков: {count}',
   agentDiagnostic_dropped: 'Потерянные данные',

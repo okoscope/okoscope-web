@@ -244,9 +244,9 @@ test('shows heterogeneous agent health at a narrow viewport', async ({ page }) =
   await expect(page.getByText('Process execution')).toBeVisible()
   await expect(page.getByText('future.signal/v2')).toBeVisible()
   await expect(page.getByText('Rate limited: +2').first()).toBeVisible()
-  await expect(page.getByText('worker-legacy-02')).toBeVisible()
+  await expect(page.getByText('worker-idle-02')).toBeVisible()
   await expect(page.getByText('Signal evidence unavailable')).toBeVisible()
-  await expect(page.getByText(/diagnostics are unavailable from this agent/i)).toBeVisible()
+  await expect(page.getByText(/diagnostics are unavailable from this agent/i)).toHaveCount(0)
   await expect(
     page.getByRole('group', { name: /1h: 57 received, 1 missing, 2 unavailable/ }).first(),
   ).toBeVisible()

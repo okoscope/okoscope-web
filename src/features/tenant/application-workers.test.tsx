@@ -48,14 +48,12 @@ const healthAgent = (overrides: Partial<ApplicationAgentHealth> = {}): Applicati
   first_event_at: '2026-08-20T10:00:00Z',
   last_event_at: '2026-08-22T09:30:00Z',
   coverage: { available_from: '2026-08-22T09:00:00Z', complete: true },
-  diagnostics_available: true,
   node_diagnostics: [],
   timeline: Array.from({ length: 60 }, (_, index) => ({
     start: `2026-08-22T09:${String(index).padStart(2, '0')}:00Z`,
     end: `2026-08-22T09:${String(index).padStart(2, '0')}:59Z`,
     status: 'received' as const,
     diagnostics: [],
-    diagnostics_available: true,
     reset: false,
   })),
   ...overrides,
@@ -219,7 +217,6 @@ describe('Application agent health', () => {
           end: new Date((index + 1) * stepSeconds * 1_000).toISOString(),
           status: 'received' as const,
           diagnostics: [],
-          diagnostics_available: true,
           reset: false,
         }))
         return Promise.resolve(
@@ -307,7 +304,7 @@ describe('Application agent health', () => {
     expect(screen.getAllByText('1 counter resets').length).toBeGreaterThan(0)
   })
 
-  it('renders unknown capabilities as inert text and older-agent diagnostics as unavailable', async () => {
+  it('renders unknown capabilities as inert text with strict scoped diagnostics', async () => {
     renderWorkers(
       endpointGet({
         agents: healthPage([
@@ -317,11 +314,6 @@ describe('Application agent health', () => {
             kernel_release: null,
             last_signal_at: null,
             stream_state: 'unknown',
-            diagnostics_available: false,
-            timeline: healthAgent().timeline.map((point) => ({
-              ...point,
-              diagnostics_available: false,
-            })),
           }),
         ]),
       }),
@@ -329,7 +321,12 @@ describe('Application agent health', () => {
     await userEvent.click(await screen.findByText('Advertised capabilities · 1'))
     expect(screen.getByText('future.signal/v2')).toBeVisible()
     expect(screen.getByText('Signal evidence unavailable')).toBeVisible()
-    expect(screen.getByText(/diagnostics are unavailable from this agent/i)).toBeVisible()
+    expect(
+      screen.getByText('No Application diagnostic counter increased in the selected range.'),
+    ).toBeVisible()
+    expect(
+      screen.queryByText(/diagnostics are unavailable from this agent/i),
+    ).not.toBeInTheDocument()
     expect(document.querySelector('a[href="future.signal/v2"]')).toBeNull()
   })
 
@@ -444,6 +441,7 @@ describe('Application agent health', () => {
     expect(await screen.findByText('Здоровье и покрытие агентов')).toBeVisible()
     expect(screen.getByText('Ограничение частоты: +3')).toBeVisible()
     expect(screen.getByRole('group', { name: 'Период истории сердцебиений' })).toBeVisible()
+    expect(screen.queryByText(/Диагностика приложения недоступна/)).not.toBeInTheDocument()
   })
 
   it('exposes interval details to keyboard focus with status, reset, and scoped delta', async () => {

@@ -35,18 +35,13 @@ export function timelineCounts(points: AgentHealthTimelinePoint[]) {
 export function AgentHealthTimeline({
   points,
   range,
-  diagnosticsAvailable,
 }: {
   points: AgentHealthTimelinePoint[]
   range: '1h' | '6h' | '24h'
-  diagnosticsAvailable: boolean
 }) {
   const t = useT()
   const counts = timelineCounts(points)
   const diagnostics = aggregateDiagnostics(points)
-  const hasUnavailableDiagnosticHistory =
-    diagnosticsAvailable &&
-    points.some((point) => point.status === 'received' && !point.diagnostics_available)
   const summary = t('agentTimelineSummary', { range, ...counts })
   const tickIndexes = [
     ...new Set([0, Math.floor((points.length - 1) / 2), points.length - 1]),
@@ -69,9 +64,6 @@ export function AgentHealthTimeline({
               end: formatTimestamp(point.end),
               status: t(`agentTimeline_${point.status}`),
               diagnostics: point.diagnostics.reduce((total, item) => total + item.delta, 0),
-              diagnosticsAvailability: point.diagnostics_available
-                ? t('agentTimelineDiagnosticsAvailable')
-                : t('agentTimelineDiagnosticsUnavailable'),
               reset: point.reset ? t('agentTimelineResetPresent') : t('agentTimelineResetAbsent'),
             })
             return (
@@ -176,17 +168,7 @@ export function AgentHealthTimeline({
         <p className="text-sm font-semibold text-slate-200">{t('agentApplicationDiagnostics')}</p>
         <p className="text-xs text-slate-500">{t('agentApplicationDiagnosticScope')}</p>
       </div>
-      {!diagnosticsAvailable && (
-        <p className="mt-3 rounded-lg border border-slate-700 bg-slate-900/40 p-3 text-sm text-slate-300">
-          {t('agentDiagnosticsUnavailable')}
-        </p>
-      )}
-      {hasUnavailableDiagnosticHistory && (
-        <p className="mt-3 rounded-lg border border-slate-700 bg-slate-900/40 p-3 text-sm text-slate-300">
-          {t('agentDiagnosticsHistoryPartial')}
-        </p>
-      )}
-      {diagnosticsAvailable && diagnostics.length === 0 && counts.resets === 0 && (
+      {diagnostics.length === 0 && counts.resets === 0 && (
         <p className="mt-3 text-sm text-slate-500">{t('agentNoRecentDiagnostics')}</p>
       )}
       {(diagnostics.length > 0 || counts.resets > 0) && (

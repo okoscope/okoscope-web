@@ -37,8 +37,8 @@ async function expectSharpFixedHeartbeatSegments(
   const reset = timeline.locator('button[data-reset="true"]')
   await expect(diagnostic).toHaveCount(1)
   await expect(reset).toHaveCount(1)
-  expect(await diagnostic.textContent()).toContain('!')
-  expect(await reset.textContent()).toContain('↻')
+  await expect(diagnostic.locator('svg, [data-timeline-marker]')).toHaveCount(0)
+  await expect(reset.locator('svg, [data-timeline-marker]')).toHaveCount(0)
   await expect(diagnostic).toHaveCSS('width', '12px')
   await expect(diagnostic).toHaveCSS('height', '32px')
   await expect(reset).toHaveCSS('width', '12px')
@@ -56,6 +56,9 @@ async function expectSharpFixedHeartbeatSegments(
     ),
   )
   expect(new Set(statusStyles).size).toBe(3)
+  expect(
+    await segments.evaluateAll((elements) => elements.every((element) => !element.hasChildNodes())),
+  ).toBe(true)
 
   if (expectInternalOverflow !== undefined) {
     await expect
@@ -255,8 +258,11 @@ test('shows heterogeneous agent health at a narrow viewport', async ({ page }) =
   await diagnosticInterval.focus()
   await expect(diagnosticInterval).toBeFocused()
   await expect(diagnosticInterval).toHaveAccessibleName(/diagnostic increase 2/)
-  await diagnosticInterval.hover()
-  await expect(diagnosticInterval.locator('span').last()).toBeVisible()
+  await expect(diagnosticInterval).toHaveAttribute('title', /diagnostic increase 2/)
+  await expect(diagnosticInterval).toBeEmpty()
+  await expect(
+    page.getByRole('group', { name: /1h: 57 received, 1 missing, 2 unavailable/ }).first(),
+  ).not.toHaveClass(/pt-14/)
   await page.getByRole('button', { name: '6 hours' }).click()
   await expect(page.getByRole('button', { name: '6 hours' })).toHaveAttribute(
     'aria-pressed',

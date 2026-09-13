@@ -271,7 +271,7 @@ describe('Application agent health', () => {
     expect(range).toHaveAttribute('aria-pressed', 'true')
   })
 
-  it('renders gaps, unavailable coverage, diagnostics, and resets with non-color text', async () => {
+  it('renders gaps, unavailable coverage, diagnostics, and resets without status icons', async () => {
     const points = healthAgent().timeline.map((point, index) =>
       index === 1
         ? { ...point, status: 'missing' as const }
@@ -300,6 +300,11 @@ describe('Application agent health', () => {
     expect(unavailableLegend.firstElementChild).toHaveClass(
       'shadow-[inset_0_-2px_0_rgb(71_85_105_/_0.65)]',
     )
+    for (const interval of document.querySelectorAll('button[data-status]')) {
+      expect(interval).toBeEmptyDOMElement()
+    }
+    expect(screen.queryByText('Application diagnostic increase')).not.toBeInTheDocument()
+    expect(screen.queryByText('counter reset')).not.toBeInTheDocument()
     expect(screen.getAllByText('Decode failures: +2').length).toBeGreaterThan(0)
     expect(screen.getAllByText('1 counter resets').length).toBeGreaterThan(0)
   })
@@ -458,6 +463,8 @@ describe('Application agent health', () => {
     const interval = (await screen.findAllByLabelText(/diagnostic increase 4; counter reset/))[0]!
     interval.focus()
     expect(interval).toHaveFocus()
+    expect(interval).toHaveAttribute('title', interval.getAttribute('aria-label'))
+    expect(interval).toBeEmptyDOMElement()
     expect(interval).toHaveAttribute('data-diagnostics', 'true')
     expect(interval).toHaveAttribute('data-reset', 'true')
   })

@@ -49,7 +49,7 @@ export function AgentHealthTimeline({
 
   return (
     <div>
-      <div className="overflow-x-auto pb-1 pt-14" aria-label={summary} role="group">
+      <div className="overflow-x-auto pb-1" aria-label={summary} role="group">
         <div
           className="grid w-max gap-0.5"
           style={{
@@ -57,7 +57,7 @@ export function AgentHealthTimeline({
             minWidth: `${TIMELINE_MIN_WIDTH_PX}px`,
           }}
         >
-          {points.map((point, index) => {
+          {points.map((point) => {
             const hasDiagnostics = point.diagnostics.length > 0
             const detail = t('agentTimelinePointDetails', {
               start: formatTimestamp(point.start),
@@ -71,39 +71,12 @@ export function AgentHealthTimeline({
                 key={point.start}
                 type="button"
                 aria-label={detail}
-                className={`group relative h-8 w-3 min-w-3 shrink-0 border p-0 outline-none focus-visible:z-20 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-1 focus-visible:ring-offset-slate-950 ${pointClasses[point.status]}`}
+                title={detail}
+                className={`relative h-8 w-3 min-w-3 shrink-0 border p-0 outline-none focus-visible:z-20 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-1 focus-visible:ring-offset-slate-950 ${pointClasses[point.status]}`}
                 data-status={point.status}
                 data-diagnostics={hasDiagnostics || undefined}
                 data-reset={point.reset || undefined}
-              >
-                {hasDiagnostics && (
-                  <span
-                    aria-hidden="true"
-                    className="absolute -right-px -top-1 text-[9px] font-black leading-none text-amber-100 drop-shadow-[0_1px_1px_rgb(0_0_0)]"
-                  >
-                    !
-                  </span>
-                )}
-                {point.reset && (
-                  <span
-                    aria-hidden="true"
-                    className="absolute -bottom-1 -left-px text-[9px] font-black leading-none text-cyan-100 drop-shadow-[0_1px_1px_rgb(0_0_0)]"
-                  >
-                    ↻
-                  </span>
-                )}
-                <span
-                  className={`pointer-events-none absolute bottom-[calc(100%+0.5rem)] z-30 hidden w-56 rounded-md border border-slate-600 bg-slate-950 p-2 text-left text-xs font-normal text-slate-100 shadow-xl group-hover:block group-focus-visible:block ${
-                    index === 0
-                      ? 'left-0'
-                      : index === points.length - 1
-                        ? 'right-0'
-                        : 'left-1/2 -translate-x-1/2'
-                  }`}
-                >
-                  {detail}
-                </span>
-              </button>
+              ></button>
             )
           })}
         </div>
@@ -150,18 +123,6 @@ export function AgentHealthTimeline({
             className="h-3 w-3 border border-slate-600 bg-slate-950 shadow-[inset_0_-2px_0_rgb(71_85_105_/_0.65)]"
           />
           {t('agentTimelineUnavailable')}
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <span aria-hidden="true" className="font-black text-amber-100">
-            !
-          </span>
-          {t('agentTimelineDiagnostic')}
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <span aria-hidden="true" className="font-black text-cyan-100">
-            ↻
-          </span>
-          {t('agentTimelineReset')}
         </span>
       </div>
       <div className="mt-3">

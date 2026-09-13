@@ -706,6 +706,7 @@ export async function mockApi(page: Page, role: 'owner' | 'member' = 'owner') {
         ).toISOString(),
         status: index === 4 ? 'missing' : index < 2 ? 'unavailable' : 'received',
         diagnostics: index === 8 ? [{ category: 'rate_limited', delta: 2 }] : [],
+        diagnostics_available: true,
         reset: index === 10,
       }))
       return json(route, {
@@ -729,6 +730,7 @@ export async function mockApi(page: Page, role: 'owner' | 'member' = 'owner') {
             first_event_at: '2026-08-17T10:00:00Z',
             last_event_at: '2026-08-17T12:00:00Z',
             coverage: { available_from: timeline[2]?.start, complete: false },
+            diagnostics_available: true,
             node_diagnostics: [{ category: 'rate_limited', delta: 2 }],
             timeline,
           },
@@ -746,8 +748,15 @@ export async function mockApi(page: Page, role: 'owner' | 'member' = 'owner') {
             first_event_at: null,
             last_event_at: null,
             coverage: { available_from: timeline[0]?.start, complete: true },
+            diagnostics_available: false,
             node_diagnostics: [],
-            timeline: timeline.map((point) => ({ ...point, status: 'unavailable' })),
+            timeline: timeline.map((point) => ({
+              ...point,
+              status: 'unavailable',
+              diagnostics: [],
+              diagnostics_available: false,
+              reset: false,
+            })),
           },
         ],
         next_cursor: null,

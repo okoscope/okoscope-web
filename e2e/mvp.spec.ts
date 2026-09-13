@@ -2,6 +2,68 @@ import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 import { authenticate, mockApi } from './fixtures'
 
+async function expectSharpFixedHeartbeatSegments(
+  page: import('@playwright/test').Page,
+  expectInternalOverflow?: boolean,
+) {
+  const timeline = page
+    .getByRole('group', { name: /1h: 57 received, 1 missing, 2 unavailable/ })
+    .first()
+  const segments = timeline.locator('button[data-status]')
+  await expect(segments).toHaveCount(60)
+
+  const geometry = await segments.evaluateAll((elements) =>
+    elements.map((element) => {
+      const rect = element.getBoundingClientRect()
+      const style = getComputedStyle(element)
+      return {
+        x: rect.x,
+        y: rect.y,
+        width: rect.width,
+        height: rect.height,
+        borderRadius: style.borderRadius,
+      }
+    }),
+  )
+  expect(new Set(geometry.map(({ width }) => width))).toEqual(new Set([12]))
+  expect(new Set(geometry.map(({ height }) => height))).toEqual(new Set([32]))
+  expect(new Set(geometry.map(({ y }) => y)).size).toBe(1)
+  expect(new Set(geometry.map(({ borderRadius }) => borderRadius))).toEqual(new Set(['0px']))
+  for (let index = 1; index < geometry.length; index += 1) {
+    expect(geometry[index]!.x - geometry[index - 1]!.x - geometry[index - 1]!.width).toBe(2)
+  }
+
+  const diagnostic = timeline.locator('button[data-diagnostics="true"]')
+  const reset = timeline.locator('button[data-reset="true"]')
+  await expect(diagnostic).toHaveCount(1)
+  await expect(reset).toHaveCount(1)
+  expect(await diagnostic.textContent()).toContain('!')
+  expect(await reset.textContent()).toContain('↻')
+  await expect(diagnostic).toHaveCSS('width', '12px')
+  await expect(diagnostic).toHaveCSS('height', '32px')
+  await expect(reset).toHaveCSS('width', '12px')
+  await expect(reset).toHaveCSS('height', '32px')
+
+  const statusStyles = await Promise.all(
+    ['received', 'missing', 'unavailable'].map((status) =>
+      segments
+        .and(page.locator(`button[data-status="${status}"]`))
+        .first()
+        .evaluate((element) => {
+          const style = getComputedStyle(element)
+          return `${style.borderStyle}|${style.backgroundImage}|${style.boxShadow}`
+        }),
+    ),
+  )
+  expect(new Set(statusStyles).size).toBe(3)
+
+  if (expectInternalOverflow !== undefined) {
+    await expect
+      .poll(() => timeline.evaluate((element) => element.scrollWidth > element.clientWidth))
+      .toBe(expectInternalOverflow)
+  }
+}
+
 test('switches the interface to Russian and persists the choice', async ({ page }) => {
   await mockApi(page)
   await page.goto('/')
@@ -178,21 +240,30 @@ test('shows heterogeneous agent health at a narrow viewport', async ({ page }) =
   await expect(page.getByRole('status', { name: 'Agent reporting is stale' })).toBeVisible()
   await expect(page.getByText('worker-amd64-01')).toBeVisible()
   await expect(page.getByText(/6.9.2/)).toBeVisible()
+  await page.getByText('Advertised capabilities · 2').press('Enter')
   await expect(page.getByText('Process execution')).toBeVisible()
   await expect(page.getByText('future.signal/v2')).toBeVisible()
   await expect(page.getByText('Rate limited: +2').first()).toBeVisible()
   await expect(page.getByText('worker-legacy-02')).toBeVisible()
   await expect(page.getByText('Signal evidence unavailable')).toBeVisible()
+  await expect(page.getByText(/diagnostics are unavailable from this agent/i)).toBeVisible()
   await expect(
-    page.getByRole('img', { name: /1h: 57 received, 1 missing, 2 unavailable/ }).first(),
+    page.getByRole('group', { name: /1h: 57 received, 1 missing, 2 unavailable/ }).first(),
   ).toBeVisible()
+  await expectSharpFixedHeartbeatSegments(page, true)
+  const diagnosticInterval = page.locator('[data-diagnostics="true"]').first()
+  await diagnosticInterval.focus()
+  await expect(diagnosticInterval).toBeFocused()
+  await expect(diagnosticInterval).toHaveAccessibleName(/diagnostic increase 2/)
+  await diagnosticInterval.hover()
+  await expect(diagnosticInterval.locator('span').last()).toBeVisible()
   await page.getByRole('button', { name: '6 hours' }).click()
   await expect(page.getByRole('button', { name: '6 hours' })).toHaveAttribute(
     'aria-pressed',
     'true',
   )
   await expect(
-    page.getByRole('img', { name: /6h: 69 received, 1 missing, 2 unavailable/ }).first(),
+    page.getByRole('group', { name: /6h: 69 received, 1 missing, 2 unavailable/ }).first(),
   ).toBeVisible()
   await page.getByRole('button', { name: '24 hours' }).press('Enter')
   await expect(page.getByRole('button', { name: '24 hours' })).toHaveAttribute(
@@ -200,10 +271,18 @@ test('shows heterogeneous agent health at a narrow viewport', async ({ page }) =
     'true',
   )
   await expect(
-    page.getByRole('img', { name: /24h: 93 received, 1 missing, 2 unavailable/ }).first(),
+    page.getByRole('group', { name: /24h: 93 received, 1 missing, 2 unavailable/ }).first(),
   ).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375)
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+
+  await page.getByRole('button', { name: '1 hour' }).click()
+  await expectSharpFixedHeartbeatSegments(page, true)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await expectSharpFixedHeartbeatSegments(page, true)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await expectSharpFixedHeartbeatSegments(page)
 })
 
 test('links an empty agent health state to localized readiness guidance', async ({ page }) => {

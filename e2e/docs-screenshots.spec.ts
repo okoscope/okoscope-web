@@ -38,6 +38,10 @@ for (const locale of supportedLocales) {
     await capture(page, locale, 'application-resources', `${applicationPath}/resources`, {
       height: 1050,
     })
+    await capture(page, locale, 'application-health', applicationPath, {
+      height: 1200,
+      start: '#agent-health-heading',
+    })
     await capture(
       page,
       locale,
@@ -90,23 +94,17 @@ async function capture(
   locale: Locale,
   name: string,
   path: string,
-  frame: { height: number },
+  frame: { height: number; start?: string },
 ) {
   await page.goto(path)
   await page.waitForLoadState('networkidle')
   const main = page.locator('main').first()
   await main.waitFor()
-  const title = main.locator('h1').first()
+  const title = main.locator(frame.start ?? 'h1').first()
   await title.waitFor()
-  const clip = await main.evaluate((element, padding) => {
-    const article = element.getBoundingClientRect()
-    const heading = element.querySelector('h1')!.getBoundingClientRect()
-    return {
-      x: article.x + window.scrollX,
-      y: heading.y + window.scrollY - padding,
-      width: article.width,
-    }
-  }, 24)
+  const [article, heading] = await Promise.all([main.boundingBox(), title.boundingBox()])
+  if (!article || !heading) throw new Error(`Could not frame documentation screenshot ${name}`)
+  const clip = { x: article.x, y: heading.y - 24, width: article.width }
   await page.screenshot({
     path: `${outputDirectory}/${name}.${locale}.png`,
     fullPage: true,

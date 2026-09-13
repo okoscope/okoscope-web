@@ -52,7 +52,9 @@ A recent agent signal means only that the server heard from that worker inside i
 
 Agent cards retain bounded heartbeat coverage for 1, 6, or 24 hours. The timeline distinguishes received signals, missing signals inside known coverage, and history that is unavailable before collection or outside retention; it never fills gaps by interpolation. Capability labels describe only what the agent advertised. Accepted Application events remain a separate field, so a reporting agent with no events is still visible and points back to the readiness explanation.
 
-Dropped, rate-limited, decode, attribution, capacity, kernel-loss, correlation, delivery-retry, and unsupported diagnostics are positive changes during the selected range, not lifetime totals. Resets are marked separately. These counters are node-wide: they can guide an agent-log or capacity investigation, but they do not establish which Application lost evidence. Health history is retained for at least 25 hours, and each response is limited to 20 agents and at most 96 timeline intervals per agent.
+Application diagnostics are positive changes during the selected range, not lifetime totals. They include only losses and delivery outcomes assigned to the selected workload's authenticated Application stream, such as a full route queue, route rate limiting, or a delivery retry. Resets are marked separately for that Application route. Failures before workload attribution and other node-wide diagnostics remain in agent logs and internal operator telemetry; they are never projected into an Application. During an older-agent upgrade, scoped diagnostics are shown as unavailable rather than zero because absence of the scoped snapshot cannot prove that no loss occurred. Health history is retained for at least 25 hours, and each response is limited to 20 agents and at most 96 timeline intervals per agent.
+
+![Compact Application agent health cards with workload-scoped diagnostics, a time axis, distinct heartbeat symbols, and capability details collapsed.](/documentation/application-health.en.png)
 
 <a id="processes"></a>
 ## Processes, system calls and termination

@@ -16,6 +16,11 @@ The UI supports:
 - tenant access, invitations, platform administration, and account security flows;
 - first-run setup, agent provisioning, and public English/Russian documentation.
 
+Application health presents only diagnostic evidence assigned to the selected workload's
+authenticated Application stream. Node-wide and pre-attribution agent diagnostics remain in
+operator logs and are not projected into an Application; older agents report Application
+diagnostics as unavailable rather than as zero.
+
 The product interface is a React single-page app. Public documentation is a statically generated
 Astro and Starlight site at `/docs/en/` and `/docs/ru/`. The application validates backend compatibility at startup and
 uses the backend's opaque `HttpOnly` session cookie for authentication. Browser requests include

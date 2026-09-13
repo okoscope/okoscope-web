@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { readinessOptions } from '../../shared/api/onboarding'
 import { applicationAgentHealthOptions } from '../../shared/api/queries'
 import type {
-  AgentDiagnosticDelta,
   AgentHealthRange,
   ApplicationAgentHealth,
   ApplicationWorker,
@@ -121,30 +120,15 @@ function CapabilityList({ capabilities }: { capabilities: string[] }) {
   const t = useT()
   if (!capabilities.length) return <p className="text-sm text-slate-500">{t('notReported')}</p>
   return (
-    <ul className="mt-2 flex flex-wrap gap-2">
+    <ul className="mt-2 flex flex-wrap gap-1.5">
       {capabilities.map((capability) => (
         <li key={capability}>
-          <span className="rounded-full border border-slate-700 px-2 py-1 text-xs text-slate-200">
+          <span className="rounded-full border border-slate-700 px-2 py-0.5 text-xs text-slate-200">
             {knownCapabilities[capability] ? t(knownCapabilities[capability]) : capability}
           </span>
         </li>
       ))}
     </ul>
-  )
-}
-
-function DiagnosticSummary({ diagnostics }: { diagnostics: AgentDiagnosticDelta[] }) {
-  const t = useT()
-  return diagnostics.length ? (
-    <ul className="mt-2 space-y-1 text-sm text-amber-200">
-      {diagnostics.map((diagnostic) => (
-        <li key={diagnostic.category}>
-          {t(`agentDiagnostic_${diagnostic.category}`)}: +{diagnostic.delta}
-        </li>
-      ))}
-    </ul>
-  ) : (
-    <p className="mt-2 text-sm text-slate-500">{t('agentNoRecentDiagnostics')}</p>
   )
 }
 
@@ -161,10 +145,15 @@ function AgentCard({
   const noEvents = !agent.first_event_at && !agent.last_event_at
   const readinessPresentation = readiness ? getReadinessPresentation(readiness) : undefined
   const platform = [agent.architecture, agent.kernel_release].filter(Boolean).join(' · ')
+  const observations = [
+    [t('lastAgentSignal'), agent.last_signal_at],
+    [t('firstApplicationObservation'), agent.first_event_at],
+    [t('lastApplicationObservation'), agent.last_event_at],
+  ] as const
 
   return (
     <Card className="overflow-hidden" data-agent-id={agent.agent_id}>
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-800 pb-3">
         <div>
           <h3 className="text-lg font-semibold text-slate-100">{agent.node_name}</h3>
           <p className="text-sm text-slate-400">
@@ -180,54 +169,32 @@ function AgentCard({
         </span>
       </div>
 
-      <div className="mt-5 grid gap-5 md:grid-cols-3">
-        <div>
-          <h4 className="text-sm font-semibold text-slate-200">{t('agentApplicationStream')}</h4>
-          <p className="mt-2 text-sm text-slate-400">{t('agentStreamHelp')}</p>
-          <p className="mt-2 text-sm text-slate-300">
-            {t('lastAgentSignal')}:{' '}
-            {agent.last_signal_at ? formatTimestamp(agent.last_signal_at) : t('notReported')}
-          </p>
-        </div>
-        <div>
-          <h4 className="text-sm font-semibold text-slate-200">
-            {t('agentAdvertisedCapabilities')}
-          </h4>
-          <p className="mt-2 text-sm text-slate-400">{t('agentCapabilitiesHelp')}</p>
-          <CapabilityList capabilities={agent.capabilities} />
-        </div>
-        <div>
-          <h4 className="text-sm font-semibold text-slate-200">{t('agentAcceptedEvidence')}</h4>
-          {noEvents ? (
-            <>
-              <p className="mt-2 text-sm text-slate-400">{t('agentNoAcceptedEvidence')}</p>
-              {readinessPresentation && (
-                <p className="mt-2 text-sm text-cyan-200">
-                  {t(readinessPresentation.explanationKey)}{' '}
-                  {readinessPresentation.actionKey && t(readinessPresentation.actionKey)}
-                </p>
-              )}
-            </>
-          ) : (
-            <dl className="mt-2 space-y-2 text-sm">
-              <div>
-                <dt className="text-slate-500">{t('firstApplicationObservation')}</dt>
-                <dd>
-                  {agent.first_event_at ? formatTimestamp(agent.first_event_at) : t('notReported')}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-slate-500">{t('lastApplicationObservation')}</dt>
-                <dd>
-                  {agent.last_event_at ? formatTimestamp(agent.last_event_at) : t('notReported')}
-                </dd>
-              </div>
-            </dl>
-          )}
-        </div>
-      </div>
+      <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-3">
+        {observations.map(([label, value]) => (
+          <div key={label} className="min-w-0">
+            <dt className="text-xs text-slate-500">{label}</dt>
+            <dd className="mt-0.5 truncate font-mono text-slate-200" title={value ?? undefined}>
+              {value ? formatTimestamp(value) : t('notReported')}
+            </dd>
+          </div>
+        ))}
+      </dl>
+      {noEvents && (
+        <p className="mt-3 text-sm text-slate-400">
+          {t('agentNoAcceptedEvidence')}{' '}
+          {readinessPresentation && t(readinessPresentation.explanationKey)}
+        </p>
+      )}
 
-      <div className="mt-5">
+      <details className="mt-3 rounded-lg border border-slate-800 bg-slate-950/30 px-3 py-2">
+        <summary className="cursor-pointer text-sm font-semibold text-slate-300 outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
+          {t('agentAdvertisedCapabilities')} · {agent.capabilities.length}
+        </summary>
+        <p className="mt-2 text-xs text-slate-500">{t('agentCapabilitiesHelp')}</p>
+        <CapabilityList capabilities={agent.capabilities} />
+      </details>
+
+      <div className="mt-4">
         <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
           <h4 className="text-sm font-semibold text-slate-200">{t('agentHeartbeatHistory')}</h4>
           <p className="text-xs text-slate-500">
@@ -236,13 +203,11 @@ function AgentCard({
               : t('agentCoveragePartial', { time: formatTimestamp(agent.coverage.available_from) })}
           </p>
         </div>
-        <AgentHealthTimeline points={agent.timeline} range={range} />
-      </div>
-
-      <div className="mt-5 border-t border-slate-800 pt-4">
-        <h4 className="text-sm font-semibold text-slate-200">{t('agentNodeDiagnostics')}</h4>
-        <p className="mt-1 text-xs text-slate-500">{t('agentNodeDiagnosticScope')}</p>
-        <DiagnosticSummary diagnostics={agent.node_diagnostics} />
+        <AgentHealthTimeline
+          points={agent.timeline}
+          range={range}
+          diagnosticsAvailable={agent.diagnostics_available}
+        />
       </div>
     </Card>
   )

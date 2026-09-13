@@ -271,7 +271,7 @@ export const englishMessages = {
   healthActionReplaceCredential: 'Replace the revoked credential to resume ingestion.',
   agentHealth: 'Agent health and coverage',
   agentHealthHelp:
-    'Application-stream signals, advertised capabilities, accepted evidence, and bounded node diagnostics are separate facts.',
+    'Application-stream signals, advertised capabilities, accepted evidence, and diagnostics assigned to this workload are separate facts.',
   agentHealthLoading: 'Loading agent health…',
   agentHealthLoadFailed: 'Agent health could not be loaded',
   agentHealthRefreshing: 'Refreshing agent health…',
@@ -310,15 +310,28 @@ export const englishMessages = {
   agentTimelineReceived: 'signal received',
   agentTimelineMissing: 'signal missing in known coverage',
   agentTimelineUnavailable: 'history unavailable',
-  agentTimelineDiagnostic: 'diagnostic increase',
+  agentTimelineDiagnostic: 'Application diagnostic increase',
   agentTimelineReset: 'counter reset',
   agentTimelineSummary:
     '{range}: {received} received, {missing} missing, {unavailable} unavailable intervals; {resets} counter resets.',
-  agentNodeDiagnostics: 'Node-wide diagnostics',
-  agentRecentNodeDiagnostics: 'Recent node-wide diagnostic changes',
-  agentNodeDiagnosticScope:
-    'These counters describe the agent process or node and are not attributed to this Application.',
-  agentNoRecentDiagnostics: 'No diagnostic counter increase in the selected range.',
+  agentTimeline_received: 'signal received',
+  agentTimeline_missing: 'signal missing',
+  agentTimeline_unavailable: 'history unavailable',
+  agentTimelineResetPresent: 'counter reset',
+  agentTimelineResetAbsent: 'no counter reset',
+  agentTimelineDiagnosticsAvailable: 'Application diagnostics available',
+  agentTimelineDiagnosticsUnavailable: 'Application diagnostics unavailable',
+  agentTimelinePointDetails:
+    '{start}–{end}: {status}; {diagnosticsAvailability}; diagnostic increase {diagnostics}; {reset}.',
+  agentApplicationDiagnostics: 'Application diagnostics',
+  agentRecentApplicationDiagnostics: 'Recent Application diagnostic changes',
+  agentApplicationDiagnosticScope:
+    'These counters describe losses or delivery outcomes assigned to this Application workload.',
+  agentDiagnosticsUnavailable:
+    'Application diagnostics are unavailable from this agent. This does not mean that zero losses occurred.',
+  agentDiagnosticsHistoryPartial:
+    'Application diagnostics are unavailable for part of this heartbeat history; those intervals do not imply zero losses.',
+  agentNoRecentDiagnostics: 'No Application diagnostic counter increased in the selected range.',
   agentResetCount: '{count} counter resets',
   agentDiagnostic_dropped: 'Dropped evidence',
   agentDiagnostic_rate_limited: 'Rate limited',
@@ -940,7 +953,7 @@ export const russianMessages = {
   healthActionReplaceCredential: 'Замените отозванный credential, чтобы возобновить приём данных.',
   agentHealth: 'Здоровье и покрытие агентов',
   agentHealthHelp:
-    'Сигналы потока приложения, заявленные возможности, принятые данные и ограниченная диагностика узла — разные факты.',
+    'Сигналы потока приложения, заявленные возможности, принятые данные и диагностика выбранной нагрузки — разные факты.',
   agentHealthLoading: 'Загружаем здоровье агентов…',
   agentHealthLoadFailed: 'Не удалось загрузить здоровье агентов',
   agentHealthRefreshing: 'Обновляем здоровье агентов…',
@@ -979,15 +992,28 @@ export const russianMessages = {
   agentTimelineReceived: 'сигнал получен',
   agentTimelineMissing: 'сигнал отсутствует в известном покрытии',
   agentTimelineUnavailable: 'история недоступна',
-  agentTimelineDiagnostic: 'рост диагностического счётчика',
+  agentTimelineDiagnostic: 'рост диагностического счётчика приложения',
   agentTimelineReset: 'сброс счётчика',
   agentTimelineSummary:
     '{range}: получено — {received}, пропущено — {missing}, недоступно — {unavailable}; сбросов счётчиков — {resets}.',
-  agentNodeDiagnostics: 'Диагностика всего узла',
-  agentRecentNodeDiagnostics: 'Недавние изменения диагностики узла',
-  agentNodeDiagnosticScope:
-    'Эти счётчики относятся к процессу агента или узлу и не приписываются этому приложению.',
-  agentNoRecentDiagnostics: 'За выбранный период диагностические счётчики не росли.',
+  agentTimeline_received: 'сигнал получен',
+  agentTimeline_missing: 'сигнал пропущен',
+  agentTimeline_unavailable: 'история недоступна',
+  agentTimelineResetPresent: 'сброс счётчика',
+  agentTimelineResetAbsent: 'без сброса счётчика',
+  agentTimelineDiagnosticsAvailable: 'диагностика приложения доступна',
+  agentTimelineDiagnosticsUnavailable: 'диагностика приложения недоступна',
+  agentTimelinePointDetails:
+    '{start}–{end}: {status}; {diagnosticsAvailability}; рост диагностики — {diagnostics}; {reset}.',
+  agentApplicationDiagnostics: 'Диагностика приложения',
+  agentRecentApplicationDiagnostics: 'Недавние изменения диагностики приложения',
+  agentApplicationDiagnosticScope:
+    'Эти счётчики описывают потери или результаты доставки, отнесённые к нагрузке этого приложения.',
+  agentDiagnosticsUnavailable:
+    'Диагностика приложения недоступна от этого агента. Это не означает, что потерь не было.',
+  agentDiagnosticsHistoryPartial:
+    'Диагностика приложения недоступна для части этой истории сигналов; такие интервалы не означают отсутствие потерь.',
+  agentNoRecentDiagnostics: 'За выбранный период диагностические счётчики приложения не росли.',
   agentResetCount: 'Сбросов счётчиков: {count}',
   agentDiagnostic_dropped: 'Потерянные данные',
   agentDiagnostic_rate_limited: 'Ограничение частоты',

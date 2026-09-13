@@ -48,12 +48,14 @@ const healthAgent = (overrides: Partial<ApplicationAgentHealth> = {}): Applicati
   first_event_at: '2026-08-20T10:00:00Z',
   last_event_at: '2026-08-22T09:30:00Z',
   coverage: { available_from: '2026-08-22T09:00:00Z', complete: true },
+  diagnostics_available: true,
   node_diagnostics: [],
   timeline: Array.from({ length: 60 }, (_, index) => ({
     start: `2026-08-22T09:${String(index).padStart(2, '0')}:00Z`,
     end: `2026-08-22T09:${String(index).padStart(2, '0')}:59Z`,
     status: 'received' as const,
     diagnostics: [],
+    diagnostics_available: true,
     reset: false,
   })),
   ...overrides,
@@ -217,6 +219,7 @@ describe('Application agent health', () => {
           end: new Date((index + 1) * stepSeconds * 1_000).toISOString(),
           status: 'received' as const,
           diagnostics: [],
+          diagnostics_available: true,
           reset: false,
         }))
         return Promise.resolve(
@@ -231,7 +234,7 @@ describe('Application agent health', () => {
         await userEvent.click(await screen.findByRole('button', { name: buttonName }))
       }
       expect(
-        await screen.findByRole('img', {
+        await screen.findByRole('group', {
           name: new RegExp(`${selectedRange}: ${pointCount} received`),
         }),
       ).toBeVisible()
@@ -242,13 +245,16 @@ describe('Application agent health', () => {
     },
   )
 
-  it('requests the default range and separates presence, capability, and evidence', async () => {
+  it('requests the default range and progressively discloses capabilities', async () => {
     const get = endpointGet()
     renderWorkers(get)
     expect(await screen.findByText('worker-amd64-01')).toBeVisible()
     expect(screen.getByText('Reporting recently')).toHaveAttribute('data-stream-state', 'reporting')
+    const disclosure = screen.getByText('Advertised capabilities · 1')
+    expect(disclosure).toBeVisible()
+    expect(screen.queryByText('Process execution')).not.toBeVisible()
+    await userEvent.click(disclosure)
     expect(screen.getByText('Process execution')).toBeVisible()
-    expect(screen.getByText('Accepted Application evidence')).toBeVisible()
     expect(get).toHaveBeenCalledWith(expect.stringMatching(/agent-health\?range=1h&limit=20/), {
       protected: true,
     })
@@ -284,14 +290,24 @@ describe('Application agent health', () => {
     )
     renderWorkers(endpointGet({ agents: healthPage([healthAgent({ timeline: points })]) }))
     expect(
-      await screen.findByRole('img', { name: /58 received, 1 missing, 1 unavailable/ }),
+      await screen.findByRole('group', { name: /58 received, 1 missing, 1 unavailable/ }),
     ).toBeVisible()
-    expect(screen.getByText('× signal missing in known coverage')).toBeVisible()
+    const receivedLegend = screen.getByText('signal received')
+    const missingLegend = screen.getByText('signal missing in known coverage')
+    const unavailableLegend = screen.getByText('history unavailable')
+    expect(receivedLegend).toBeVisible()
+    expect(missingLegend).toBeVisible()
+    expect(unavailableLegend).toBeVisible()
+    expect(receivedLegend.firstElementChild).toHaveClass('bg-emerald-500/65')
+    expect(missingLegend.firstElementChild).toHaveClass('border-dashed')
+    expect(unavailableLegend.firstElementChild).toHaveClass(
+      'shadow-[inset_0_-2px_0_rgb(71_85_105_/_0.65)]',
+    )
     expect(screen.getAllByText('Decode failures: +2').length).toBeGreaterThan(0)
     expect(screen.getAllByText('1 counter resets').length).toBeGreaterThan(0)
   })
 
-  it('renders unknown capabilities as inert text and older-agent fields as unavailable', async () => {
+  it('renders unknown capabilities as inert text and older-agent diagnostics as unavailable', async () => {
     renderWorkers(
       endpointGet({
         agents: healthPage([
@@ -301,16 +317,23 @@ describe('Application agent health', () => {
             kernel_release: null,
             last_signal_at: null,
             stream_state: 'unknown',
+            diagnostics_available: false,
+            timeline: healthAgent().timeline.map((point) => ({
+              ...point,
+              diagnostics_available: false,
+            })),
           }),
         ]),
       }),
     )
-    expect(await screen.findByText('future.signal/v2')).toBeVisible()
+    await userEvent.click(await screen.findByText('Advertised capabilities · 1'))
+    expect(screen.getByText('future.signal/v2')).toBeVisible()
     expect(screen.getByText('Signal evidence unavailable')).toBeVisible()
+    expect(screen.getByText(/diagnostics are unavailable from this agent/i)).toBeVisible()
     expect(document.querySelector('a[href="future.signal/v2"]')).toBeNull()
   })
 
-  it('renders every closed diagnostic category with localized node-wide scope', async () => {
+  it('renders every scoped diagnostic category without node-wide language', async () => {
     const diagnostics = [
       'dropped',
       'rate_limited',
@@ -325,8 +348,18 @@ describe('Application agent health', () => {
       category: category as ApplicationAgentHealth['node_diagnostics'][number]['category'],
       delta: 1,
     }))
+    const timeline = healthAgent().timeline.map((point, index) =>
+      index === 0 ? { ...point, diagnostics } : point,
+    )
     renderWorkers(
-      endpointGet({ agents: healthPage([healthAgent({ node_diagnostics: diagnostics })]) }),
+      endpointGet({
+        agents: healthPage([
+          healthAgent({
+            timeline,
+            node_diagnostics: [{ category: 'unsupported', delta: 99 }],
+          }),
+        ]),
+      }),
     )
     for (const label of [
       'Dropped evidence',
@@ -341,7 +374,9 @@ describe('Application agent health', () => {
     ]) {
       expect(await screen.findByText(`${label}: +1`)).toBeVisible()
     }
-    expect(screen.getAllByText(/not attributed to this Application/).length).toBeGreaterThan(0)
+    expect(screen.getByText(/assigned to this Application workload/)).toBeVisible()
+    expect(screen.queryByText(/node-wide/i)).not.toBeInTheDocument()
+    expect(screen.queryByText('Unsupported condition: +99')).not.toBeInTheDocument()
   })
 
   it('links an agent without events to readiness guidance', async () => {
@@ -351,9 +386,8 @@ describe('Application agent health', () => {
         health: readiness({ state: 'waiting_for_event', reason: 'event_not_observed' }),
       }),
     )
-    expect(
-      await screen.findByText('No runtime event has been accepted for this Application.'),
-    ).toBeVisible()
+    const card = (await screen.findByText('worker-amd64-01')).closest('[data-agent-id]')
+    expect(card).toHaveTextContent('No runtime event has been accepted for this Application.')
     expect(screen.getAllByText(/Generate normal application activity/).length).toBeGreaterThan(0)
   })
 
@@ -393,7 +427,16 @@ describe('Application agent health', () => {
     renderWorkers(
       endpointGet({
         agents: healthPage([
-          healthAgent({ node_diagnostics: [{ category: 'rate_limited', delta: 3 }] }),
+          healthAgent({
+            timeline: healthAgent().timeline.map((point, index) =>
+              index === 0
+                ? {
+                    ...point,
+                    diagnostics: [{ category: 'rate_limited', delta: 3 }],
+                  }
+                : point,
+            ),
+          }),
         ]),
       }),
       'ru',
@@ -401,6 +444,24 @@ describe('Application agent health', () => {
     expect(await screen.findByText('Здоровье и покрытие агентов')).toBeVisible()
     expect(screen.getByText('Ограничение частоты: +3')).toBeVisible()
     expect(screen.getByRole('group', { name: 'Период истории сердцебиений' })).toBeVisible()
+  })
+
+  it('exposes interval details to keyboard focus with status, reset, and scoped delta', async () => {
+    const timeline = healthAgent().timeline.map((point, index) =>
+      index === 0
+        ? {
+            ...point,
+            diagnostics: [{ category: 'dropped' as const, delta: 4 }],
+            reset: true,
+          }
+        : point,
+    )
+    renderWorkers(endpointGet({ agents: healthPage([healthAgent({ timeline })]) }))
+    const interval = (await screen.findAllByLabelText(/diagnostic increase 4; counter reset/))[0]!
+    interval.focus()
+    expect(interval).toHaveFocus()
+    expect(interval).toHaveAttribute('data-diagnostics', 'true')
+    expect(interval).toHaveAttribute('data-reset', 'true')
   })
 
   it('keeps previous data visible after a background refresh failure', async () => {

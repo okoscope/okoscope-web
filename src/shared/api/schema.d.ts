@@ -3356,7 +3356,7 @@ export interface components {
             api_version: "v1";
             /**
              * Format: int64
-             * @example 28
+             * @example 29
              */
             required_database_migration: number;
         };
@@ -3476,6 +3476,7 @@ export interface components {
             items: components["schemas"]["ApplicationWorker"][];
             next_cursor: components["schemas"]["NullableOpaqueCursor"];
         };
+        /** @description A diagnostic delta assigned to the selected workload's authenticated Application stream; node-wide and pre-attribution failures are excluded. */
         AgentDiagnosticDelta: {
             /** @enum {string} */
             category: "dropped" | "rate_limited" | "decode_failed" | "attribution_failed" | "capacity" | "kernel_lost" | "correlation" | "delivery_retry" | "unsupported";
@@ -3488,6 +3489,8 @@ export interface components {
             /** @enum {string} */
             status: "received" | "missing" | "unavailable";
             diagnostics: components["schemas"]["AgentDiagnosticDelta"][];
+            /** @description True only when the agent reported an Application-scoped diagnostic snapshot for this interval. False is unavailable */
+            diagnostics_available: boolean;
             reset: boolean;
         };
         AgentHealthCoverage: {
@@ -3509,6 +3512,9 @@ export interface components {
             first_event_at: components["schemas"]["NullableTimestamp"];
             last_event_at: components["schemas"]["NullableTimestamp"];
             coverage: components["schemas"]["AgentHealthCoverage"];
+            /** @description True after this agent has reported scoped diagnostics for the selected Application in the requested window. False is unavailable */
+            diagnostics_available: boolean;
+            /** @description Application-scoped diagnostic summary retained under its legacy field name for wire compatibility. It never contains node-wide or pre-attribution counters. */
             node_diagnostics: components["schemas"]["AgentDiagnosticDelta"][];
             /** @description Exactly 60 points for 1h and 72 points for 6h; 24h may contain 96 points. */
             timeline: components["schemas"]["AgentHealthTimelinePoint"][];
@@ -5033,7 +5039,7 @@ export interface components {
                 "application/json": components["schemas"]["ApplicationWorkerPage"];
             };
         };
-        /** @description Bounded Application-stream health and node-wide diagnostics */
+        /** @description Bounded Application-stream health and diagnostics assigned only to the selected Application workload; node-wide and pre-attribution diagnostics are excluded */
         ApplicationAgentHealthPage: {
             headers: {
                 "X-Request-Id": components["headers"]["RequestId"];

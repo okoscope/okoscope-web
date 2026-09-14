@@ -224,7 +224,7 @@ describe('attention presentation', () => {
     const groupLabel = await screen.findByText('Запуск процесса')
     expect(groupLabel).toBeVisible()
     expect(groupLabel).toHaveClass('text-emerald-200')
-    expect(groupLabel.closest('p')).toHaveClass('text-cyan-200')
+    expect(groupLabel.closest('div.mt-2')).toHaveClass('text-cyan-200')
     expect(groupLabel.closest('strong')).not.toHaveClass('rounded-full', 'border-cyan-700')
     expect(screen.getByText('checkout')).toHaveClass('text-violet-200')
     expect(groupLabel.closest('strong')).toHaveTextContent('Запуск процесса [checkout]')

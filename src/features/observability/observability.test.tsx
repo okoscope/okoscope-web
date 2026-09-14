@@ -136,6 +136,7 @@ describe('inbound network privacy', () => {
     semanticSummary: RuntimeGroup['semantic_summary'],
   ): RuntimeGroup => ({
     coverage: { closed_before: null, history_expired_before: null, detail_scope: 'raw' },
+    user_labels: [],
     id,
     project_id: 'project',
     application_id: 'application',

@@ -2,6 +2,41 @@ import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 import { authenticate, mockApi } from './fixtures'
 
+test('creates, edits, searches, and removes a behavior name while retaining technical evidence', async ({
+  page,
+}) => {
+  const { project, application } = await mockApi(page)
+  await page.goto(
+    `/projects/${project.id}/applications/${application.id}/runtime-inventory?kind=process`,
+  )
+  await authenticate(page)
+
+  await page.getByRole('button', { name: 'Add name' }).click()
+  await page.getByRole('textbox', { name: 'Behavior name' }).fill('  Database connection  ')
+  await page.getByRole('button', { name: 'Save name' }).click()
+  await expect(page.getByText('Behavior name saved.')).toBeVisible()
+  await expect(page.getByText('Database connection').first()).toBeVisible()
+  await expect(page.getByText("<img src=x onerror=alert('inventory')>").first()).toBeVisible()
+
+  await page.getByLabel('Search application activity').fill('Database connection')
+  await expect(page).toHaveURL(/search=/)
+  await expect(page.getByText('Database connection').first()).toBeVisible()
+
+  await page.getByRole('button', { name: 'Edit name' }).click()
+  await page.getByRole('textbox', { name: 'Behavior name' }).fill('NATS connection')
+  await page.getByRole('button', { name: 'Save name' }).click()
+  await expect(page.getByText('NATS connection').first()).toBeVisible()
+
+  await page.getByRole('link', { name: 'Observation history' }).click()
+  await expect(page.getByText('NATS connection').first()).toBeVisible()
+  await expect(page.getByText("<img src=x onerror=alert('inventory')>").first()).toBeVisible()
+  await page.getByRole('button', { name: 'Edit name' }).click()
+  await page.getByRole('button', { name: 'Remove name' }).click()
+  await expect(page.getByText('Behavior name removed.')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Add name' })).toBeVisible()
+  await expect(page.getByText("<img src=x onerror=alert('inventory')>").first()).toBeVisible()
+})
+
 test('explores Application Activity scope, views, cursors, and observation history', async ({
   page,
 }) => {
@@ -117,6 +152,7 @@ test('withholds Application Activity observations on ownership mismatch', async 
         inventory_kind: 'process',
         identity_version: 1,
         semantic_summary: { executable: '/withheld' },
+        user_label: null,
         first_seen_at: '2026-08-17T10:00:00Z',
         last_seen_at: '2026-08-18T10:00:00Z',
         occurrence_count: 1,

@@ -10,6 +10,8 @@ import { ErrorState } from '../../shared/ui/error-state'
 import { Loading } from '../../shared/ui/loading'
 import { formatTime } from './shared'
 import { SingleRecoveryActions } from './recovery'
+import { BehaviorUserLabels } from '../runtime-inventory/user-label'
+import { useLocalization } from '../../shared/i18n'
 
 export function DeliveryHistory({
   projectId,
@@ -144,6 +146,7 @@ export function DeliveryDetailView({
   projectId: string
   deliveryId: string
 }) {
+  const { t } = useLocalization()
   const query = useQuery(deliveryOptions(useApi(), projectId, deliveryId))
   useEffect(() => {
     if (query.data) document.title = `Delivery ${query.data.id} · Okoscope`
@@ -192,6 +195,21 @@ export function DeliveryDetailView({
                   .join(' · ') || '—'
               : '—'}
           </dd>
+          {delivery.semantic_metadata?.user_labels.length ? (
+            <>
+              <dt>{t('notificationBehaviorLabels')}</dt>
+              <dd>
+                <BehaviorUserLabels
+                  as="div"
+                  labels={delivery.semantic_metadata.user_labels}
+                  technicalTitle={
+                    delivery.semantic_metadata.event_kind ?? t('technicalEventUnavailable')
+                  }
+                  headingClassName="font-semibold"
+                />
+              </dd>
+            </>
+          ) : null}
           <dt>Attempts</dt>
           <dd>
             {delivery.attempt_count}/{delivery.max_attempts}

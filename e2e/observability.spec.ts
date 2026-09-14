@@ -291,6 +291,7 @@ test('investigates a restart loop from Requires attention with source-qualified 
                 runtime_group_id: restartGroup.id,
                 event_kind: restartGroup.event_kind,
                 semantic_summary: restartGroup.semantic_summary,
+                user_labels: restartGroup.user_labels,
               },
             },
           ],

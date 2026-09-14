@@ -33,6 +33,7 @@ import { getEventKindLabel } from '../features/observability/presentation'
 import { LayoutGrid, List } from 'lucide-react'
 import { PolicyState } from '../features/policies/components'
 import { ObservationPolicyActions } from '../features/policies/from-observation'
+import { BehaviorUserLabels } from '../features/runtime-inventory/user-label'
 
 export const Route = createFileRoute(
   '/projects/$projectId/applications/$applicationId/runtime-groups/$groupId',
@@ -126,9 +127,12 @@ function RuntimeGroupDetailPage() {
       </nav>
       <Card>
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-3xl font-semibold">
-            {getEventKindLabel(group.data.event_kind, group.data.semantic_summary)}
-          </h1>
+          <BehaviorUserLabels
+            as="h1"
+            labels={group.data.user_labels}
+            technicalTitle={getEventKindLabel(group.data.event_kind, group.data.semantic_summary)}
+            headingClassName="text-3xl font-semibold"
+          />
           <RuntimeGroupStatusBadge status={group.data.status} />
           <PolicyState
             evaluation={group.data.policy_evaluation}

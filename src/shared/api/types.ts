@@ -209,6 +209,8 @@ export type InventoryDistribution = components['schemas']['InventoryDistribution
 export type InventoryDistributionEntry = components['schemas']['InventoryDistributionEntry']
 export type InventoryFacetPage = components['schemas']['InventoryFacetPage']
 export type InventoryItemDetail = components['schemas']['InventoryItemDetail']
+export type RuntimeBehaviorUserLabel = components['schemas']['RuntimeBehaviorUserLabel']
+export type PutRuntimeBehaviorUserLabel = components['schemas']['PutRuntimeBehaviorUserLabel']
 export type InventoryReleaseEvidence = components['schemas']['InventoryReleaseEvidence']
 export type InventoryReleasePresencePage = components['schemas']['InventoryReleasePresencePage']
 export type InventorySighting = components['schemas']['InventorySighting']
@@ -570,6 +572,7 @@ export const contractFixture = {
     inventory_kind: 'process',
     identity_version: 1,
     semantic_summary: { executable: '/app/payments' },
+    user_label: null,
     first_seen_at: '2026-08-17T00:00:00Z',
     last_seen_at: '2026-08-18T00:00:00Z',
     occurrence_count: 12,
@@ -645,6 +648,7 @@ export const contractFixture = {
         workload_kind: 'Deployment',
         workload_name: 'payments',
         event_kind: 'exec',
+        user_labels: [],
         status: 'open',
         first_seen_at: '2026-08-18T00:00:00Z',
         last_seen_at: '2026-08-18T01:00:00Z',
@@ -690,6 +694,7 @@ export const contractFixture = {
         {
           identity_token: 'process-token',
           semantic_summary: { executable: '/app/payments' },
+          user_label: null,
           item_count: 1,
           occurrence_count: 8,
         },
@@ -711,6 +716,7 @@ export const contractFixture = {
             destination_address: '203.0.113.7',
             destination_port: 443,
           },
+          user_label: null,
           item_count: 1,
           occurrence_count: 6,
         },
@@ -731,6 +737,7 @@ export const contractFixture = {
             name: 'api.example.com',
             query_type: 'A',
           },
+          user_label: null,
           item_count: 1,
           occurrence_count: 5,
         },
@@ -747,6 +754,7 @@ export const contractFixture = {
         {
           identity_token: 'syscall-token',
           semantic_summary: { process_command: 'payments', syscall: 'epoll_wait' },
+          user_label: null,
           item_count: 1,
           occurrence_count: 9,
         },

@@ -43,6 +43,7 @@ import { Button } from '../../shared/ui/button'
 import { Card } from '../../shared/ui/card'
 import { ErrorState } from '../../shared/ui/error-state'
 import { formatCount, formatTimestamp } from '../tenant/format'
+import { BehaviorUserLabels } from '../runtime-inventory/user-label'
 import { useLocalization, type MessageKey } from '../../shared/i18n'
 import { PolicyState } from '../policies/components'
 import { useApi } from '../../shared/api/context'
@@ -1061,7 +1062,12 @@ export function RuntimeGroupList({
                 params={{ projectId, applicationId, groupId: group.id }}
                 search={search}
               >
-                {getEventKindLabel(group.event_kind, group.semantic_summary)}
+                <BehaviorUserLabels
+                  as="h2"
+                  labels={group.user_labels}
+                  technicalTitle={getEventKindLabel(group.event_kind, group.semantic_summary)}
+                  headingClassName="text-xl font-semibold"
+                />
               </Link>
               <InboundEventBadge eventKind={group.event_kind} />
             </div>

@@ -35,6 +35,11 @@ import type { InventorySearch } from './url-state'
 import { PolicyState } from '../policies/components'
 import { getActivityPresentation, getEventKindLabel } from '../observability/presentation'
 import { evidencePresentation } from '../observability/presentation'
+import {
+  BehaviorUserLabels,
+  InventoryUserLabelEditor,
+  InventoryUserLabelHeading,
+} from './user-label'
 
 function KubernetesSourceIcon() {
   return (
@@ -322,9 +327,18 @@ export function InventoryList({
               <p className="eyebrow">
                 {getActivityPresentation(item.inventory_kind).behaviorLabel}
               </p>
-              <h2 className="mt-2 text-lg font-semibold">
-                <InventoryIdentity item={item} />
-              </h2>
+              <InventoryUserLabelHeading
+                as="h2"
+                item={item}
+                technicalIdentity={<InventoryIdentity item={item} />}
+                headingClassName="mt-2 text-lg font-semibold"
+              />
+              <InventoryUserLabelEditor
+                projectId={projectId}
+                applicationId={applicationId}
+                itemId={item.id}
+                userLabel={item.user_label}
+              />
             </div>
             <Button
               asChild
@@ -652,7 +666,12 @@ export function EvidenceList(props: EvidenceProps) {
         {props.page.items.map((item) => (
           <Card key={item.id}>
             <div className="flex flex-wrap justify-between gap-3">
-              <h2 className="break-all font-semibold">{getEventKindLabel(item.event_kind)}</h2>
+              <BehaviorUserLabels
+                as="h2"
+                labels={item.user_labels}
+                technicalTitle={getEventKindLabel(item.event_kind)}
+                headingClassName="break-all font-semibold"
+              />
               <span className="flex items-center gap-3">
                 <span>{item.status}</span>
                 {props.projectId && props.applicationId && (

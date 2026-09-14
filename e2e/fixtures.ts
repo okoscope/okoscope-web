@@ -78,6 +78,7 @@ const group = {
       ambiguous: true,
     },
   },
+  user_labels: [],
   status: 'open',
   first_seen_at: '2026-08-17T10:00:00Z',
   first_seen_event_id: '00000000-0000-4000-8000-000000000006',
@@ -202,6 +203,7 @@ const attentionItem = {
     runtime_group_id: group.id,
     event_kind: group.event_kind,
     semantic_summary: group.semantic_summary,
+    user_labels: group.user_labels,
     namespace: group.namespace,
     workload_kind: group.workload_kind,
     workload_name: group.workload_name,
@@ -270,6 +272,7 @@ const inventoryItem = {
   inventory_kind: 'process',
   identity_version: 1,
   semantic_summary: { executable: unsafeInventoryText },
+  user_label: null,
   first_seen_at: '2026-08-17T10:00:00Z',
   last_seen_at: '2026-08-18T10:00:00Z',
   occurrence_count: 12,
@@ -324,6 +327,13 @@ export async function mockApi(page: Page, role: 'owner' | 'member' = 'owner') {
   let loggedIn = false
   let preferredLocale: 'en' | 'ru' = 'en'
   let groupStatus: 'open' | 'acknowledged' | 'resolved' = 'open'
+  let inventoryUserLabel: null | {
+    display_name: string
+    created_by_user_id: string
+    updated_by_user_id: string
+    created_at: string
+    updated_at: string
+  } = null
   const destination = {
     id: '00000000-0000-4000-8000-000000000010',
     project_id: project.id,
@@ -348,6 +358,7 @@ export async function mockApi(page: Page, role: 'owner' | 'member' = 'owner') {
       application_id: application.id,
       group_id: group.id,
       event_kind: 'notification.test',
+      user_labels: [],
     },
     destination: { id: destination.id, name: destination.name, enabled: true },
     status: 'pending',
@@ -818,6 +829,26 @@ export async function mockApi(page: Page, role: 'owner' | 'member' = 'owner') {
           { kind: 'inbound_endpoint', item_count: 1, occurrence_count: 18 },
         ],
       })
+    if (path === `${inventoryBase}/${inventoryItemId}/user-label`) {
+      if (route.request().method() === 'PUT') {
+        const body = route.request().postDataJSON() as {
+          display_name: string
+          expected_updated_at?: string | null
+        }
+        inventoryUserLabel = {
+          display_name: body.display_name.trim(),
+          created_by_user_id: '00000000-0000-4000-8000-000000000020',
+          updated_by_user_id: '00000000-0000-4000-8000-000000000020',
+          created_at: inventoryUserLabel?.created_at ?? '2026-09-14T10:00:00Z',
+          updated_at: inventoryUserLabel === null ? '2026-09-14T10:00:00Z' : '2026-09-14T11:00:00Z',
+        }
+        return json(route, inventoryUserLabel)
+      }
+      if (route.request().method() === 'DELETE') {
+        inventoryUserLabel = null
+        return route.fulfill({ status: 204 })
+      }
+    }
     if (path === `${inventoryBase}/distribution`) {
       const kind = url.searchParams.get('kind') ?? 'process'
       const identity =
@@ -859,6 +890,7 @@ export async function mockApi(page: Page, role: 'owner' | 'member' = 'owner') {
           {
             identity_token: `${kind}-identity`,
             semantic_summary: identity,
+            user_label: inventoryUserLabel,
             item_count: 1,
             occurrence_count: 16,
           },
@@ -916,11 +948,19 @@ export async function mockApi(page: Page, role: 'owner' | 'member' = 'owner') {
                   ? { process_command: 'gateway', syscall: 'epoll_wait' }
                   : inventoryItem.semantic_summary
       return json(route, {
-        items: [{ ...inventoryItem, inventory_kind: kind, semantic_summary: identity }],
+        items: [
+          {
+            ...inventoryItem,
+            inventory_kind: kind,
+            semantic_summary: identity,
+            user_label: inventoryUserLabel,
+          },
+        ],
         next_cursor: 'terminal',
       })
     }
-    if (path === `${inventoryBase}/${inventoryItemId}`) return json(route, inventoryDetail)
+    if (path === `${inventoryBase}/${inventoryItemId}`)
+      return json(route, { ...inventoryDetail, user_label: inventoryUserLabel })
     if (path === `${inventoryBase}/${inventoryItemId}/releases`)
       return json(route, {
         items: [
@@ -980,6 +1020,7 @@ export async function mockApi(page: Page, role: 'owner' | 'member' = 'owner') {
             workload_kind: group.workload_kind,
             workload_name: group.workload_name,
             event_kind: group.event_kind,
+            user_labels: group.user_labels,
             status: groupStatus,
             first_seen_at: group.first_seen_at,
             last_seen_at: group.last_seen_at,

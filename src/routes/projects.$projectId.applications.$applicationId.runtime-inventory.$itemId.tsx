@@ -34,6 +34,10 @@ import { Loading } from '../shared/ui/loading'
 import { formatCount, formatTimestamp } from '../features/tenant/format'
 import { getActivityPresentation } from '../features/observability/presentation'
 import { ObservationPolicyActions } from '../features/policies/from-observation'
+import {
+  InventoryUserLabelEditor,
+  InventoryUserLabelHeading,
+} from '../features/runtime-inventory/user-label'
 
 export const Route = createFileRoute(
   '/projects/$projectId/applications/$applicationId/runtime-inventory/$itemId',
@@ -169,9 +173,18 @@ function RuntimeInventoryDetailPage() {
       <RetentionCoverage coverage={item.data.coverage} inventory />
       <Card>
         <p className="eyebrow">{getActivityPresentation(item.data.inventory_kind).itemLabel}</p>
-        <h1 className="mt-2 text-2xl font-semibold">
-          <InventoryIdentity item={item.data} />
-        </h1>
+        <InventoryUserLabelHeading
+          as="h1"
+          item={item.data}
+          technicalIdentity={<InventoryIdentity item={item.data} />}
+          headingClassName="mt-2 text-2xl font-semibold"
+        />
+        <InventoryUserLabelEditor
+          projectId={projectId}
+          applicationId={applicationId}
+          itemId={itemId}
+          userLabel={item.data.user_label}
+        />
         <dl className="details mt-5">
           <dt>{getActivityPresentation(item.data.inventory_kind).countLabel}</dt>
           <dd>{formatCount(item.data.occurrence_count)}</dd>

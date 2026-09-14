@@ -107,30 +107,37 @@ export function TopBehaviorDistribution({
   const copy = getActivityPresentation(distribution.kind)
   const entries = distribution.entries.map((entry) => {
     const label = inventoryIdentityText(distribution.kind, entry.semantic_summary)
+    const displayLabel = entry.user_label?.display_name
     const lifecycle =
       distribution.kind === 'lifecycle' && isInventoryLifecycle(entry.semantic_summary)
         ? entry.semantic_summary
         : undefined
     return {
       id: entry.identity_token,
-      label:
-        lifecycle &&
+      label: displayLabel ? (
+        <span className="inline-flex min-w-0 flex-col">
+          <span>{displayLabel}</span>
+          <span className="break-all font-mono text-xs font-normal text-slate-400">{label}</span>
+        </span>
+      ) : lifecycle &&
         (lifecycle.evidence_source === 'kernel' || lifecycle.evidence_source === 'kubernetes') ? (
-          <span className="inline-flex min-w-0 items-center gap-2 font-mono">
-            <span>{getEventKindLabel(lifecycle.event_kind ?? 'lifecycle')}</span>
-            {lifecycle.event_kind === 'process.exit' && (
-              <span className="break-all">· {lifecycle.identity}</span>
-            )}
-            <LifecycleSourceIcon source={lifecycle.evidence_source} />
-          </span>
-        ) : (
-          <span className="font-mono">{label}</span>
-        ),
-      accessibleLabel: lifecycle
-        ? `${localized(getEventKindLabel(lifecycle.event_kind ?? 'lifecycle'))}${
-            lifecycle.event_kind === 'process.exit' ? ` · ${lifecycle.identity}` : ''
-          } · ${lifecycle.evidence_source}`
-        : label,
+        <span className="inline-flex min-w-0 items-center gap-2 font-mono">
+          <span>{getEventKindLabel(lifecycle.event_kind ?? 'lifecycle')}</span>
+          {lifecycle.event_kind === 'process.exit' && (
+            <span className="break-all">· {lifecycle.identity}</span>
+          )}
+          <LifecycleSourceIcon source={lifecycle.evidence_source} />
+        </span>
+      ) : (
+        <span className="font-mono">{label}</span>
+      ),
+      accessibleLabel: displayLabel
+        ? `${displayLabel}. ${label}`
+        : lifecycle
+          ? `${localized(getEventKindLabel(lifecycle.event_kind ?? 'lifecycle'))}${
+              lifecycle.event_kind === 'process.exit' ? ` · ${lifecycle.identity}` : ''
+            } · ${lifecycle.evidence_source}`
+          : label,
       value: entry.occurrence_count,
       selected: entry.identity_token === selectedToken,
       meta: `${formatCount(entry.item_count)} unique identities`,

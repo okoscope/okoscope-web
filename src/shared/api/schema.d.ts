@@ -809,6 +809,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/{project_id}/applications/{application_id}/runtime-inventory/{item_id}/user-label": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+                application_id: components["parameters"]["ApplicationId"];
+                item_id: components["parameters"]["InventoryItemId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /** @description Assigns a user-provided name to the stable identity resolved from the owned inventory item. The observed semantic summary and identity are not changed. */
+        put: operations["putApplicationRuntimeInventoryUserLabel"];
+        post?: never;
+        /** @description Removes the label resolved from the owned inventory item. Deleting an already absent label is successful. */
+        delete: operations["deleteApplicationRuntimeInventoryUserLabel"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{project_id}/applications/{application_id}/runtime-inventory/{item_id}/releases": {
         parameters: {
             query?: never;
@@ -3120,6 +3142,7 @@ export interface components {
             runtime_group_id: components["schemas"]["Uuid"];
             event_kind: components["schemas"]["RuntimeEventKind"];
             semantic_summary: components["schemas"]["RuntimeEventSemanticSummary"];
+            user_labels: components["schemas"]["RuntimeBehaviorUserLabel"][];
             namespace: string;
             workload_kind: string;
             workload_name: string;
@@ -3356,7 +3379,7 @@ export interface components {
             api_version: "v1";
             /**
              * Format: int64
-             * @example 29
+             * @example 30
              */
             required_database_migration: number;
         };
@@ -3539,6 +3562,7 @@ export interface components {
             fingerprint_version: number;
             event_kind: string;
             semantic_summary: components["schemas"]["RuntimeEventSemanticSummary"];
+            user_labels: components["schemas"]["RuntimeBehaviorUserLabel"][];
             /** @enum {string} */
             status: "open" | "acknowledged" | "resolved";
             first_seen_at: components["schemas"]["Timestamp"];
@@ -4162,6 +4186,7 @@ export interface components {
             application_id: components["schemas"]["NullableUuid"];
             group_id: components["schemas"]["NullableUuid"];
             event_kind: string | null;
+            user_labels: components["schemas"]["RuntimeBehaviorUserLabel"][];
         };
         NullableDeliverySemanticMetadata: components["schemas"]["DeliverySemanticMetadata"] | null;
         DeliveryPage: {
@@ -4358,6 +4383,7 @@ export interface components {
              */
             identity_version: number;
             semantic_summary: components["schemas"]["InventorySemanticSummary"];
+            user_label: components["schemas"]["RuntimeBehaviorUserLabel"] | null;
             first_seen_at: components["schemas"]["Timestamp"];
             last_seen_at: components["schemas"]["Timestamp"];
             /** Format: int64 */
@@ -4425,10 +4451,23 @@ export interface components {
         InventoryDistributionEntry: {
             identity_token: string;
             semantic_summary: components["schemas"]["InventorySemanticSummary"];
+            user_label: components["schemas"]["RuntimeBehaviorUserLabel"] | null;
             /** Format: int64 */
             item_count: number;
             /** Format: int64 */
             occurrence_count: number;
+        };
+        RuntimeBehaviorUserLabel: {
+            display_name: string;
+            created_by_user_id: components["schemas"]["Uuid"];
+            updated_by_user_id: components["schemas"]["Uuid"];
+            created_at: components["schemas"]["Timestamp"];
+            updated_at: components["schemas"]["Timestamp"];
+        };
+        PutRuntimeBehaviorUserLabel: {
+            /** @description Unicode display text. The server trims edge whitespace and rejects control characters. */
+            display_name: string;
+            expected_updated_at?: components["schemas"]["Timestamp"] | null;
         };
         InventoryDistributionOther: {
             /** Format: int64 */
@@ -4551,6 +4590,7 @@ export interface components {
             workload_kind: string;
             workload_name: string;
             event_kind: string;
+            user_labels: components["schemas"]["RuntimeBehaviorUserLabel"][];
             /** @enum {string} */
             status: "open" | "acknowledged" | "resolved";
             first_seen_at: components["schemas"]["Timestamp"];
@@ -6679,7 +6719,7 @@ export interface operations {
                 container_name?: string;
                 observed_from?: string;
                 observed_to?: string;
-                /** @description Case-insensitive search over allowlisted safe semantic identity fields only. */
+                /** @description Case-insensitive search over the current user label and allowlisted safe semantic identity fields only. */
                 search?: string;
                 /** @description Opaque server-issued token selecting one typed inventory identity. */
                 identity_token?: string;
@@ -6817,6 +6857,68 @@ export interface operations {
             200: components["responses"]["InventoryItemDetail"];
             401: components["responses"]["Error"];
             404: components["responses"]["Error"];
+        };
+    };
+    putApplicationRuntimeInventoryUserLabel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+                application_id: components["parameters"]["ApplicationId"];
+                item_id: components["parameters"]["InventoryItemId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PutRuntimeBehaviorUserLabel"];
+            };
+        };
+        responses: {
+            /** @description Current user label */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RuntimeBehaviorUserLabel"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            500: components["responses"]["Error"];
+        };
+    };
+    deleteApplicationRuntimeInventoryUserLabel: {
+        parameters: {
+            query?: {
+                /** @description Optional optimistic-concurrency precondition. */
+                expected_updated_at?: string;
+            };
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+                application_id: components["parameters"]["ApplicationId"];
+                item_id: components["parameters"]["InventoryItemId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Label absent */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            500: components["responses"]["Error"];
         };
     };
     listApplicationRuntimeInventoryItemReleases: {

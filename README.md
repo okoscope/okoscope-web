@@ -8,7 +8,8 @@ The UI supports:
 
 - organizations, projects, applications, clusters, and workloads;
 - runtime activity, grouped events, and inventory of executables, network destinations, and
-  file paths;
+  file paths, with optional application-scoped user names that never replace observed technical
+  evidence;
 - release history and behavioral comparisons between releases;
 - resource history and resource-impact comparisons;
 - attention queues and policy review;

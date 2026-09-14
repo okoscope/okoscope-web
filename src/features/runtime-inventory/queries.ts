@@ -11,6 +11,8 @@ import type {
   InventoryReleasePresencePage,
   InventorySightingPage,
   InventorySummary,
+  PutRuntimeBehaviorUserLabel,
+  RuntimeBehaviorUserLabel,
 } from '../../shared/api/types'
 import type { InventoryEvidence, InventorySearch } from './url-state'
 import { summarySearch } from './url-state'
@@ -32,6 +34,33 @@ const query = (input: Record<string, string | number | boolean | undefined>) => 
 }
 const base = (projectId: string, applicationId: string) =>
   `/api/v1/projects/${encodeURIComponent(projectId)}/applications/${encodeURIComponent(applicationId)}/runtime-inventory`
+
+const userLabelPath = (projectId: string, applicationId: string, itemId: string) =>
+  `${base(projectId, applicationId)}/${encodeURIComponent(itemId)}/user-label`
+
+export const putInventoryUserLabel = (
+  api: ApiClient,
+  projectId: string,
+  applicationId: string,
+  itemId: string,
+  input: PutRuntimeBehaviorUserLabel,
+) =>
+  api.put<RuntimeBehaviorUserLabel>(userLabelPath(projectId, applicationId, itemId), {
+    protected: true,
+    body: input,
+  })
+
+export const deleteInventoryUserLabel = (
+  api: ApiClient,
+  projectId: string,
+  applicationId: string,
+  itemId: string,
+  expectedUpdatedAt?: string,
+) =>
+  api.delete(
+    `${userLabelPath(projectId, applicationId, itemId)}${query({ expected_updated_at: expectedUpdatedAt })}`,
+    { protected: true },
+  )
 
 export const inventoryKeys = {
   summary: (projectId: string, applicationId: string, search: InventorySearch) =>

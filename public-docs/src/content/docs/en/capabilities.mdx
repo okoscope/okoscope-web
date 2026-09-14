@@ -91,6 +91,10 @@ observation:
 
 Inventory is where you browse what was seen — executables, network identities, file paths — together with the evidence still stored for each. Release comparison puts a baseline next to a target and shows how their behavior differs; where coverage has expired, the answer is unknown rather than no. So look at coverage first, then decide what a missing behavior means.
 
+You can give any inventory behavior an application-specific name, whether it is a process, connection, domain, syscall, file operation or lifecycle event. For example, name an observed destination `Database connection` or a process `Background request worker`. The name is user-provided interpretation: Okoscope always keeps the canonical technical identity visible underneath it, and naming does not change agent evidence, grouping, counts or policy evaluation. Names are scoped to one Application, may be duplicated, are included in inventory search, and remain available when older raw evidence expires. A changed technical identity or identity-version does not inherit a name automatically.
+
+Open an inventory card or its observation history and choose **Add name**. Any signed-in principal with access to that Project can create, edit or remove a name. Names contain 1–120 characters and cannot contain control characters. Concurrent edits are detected; when a conflict is reported, review the freshly loaded value before retrying.
+
 Runtime policies record how you decided to treat a behavior when you reviewed it. They are a review tool: they do not install a kernel firewall and they do not block a syscall. Project notifications forward supported findings to the destinations you configured. Delivery is tracked separately from the finding itself, so check the delivery record and its attempts — an event in the interface does not mean a webhook arrived.
 
 ![Application Activity showing observed behavior by kind and the most observed DNS requests for an example Application.](/documentation/application-activity.en.png)

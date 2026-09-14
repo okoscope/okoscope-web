@@ -57,6 +57,7 @@ describe('data visualization presentation', () => {
             listener_observed: true,
             accept_observed: true,
           },
+          user_label: null,
           item_count: 1,
           occurrence_count: 18,
         },
@@ -113,6 +114,7 @@ describe('data visualization presentation', () => {
           {
             identity_token: source,
             semantic_summary: semanticSummary,
+            user_label: null,
             item_count: 1,
             occurrence_count: 4,
           },
@@ -168,12 +170,14 @@ describe('data visualization presentation', () => {
             observed_restart_count: 4,
             container_name: 'api',
           } as unknown as InventoryLifecycleSemanticSummary,
+          user_label: null,
           item_count: 1,
           occurrence_count: 3,
         },
         {
           identity_token: 'unknown',
           semantic_summary: { executable: 'not-lifecycle' },
+          user_label: null,
           item_count: 1,
           occurrence_count: 2,
         },
@@ -220,12 +224,14 @@ describe('data visualization presentation', () => {
         {
           identity_token: 'low',
           semantic_summary: { executable: 'low' },
+          user_label: null,
           item_count: 1,
           occurrence_count: 5,
         },
         {
           identity_token: 'high',
           semantic_summary: { executable: 'high' },
+          user_label: null,
           item_count: 1,
           occurrence_count: 20,
         },
@@ -255,6 +261,7 @@ describe('data visualization presentation', () => {
         {
           identity_token: 'opaque',
           semantic_summary: { executable: '<img src=x onerror=alert(1)>' },
+          user_label: null,
           item_count: 1,
           occurrence_count: 8,
         },

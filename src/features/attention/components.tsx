@@ -16,6 +16,7 @@ import { Card } from '../../shared/ui/card'
 import { getEventKindLabel } from '../observability/presentation'
 import { formatResourceValue, metricLabel } from '../resources/model'
 import { attentionDestination, type AttentionDestination } from './routing'
+import { BehaviorUserLabels } from '../runtime-inventory/user-label'
 
 const priorityKeys: Record<AttentionPriority, MessageKey> = {
   urgent: 'priorityUrgent',
@@ -160,30 +161,37 @@ function RuntimeGroupIdentity({ item }: { item: AttentionPriorityItem }) {
   const [eventLabel, ...detailParts] = displayName.split(' — ')
   const details = detailParts.join(' — ').split(' · ').filter(Boolean)
   return (
-    <p className="mt-2 text-sm text-cyan-200">
-      {t('runtimeGroup')}:{' '}
-      <strong className="inline-flex max-w-full flex-wrap items-center gap-2 font-semibold">
-        <span className="text-emerald-200">{eventLabel}</span>
-        {details[0] ? (
-          <span>
-            <span className="sr-only"> </span>
-            <span className="text-white">[</span>
-            <span className="text-violet-200">{details[0]}</span>
-            <span className="text-white">]</span>
-          </span>
-        ) : null}
-        {details[1] ? (
-          <span className="inline-flex items-center gap-2">
-            <span className="sr-only"> leads to </span>
-            <ArrowRight size={14} className="text-white" aria-hidden="true" />
-            <span className="text-amber-200">{details[1]}</span>
-          </span>
-        ) : null}
-      </strong>
+    <div className="mt-2 text-sm text-cyan-200">
+      <span>{t('runtimeGroup')}:</span>{' '}
+      <BehaviorUserLabels
+        as="div"
+        labels={resource.user_labels}
+        technicalTitle={
+          <strong className="inline-flex max-w-full flex-wrap items-center gap-2 font-semibold">
+            <span className="text-emerald-200">{eventLabel}</span>
+            {details[0] ? (
+              <span>
+                <span className="sr-only"> </span>
+                <span className="text-white">[</span>
+                <span className="text-violet-200">{details[0]}</span>
+                <span className="text-white">]</span>
+              </span>
+            ) : null}
+            {details[1] ? (
+              <span className="inline-flex items-center gap-2">
+                <span className="sr-only"> leads to </span>
+                <ArrowRight size={14} className="text-white" aria-hidden="true" />
+                <span className="text-amber-200">{details[1]}</span>
+              </span>
+            ) : null}
+          </strong>
+        }
+        headingClassName="font-semibold text-cyan-100"
+      />
       <span className="mt-1 block text-slate-400">
         {resource.namespace} · {resource.workload_kind}/{resource.workload_name}
       </span>
-    </p>
+    </div>
   )
 }
 

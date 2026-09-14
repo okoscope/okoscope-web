@@ -7,6 +7,8 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-09-14
+
 ### Fixed
 
 - Kept runtime-group event names distinct by moving status and policy badges to a dedicated row
@@ -48,6 +50,7 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Agent freshness now follows the server-provided bound instead of a
   client-owned inactivity threshold.
 
-[Unreleased]: https://github.com/okoscope/okoscope-web/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/okoscope/okoscope-web/compare/v0.2.3...HEAD
+[0.2.3]: https://github.com/okoscope/okoscope-web/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/okoscope/okoscope-web/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/okoscope/okoscope-web/compare/v0.2.0...v0.2.1

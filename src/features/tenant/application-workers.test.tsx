@@ -242,19 +242,38 @@ describe('Application agent health', () => {
     },
   )
 
-  it('requests the default range and progressively discloses capabilities', async () => {
+  it('shows the complete capability set in one always-visible row', async () => {
     const get = endpointGet()
     renderWorkers(get)
     expect(await screen.findByText('worker-amd64-01')).toBeVisible()
     expect(screen.getByText('Reporting recently')).toHaveAttribute('data-stream-state', 'reporting')
-    const disclosure = screen.getByText('Advertised capabilities · 1')
-    expect(disclosure).toBeVisible()
-    expect(screen.queryByText('Process execution')).not.toBeVisible()
-    await userEvent.click(disclosure)
-    expect(screen.getByText('Process execution')).toBeVisible()
+    expect(screen.getByText('Advertised capabilities · 1')).toBeVisible()
+    const capabilityRow = screen.getByRole('list', { name: 'Advertised capabilities' })
+    expect(capabilityRow).toHaveClass('flex-nowrap', 'overflow-x-auto')
+    expect(capabilityRow.children).toHaveLength(13)
+    expect(screen.getByLabelText('Process execution')).toHaveAttribute('data-active', 'true')
+    expect(screen.getByLabelText('Process termination')).toHaveAttribute('data-active', 'false')
+    expect(screen.getByLabelText('Process termination')).toHaveAttribute('aria-disabled', 'true')
+    expect(screen.getByText('Process execution')).toHaveAttribute('role', 'tooltip')
+    expect(
+      screen.queryByText('What this agent advertised, not proof that evidence was accepted.'),
+    ).not.toBeInTheDocument()
+    expect(document.querySelector('details')).toBeNull()
     expect(get).toHaveBeenCalledWith(expect.stringMatching(/agent-health\?range=1h&limit=20/), {
       protected: true,
     })
+  })
+
+  it('localizes capability names and exposes tooltips to keyboard focus', async () => {
+    renderWorkers(endpointGet(), 'ru')
+    const capability = await screen.findByLabelText('Запуск процессов')
+    capability.focus()
+    expect(capability).toHaveFocus()
+    expect(screen.getByText('Запуск процессов')).toHaveAttribute('role', 'tooltip')
+    expect(screen.getByLabelText('Наблюдение системных вызовов')).toHaveAttribute(
+      'data-active',
+      'false',
+    )
   })
 
   it('changes to a supported range with keyboard-operable controls', async () => {
@@ -348,7 +367,7 @@ describe('Application agent health', () => {
     )
   })
 
-  it('renders unknown capabilities as inert text with strict scoped diagnostics', async () => {
+  it('renders unknown capabilities as active inert question icons with strict scoped diagnostics', async () => {
     renderWorkers(
       endpointGet({
         agents: healthPage([
@@ -362,8 +381,11 @@ describe('Application agent health', () => {
         ]),
       }),
     )
-    await userEvent.click(await screen.findByText('Advertised capabilities · 1'))
-    expect(screen.getByText('future.signal/v2')).toBeVisible()
+    expect(await screen.findByText('Advertised capabilities · 1')).toBeVisible()
+    const unknown = screen.getByLabelText('future.signal/v2')
+    expect(unknown).toHaveAttribute('data-active', 'true')
+    expect(unknown).not.toHaveAttribute('aria-disabled')
+    expect(screen.getByText('future.signal/v2')).toHaveAttribute('role', 'tooltip')
     expect(screen.getByText('Signal evidence unavailable')).toBeVisible()
     expect(
       screen.getByText('No Application diagnostic counter increased in the selected range.'),

@@ -20,6 +20,8 @@ Application health presents only diagnostic evidence assigned to the selected wo
 authenticated Application stream. Node-wide and pre-attribution agent diagnostics remain in
 operator logs and are not projected into an Application. Every accepted heartbeat includes an
 Application-scoped diagnostic snapshot; agents that omit it are rejected as incompatible.
+Agent cards keep the supported capability icons visible in one row, dim capabilities that the
+agent did not advertise, and expose each localized capability name on hover or keyboard focus.
 
 The product interface is a React single-page app. Public documentation is a statically generated
 Astro and Starlight site at `/docs/en/` and `/docs/ru/`. The application validates backend compatibility at startup and

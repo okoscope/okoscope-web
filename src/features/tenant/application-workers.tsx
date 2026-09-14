@@ -1,5 +1,21 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
+import {
+  Activity,
+  Boxes,
+  CircleGauge,
+  CircleHelp,
+  Container,
+  FileSearch,
+  LogIn,
+  LogOut,
+  Network,
+  RadioTower,
+  Send,
+  Settings2,
+  SquareTerminal,
+  type LucideIcon,
+} from 'lucide-react'
 import { useState } from 'react'
 import { readinessOptions } from '../../shared/api/onboarding'
 import { applicationAgentHealthOptions } from '../../shared/api/queries'
@@ -101,30 +117,111 @@ function HealthSummary({ readiness }: { readiness: ConnectionReadiness }) {
 }
 
 const ranges = ['1h', '6h', '24h'] as const
-const knownCapabilities: Record<string, MessageKey> = {
-  'process.exec/v1': 'agentCapability_processExec',
-  'process.exit/v1': 'agentCapability_processExit',
-  'container.lifecycle/v1': 'agentCapability_containerLifecycle',
-  'network.connect/v1': 'agentCapability_networkConnect',
-  'network.listen/v1': 'agentCapability_networkListen',
-  'network.accept/v1': 'agentCapability_networkAccept',
-  'network.dns.udp/v1': 'agentCapability_networkDnsUdp',
-  'network.dns.tcp/v1': 'agentCapability_networkDnsTcp',
-  'file.activity.syscall-path/v1': 'agentCapability_fileActivitySyscallPath',
-  'kubernetes.release-discovery/v1': 'agentCapability_kubernetesReleaseDiscovery',
-  'onboarding.status/v1': 'agentCapability_onboardingStatus',
-  'resource.utilization/v1': 'agentCapability_resourceUtilization',
+type CapabilityPresentation = {
+  capability: string
+  labelKey: MessageKey
+  icon: LucideIcon
+  matches?: (capability: string) => boolean
 }
+
+const knownCapabilities: CapabilityPresentation[] = [
+  { capability: 'process.exec/v1', labelKey: 'agentCapability_processExec', icon: SquareTerminal },
+  { capability: 'process.exit/v1', labelKey: 'agentCapability_processExit', icon: LogOut },
+  {
+    capability: 'syscall.*/v1',
+    labelKey: 'agentCapability_syscalls',
+    icon: Activity,
+    matches: (capability) => capability.startsWith('syscall.') && capability.endsWith('/v1'),
+  },
+  {
+    capability: 'container.lifecycle/v1',
+    labelKey: 'agentCapability_containerLifecycle',
+    icon: Container,
+  },
+  { capability: 'network.connect/v1', labelKey: 'agentCapability_networkConnect', icon: Send },
+  { capability: 'network.listen/v1', labelKey: 'agentCapability_networkListen', icon: RadioTower },
+  { capability: 'network.accept/v1', labelKey: 'agentCapability_networkAccept', icon: LogIn },
+  { capability: 'network.dns.udp/v1', labelKey: 'agentCapability_networkDnsUdp', icon: Network },
+  { capability: 'network.dns.tcp/v1', labelKey: 'agentCapability_networkDnsTcp', icon: Network },
+  {
+    capability: 'file.activity.syscall-path/v1',
+    labelKey: 'agentCapability_fileActivitySyscallPath',
+    icon: FileSearch,
+  },
+  {
+    capability: 'kubernetes.release-discovery/v1',
+    labelKey: 'agentCapability_kubernetesReleaseDiscovery',
+    icon: Boxes,
+  },
+  {
+    capability: 'onboarding.status/v1',
+    labelKey: 'agentCapability_onboardingStatus',
+    icon: Settings2,
+  },
+  {
+    capability: 'resource.utilization/v1',
+    labelKey: 'agentCapability_resourceUtilization',
+    icon: CircleGauge,
+  },
+]
 
 function CapabilityList({ capabilities }: { capabilities: string[] }) {
   const t = useT()
-  if (!capabilities.length) return <p className="text-sm text-slate-500">{t('notReported')}</p>
+  const knownValues = new Set(
+    capabilities.filter((capability) =>
+      knownCapabilities.some(
+        (presentation) =>
+          presentation.capability === capability || presentation.matches?.(capability),
+      ),
+    ),
+  )
+  const unknownCapabilities = capabilities.filter((capability) => !knownValues.has(capability))
+
   return (
-    <ul className="mt-2 flex flex-wrap gap-1.5">
-      {capabilities.map((capability) => (
-        <li key={capability}>
-          <span className="rounded-full border border-slate-700 px-2 py-0.5 text-xs text-slate-200">
-            {knownCapabilities[capability] ? t(knownCapabilities[capability]) : capability}
+    <ul
+      className="mt-2 flex flex-nowrap gap-2 overflow-x-auto pb-2"
+      aria-label={t('agentAdvertisedCapabilities')}
+    >
+      {knownCapabilities.map(({ capability, labelKey, icon: Icon, matches }) => {
+        const active = capabilities.some((value) => value === capability || matches?.(value))
+        const label = t(labelKey)
+        return (
+          <li key={capability} className="shrink-0">
+            <span
+              aria-label={label}
+              aria-disabled={!active}
+              className={`group/capability relative inline-flex size-9 items-center justify-center rounded-lg border outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 ${active ? 'border-cyan-800/80 bg-cyan-950/50 text-cyan-200' : 'border-slate-800 bg-slate-950/40 text-slate-600'}`}
+              data-capability={capability}
+              data-active={active}
+              tabIndex={0}
+            >
+              <Icon aria-hidden="true" className="size-4" strokeWidth={1.8} />
+              <span
+                role="tooltip"
+                className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 -translate-x-1/2 whitespace-nowrap rounded-md border border-slate-600 bg-slate-950 px-2 py-1 text-xs font-medium text-slate-100 opacity-0 shadow-lg transition-opacity group-hover/capability:opacity-100 group-focus-visible/capability:opacity-100 motion-reduce:transition-none"
+              >
+                {label}
+              </span>
+            </span>
+          </li>
+        )
+      })}
+      {unknownCapabilities.map((capability) => (
+        <li key={capability} className="shrink-0">
+          <span
+            aria-label={capability}
+            className="group/capability relative inline-flex size-9 items-center justify-center rounded-lg border border-cyan-800/80 bg-cyan-950/50 text-cyan-200 outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+            data-capability={capability}
+            data-active="true"
+            tabIndex={0}
+          >
+            <CircleHelp aria-hidden="true" className="size-4" strokeWidth={1.8} />
+            <span
+              role="tooltip"
+              className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 -translate-x-1/2 whitespace-nowrap rounded-md border border-slate-600 bg-slate-950 px-2 py-1 font-mono text-xs font-medium text-slate-100 opacity-0 shadow-lg transition-opacity group-hover/capability:opacity-100 group-focus-visible/capability:opacity-100 motion-reduce:transition-none"
+            >
+              {capability}
+            </span>
           </span>
         </li>
       ))}
@@ -186,13 +283,12 @@ function AgentCard({
         </p>
       )}
 
-      <details className="mt-3 rounded-lg border border-slate-800 bg-slate-950/30 px-3 py-2">
-        <summary className="cursor-pointer text-sm font-semibold text-slate-300 outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
+      <div className="mt-3 rounded-lg border border-slate-800 bg-slate-950/30 px-3 py-2">
+        <p className="text-sm font-semibold text-slate-300">
           {t('agentAdvertisedCapabilities')} · {agent.capabilities.length}
-        </summary>
-        <p className="mt-2 text-xs text-slate-500">{t('agentCapabilitiesHelp')}</p>
+        </p>
         <CapabilityList capabilities={agent.capabilities} />
-      </details>
+      </div>
 
       <div className="mt-4">
         <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">

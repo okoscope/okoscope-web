@@ -9,13 +9,18 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
-- Rendered missing heartbeat intervals as solid yellow outlined segments matching the received
-  interval geometry and shortened the legend label.
 - Kept organization invitation and project creation buttons compact and aligned with their
   adjacent fields on wider screens.
 - Limited Application health diagnostics to losses and delivery outcomes assigned to the selected
   workload, removed node-wide counters from Application pages, and removed compatibility UI for
   agents that omit the now-required scoped diagnostic snapshot.
+
+## [0.2.2] - 2026-09-14
+
+### Fixed
+
+- Rendered missing heartbeat intervals as solid yellow outlined segments matching the received
+  interval geometry and shortened the legend label.
 
 ## [0.2.1] - 2026-09-09
 
@@ -37,5 +42,6 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Agent freshness now follows the server-provided bound instead of a
   client-owned inactivity threshold.
 
-[Unreleased]: https://github.com/okoscope/okoscope-web/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/okoscope/okoscope-web/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/okoscope/okoscope-web/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/okoscope/okoscope-web/compare/v0.2.0...v0.2.1

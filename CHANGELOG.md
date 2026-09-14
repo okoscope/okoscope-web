@@ -9,6 +9,8 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Replaced textual kernel and Kubernetes source suffixes in lifecycle activity summaries with
+  compact cyan source icons and keyboard-accessible tooltips.
 - Kept organization invitation and project creation buttons compact and aligned with their
   adjacent fields on wider screens.
 - Limited Application health diagnostics to losses and delivery outcomes assigned to the selected

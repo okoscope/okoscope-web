@@ -1,7 +1,11 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
-import type { InventoryDistribution, InventorySummary } from '../../shared/api/types'
+import type {
+  InventoryDistribution,
+  InventoryLifecycleSemanticSummary,
+  InventorySummary,
+} from '../../shared/api/types'
 import {
   formatPercentage,
   formatSignedCount,
@@ -62,6 +66,122 @@ describe('data visualization presentation', () => {
     render(<TopBehaviorDistribution distribution={distribution} onIdentity={vi.fn()} />)
     expect(screen.getByText('TCP IPV6 [::]:8080')).toBeVisible()
     expect(screen.queryByText(/remote|client/i)).not.toBeInTheDocument()
+  })
+
+  it.each([
+    {
+      source: 'kernel' as const,
+      eventLabel: 'Process terminated',
+      tooltip: 'Linux kernel',
+      accessibleSource: 'Kernel evidence. Observed by the Linux kernel.',
+      iconClass: 'lucide-cpu',
+      expectedSpokes: 0,
+    },
+    {
+      source: 'kubernetes' as const,
+      eventLabel: 'Container terminated',
+      tooltip: 'Kubernetes',
+      accessibleSource: 'Kubernetes evidence. Reported by Kubernetes or the container runtime.',
+      iconClass: null,
+      expectedSpokes: 7,
+    },
+  ])(
+    'replaces the visible $source lifecycle suffix with its compact accessible icon',
+    ({ source, eventLabel, tooltip, accessibleSource, iconClass, expectedSpokes }) => {
+      const semanticSummary: InventoryLifecycleSemanticSummary =
+        source === 'kernel'
+          ? ({
+              event_kind: 'process.exit',
+              evidence_source: source,
+              identity: '/app/api',
+              termination: { type: 'exited', status: 0 },
+            } as unknown as InventoryLifecycleSemanticSummary)
+          : ({
+              event_kind: 'container.terminated',
+              evidence_source: source,
+              container_name: 'api',
+              reason: 'Completed',
+              exit_code: 0,
+            } as unknown as InventoryLifecycleSemanticSummary)
+      const distribution: InventoryDistribution = {
+        coverage: { closed_before: null, history_expired_before: null, detail_scope: 'raw' },
+        identity_version: 1,
+        kind: 'lifecycle',
+        total_item_count: 1,
+        total_occurrence_count: 4,
+        entries: [
+          {
+            identity_token: source,
+            semantic_summary: semanticSummary,
+            item_count: 1,
+            occurrence_count: 4,
+          },
+        ],
+        other: null,
+      }
+
+      const { container } = render(
+        <TopBehaviorDistribution distribution={distribution} onIdentity={vi.fn()} />,
+      )
+
+      expect(screen.getByText(eventLabel)).toBeVisible()
+      const sourceIcon = screen.getByLabelText(accessibleSource)
+      expect(sourceIcon).toHaveClass('text-cyan-300')
+      const svg = sourceIcon.querySelector('svg')
+      expect(svg).toHaveClass('size-4')
+      expect(svg).toHaveAttribute('aria-hidden', 'true')
+      if (iconClass) expect(svg).toHaveClass(iconClass)
+      expect(svg?.querySelectorAll('g')).toHaveLength(expectedSpokes)
+      const sourceTooltip = screen.getByRole('tooltip', { name: tooltip })
+      expect(sourceTooltip).toHaveTextContent(tooltip)
+      expect(sourceTooltip).toHaveClass(
+        'group-hover/source:opacity-100',
+        'group-focus-visible/bar:opacity-100',
+      )
+      const row = screen.getByRole('button', { name: new RegExp(`${source}: 4 observations`) })
+      expect(row).toHaveClass('group/bar')
+      expect(row.querySelector('.font-mono')?.childNodes).toHaveLength(2)
+      expect(container.querySelector('[data-variant]')).toBeNull()
+    },
+  )
+
+  it('keeps derived and malformed lifecycle identities on the existing text fallback', () => {
+    const distribution: InventoryDistribution = {
+      coverage: { closed_before: null, history_expired_before: null, detail_scope: 'raw' },
+      identity_version: 1,
+      kind: 'lifecycle',
+      total_item_count: 2,
+      total_occurrence_count: 5,
+      entries: [
+        {
+          identity_token: 'derived',
+          semantic_summary: {
+            event_kind: 'container.restart_loop',
+            evidence_source: 'derived',
+            projection_version: 1,
+            threshold: 3,
+            window_started_at: '2026-08-17T09:00:00Z',
+            window_ended_at: '2026-08-17T10:00:00Z',
+            observed_restart_count: 4,
+            container_name: 'api',
+          } as unknown as InventoryLifecycleSemanticSummary,
+          item_count: 1,
+          occurrence_count: 3,
+        },
+        {
+          identity_token: 'unknown',
+          semantic_summary: { executable: 'not-lifecycle' },
+          item_count: 1,
+          occurrence_count: 2,
+        },
+      ],
+      other: null,
+    }
+
+    render(<TopBehaviorDistribution distribution={distribution} onIdentity={vi.fn()} />)
+
+    expect(screen.getByText('Restart loop observed · derived')).toBeVisible()
+    expect(screen.getByText('Unsupported identity')).toBeVisible()
   })
 
   it('shows server summary totals and supports keyboard kind selection', async () => {

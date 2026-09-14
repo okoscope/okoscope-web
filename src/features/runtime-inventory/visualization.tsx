@@ -3,6 +3,7 @@ import { Card } from '../../shared/ui/card'
 import { HorizontalBars } from '../../shared/ui/horizontal-bars'
 import { formatCount } from '../tenant/format'
 import {
+  evidencePresentation,
   formatEndpoint,
   getActivityPresentation,
   getEventKindLabel,
@@ -19,6 +20,54 @@ import {
 } from './components'
 import { useLocalization } from '../../shared/i18n'
 import { legacyRussian } from '../../shared/i18n/legacy'
+import { Cpu } from 'lucide-react'
+
+function KubernetesSourceIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="size-4" fill="none">
+      <circle cx="12" cy="12" r="6.3" stroke="currentColor" strokeWidth="1.7" />
+      <circle cx="12" cy="12" r="2.1" stroke="currentColor" strokeWidth="1.7" />
+      {Array.from({ length: 7 }, (_, index) => {
+        const angle = (index * 360) / 7 - 90
+        return (
+          <g key={index} transform={`rotate(${angle} 12 12)`}>
+            <path d="M12 5.7V2.4" stroke="currentColor" strokeWidth="1.7" />
+            <path
+              d="M10.65 3.15 12 1.8l1.35 1.35"
+              stroke="currentColor"
+              strokeWidth="1.7"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </g>
+        )
+      })}
+    </svg>
+  )
+}
+
+function LifecycleSourceIcon({ source }: { source: 'kernel' | 'kubernetes' }) {
+  const copy = evidencePresentation[source]
+  const label = source === 'kernel' ? 'Linux kernel' : 'Kubernetes'
+  return (
+    <span
+      aria-label={`${copy.label}. ${copy.description}`}
+      className="group/source relative inline-flex text-cyan-300"
+    >
+      {source === 'kernel' ? (
+        <Cpu aria-hidden="true" className="size-4" strokeWidth={1.7} />
+      ) : (
+        <KubernetesSourceIcon />
+      )}
+      <span
+        role="tooltip"
+        className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 -translate-x-1/2 whitespace-nowrap rounded-md border border-cyan-700/70 bg-slate-950 px-2 py-1 font-sans text-xs font-medium text-cyan-100 opacity-0 shadow-lg transition-opacity group-hover/source:opacity-100 group-focus-visible/bar:opacity-100 motion-reduce:transition-none"
+      >
+        {label}
+      </span>
+    </span>
+  )
+}
 
 const byOccurrenceCountDescending = <T extends { value: number }>(items: T[]) =>
   items
@@ -103,9 +152,22 @@ export function TopBehaviorDistribution({
   const copy = getActivityPresentation(distribution.kind)
   const entries = distribution.entries.map((entry) => {
     const label = inventoryIdentityText(distribution.kind, entry.semantic_summary)
+    const lifecycle =
+      distribution.kind === 'lifecycle' && isInventoryLifecycle(entry.semantic_summary)
+        ? entry.semantic_summary
+        : undefined
     return {
       id: entry.identity_token,
-      label: <span className="font-mono">{label}</span>,
+      label:
+        lifecycle &&
+        (lifecycle.evidence_source === 'kernel' || lifecycle.evidence_source === 'kubernetes') ? (
+          <span className="inline-flex items-center gap-2 font-mono">
+            <span>{getEventKindLabel(lifecycle.event_kind ?? 'lifecycle')}</span>
+            <LifecycleSourceIcon source={lifecycle.evidence_source} />
+          </span>
+        ) : (
+          <span className="font-mono">{label}</span>
+        ),
       accessibleLabel: label,
       value: entry.occurrence_count,
       selected: entry.identity_token === selectedToken,

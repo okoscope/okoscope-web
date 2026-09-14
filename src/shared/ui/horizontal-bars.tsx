@@ -63,7 +63,7 @@ export function HorizontalBars({
                 aria-label={`${item.accessibleLabel}: ${formatCount(item.value)} observations, ${percentage}`}
                 aria-pressed={item.selected}
                 onClick={item.onSelect}
-                className={`w-full rounded-lg border p-3 text-left outline-none transition focus-visible:ring-2 focus-visible:ring-cyan-300 motion-reduce:transition-none ${item.selected ? 'border-cyan-300 bg-cyan-950/50' : 'border-slate-700 bg-slate-950 hover:border-slate-500'}`}
+                className={`group/bar w-full rounded-lg border p-3 text-left outline-none transition focus-visible:ring-2 focus-visible:ring-cyan-300 motion-reduce:transition-none ${item.selected ? 'border-cyan-300 bg-cyan-950/50' : 'border-slate-700 bg-slate-950 hover:border-slate-500'}`}
               >
                 {content}
               </button>

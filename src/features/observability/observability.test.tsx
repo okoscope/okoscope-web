@@ -1,7 +1,13 @@
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { QueryClient } from '@tanstack/react-query'
+import {
+  createMemoryHistory,
+  createRootRoute,
+  createRouter,
+  RouterProvider,
+} from '@tanstack/react-router'
 import {
   JsonDetailsViewer,
   RuntimeDiffClassificationBadge,
@@ -15,6 +21,7 @@ import {
   getNetworkScope,
   NetworkScopeBadge,
   FileActivitySummary,
+  RuntimeGroupList,
 } from './components'
 import {
   invalidateRuntimeGroupLifecycle,
@@ -37,6 +44,7 @@ import {
   getEventKindLabel,
   getWildcardEndpointLabel,
 } from './presentation'
+import type { RuntimeGroup } from '../../shared/api/types'
 
 afterEach(cleanup)
 
@@ -122,6 +130,110 @@ describe('observability URL state', () => {
 })
 
 describe('inbound network privacy', () => {
+  const runtimeGroup = (
+    id: string,
+    eventKind: string,
+    semanticSummary: RuntimeGroup['semantic_summary'],
+  ): RuntimeGroup => ({
+    coverage: { closed_before: null, history_expired_before: null, detail_scope: 'raw' },
+    id,
+    project_id: 'project',
+    application_id: 'application',
+    cluster_id: 'cluster',
+    namespace: 'production',
+    workload_kind: 'Deployment',
+    workload_name: 'api',
+    fingerprint_version: 1,
+    event_kind: eventKind,
+    semantic_summary: semanticSummary,
+    status: 'open',
+    first_seen_at: '2020-01-01T00:00:00Z',
+    first_seen_event_id: null,
+    last_seen_at: '2020-01-01T00:05:00Z',
+    occurrence_count: 3,
+    representative_event_id: null,
+    policy_evaluation: {
+      state: 'current',
+      verdict: null,
+      reason_code: 'no_matching_policy',
+      explanation: {},
+    },
+    active_suppression: null,
+    actionable: true,
+    status_changed_at: null,
+    status_changed_by: null,
+  })
+
+  const renderRuntimeGroups = (view: 'grid' | 'list') => {
+    const groups = [
+      runtimeGroup('accept', 'network.accept', {
+        process_command: 'api',
+        transport: 'tcp',
+        address_family: 'ipv4',
+        local_address: '10.0.0.1',
+        local_port: 8080,
+      }),
+      runtimeGroup('listen', 'network.listen', {
+        process_command: 'api',
+        transport: 'tcp',
+        address_family: 'ipv4',
+        local_address: '0.0.0.0',
+        local_port: 8080,
+      }),
+      runtimeGroup('process', 'process.exec', {
+        executable: '/usr/local/bin/api',
+        parent_command: null,
+      }),
+    ]
+    const rootRoute = createRootRoute({
+      component: () => (
+        <RuntimeGroupList
+          groups={groups}
+          projectId="project"
+          applicationId="application"
+          search={{}}
+          view={view}
+        />
+      ),
+    })
+    const router = createRouter({
+      routeTree: rootRoute,
+      history: createMemoryHistory({ initialEntries: ['/'] }),
+    })
+    return render(<RouterProvider router={router} />)
+  }
+
+  it.each(['grid', 'list'] as const)(
+    'keeps card state on its own row and inbound indicators at the title-row edge in %s view',
+    async (view) => {
+      const { container } = renderRuntimeGroups(view)
+
+      expect(await screen.findByText('Accepted inbound connection')).toBeVisible()
+      for (const [title, indicator] of [
+        ['Accepted inbound connection', 'ACCEPT'],
+        ['Opened port', 'LISTEN'],
+      ] as const) {
+        expect(screen.getAllByText(title)).toHaveLength(1)
+        const titleRow = screen.getByText(title).closest('[data-runtime-group-title-row]')
+        expect(titleRow).not.toBeNull()
+        const marker = within(titleRow as HTMLElement).getByLabelText(indicator)
+        expect(marker).toHaveClass('ml-auto')
+        expect(marker).toHaveAttribute('tabindex', '0')
+        expect(within(marker).getByRole('tooltip')).toHaveTextContent(indicator)
+      }
+
+      const cards = container.querySelectorAll('[data-runtime-group-title-row]')
+      const stateRows = container.querySelectorAll('[data-runtime-group-state-row]')
+      expect(cards).toHaveLength(3)
+      expect(stateRows).toHaveLength(3)
+      for (const stateRow of stateRows) {
+        expect(within(stateRow as HTMLElement).getByText('open')).toBeVisible()
+        expect(within(stateRow as HTMLElement).getByText('Unclassified')).toBeVisible()
+      }
+      expect(container.querySelector(`[data-view="${view}"]`)).not.toBeNull()
+    },
+  )
+
   it('renders a safe inbound group summary using only the local endpoint', () => {
     render(
       <SemanticSummary

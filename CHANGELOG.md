@@ -9,6 +9,10 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Kept runtime-group event names distinct by moving status and policy badges to a dedicated row
+  and replacing repeated inbound event labels with compact ACCEPT and LISTEN indicators.
+- Displayed the exact process identity in lifecycle termination headings and activity
+  visualizations while retaining the evidence source indicator.
 - Replaced textual kernel and Kubernetes source suffixes in lifecycle activity summaries with
   compact cyan source icons and keyboard-accessible tooltips.
 - Kept organization invitation and project creation buttons compact and aligned with their

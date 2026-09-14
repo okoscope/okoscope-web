@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router'
+import { Cpu } from 'lucide-react'
 import type { ChangeEvent } from 'react'
 import { formatCount, formatTimestamp } from '../tenant/format'
 import {
@@ -33,6 +34,61 @@ import { Card } from '../../shared/ui/card'
 import type { InventorySearch } from './url-state'
 import { PolicyState } from '../policies/components'
 import { getActivityPresentation, getEventKindLabel } from '../observability/presentation'
+import { evidencePresentation } from '../observability/presentation'
+
+function KubernetesSourceIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="size-4" fill="none">
+      <circle cx="12" cy="12" r="6.3" stroke="currentColor" strokeWidth="1.7" />
+      <circle cx="12" cy="12" r="2.1" stroke="currentColor" strokeWidth="1.7" />
+      {Array.from({ length: 7 }, (_, index) => {
+        const angle = (index * 360) / 7 - 90
+        return (
+          <g key={index} transform={`rotate(${angle} 12 12)`}>
+            <path d="M12 5.7V2.4" stroke="currentColor" strokeWidth="1.7" />
+            <path
+              d="M10.65 3.15 12 1.8l1.35 1.35"
+              stroke="currentColor"
+              strokeWidth="1.7"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </g>
+        )
+      })}
+    </svg>
+  )
+}
+
+export function LifecycleSourceIcon({
+  source,
+  focusable = false,
+}: {
+  source: 'kernel' | 'kubernetes'
+  focusable?: boolean
+}) {
+  const copy = evidencePresentation[source]
+  const label = source === 'kernel' ? 'Linux kernel' : 'Kubernetes'
+  return (
+    <span
+      aria-label={`${copy.label}. ${copy.description}`}
+      className="group/source relative inline-flex text-cyan-300"
+      tabIndex={focusable ? 0 : undefined}
+    >
+      {source === 'kernel' ? (
+        <Cpu aria-hidden="true" className="size-4" strokeWidth={1.7} />
+      ) : (
+        <KubernetesSourceIcon />
+      )}
+      <span
+        role="tooltip"
+        className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 -translate-x-1/2 whitespace-nowrap rounded-md border border-cyan-700/70 bg-slate-950 px-2 py-1 font-sans text-xs font-medium text-cyan-100 opacity-0 shadow-lg transition-opacity group-hover/source:opacity-100 group-focus-visible/source:opacity-100 group-focus-visible/bar:opacity-100 motion-reduce:transition-none"
+      >
+        {label}
+      </span>
+    </span>
+  )
+}
 
 type InventorySummaryValue = InventoryItem['semantic_summary']
 
@@ -100,6 +156,11 @@ export const isInventoryLifecycle = (
   ) &&
   'evidence_source' in value &&
   ['kernel', 'kubernetes', 'derived'].includes(String(value.evidence_source))
+
+export const inventoryLifecycleIdentityText = (value: InventoryLifecycleSemanticSummary) => {
+  const eventLabel = getEventKindLabel(value.event_kind ?? 'lifecycle')
+  return value.event_kind === 'process.exit' ? `${eventLabel} · ${value.identity}` : eventLabel
+}
 
 export const inventoryKinds: { kind: InventoryKind; label: string }[] = [
   { kind: 'process', label: 'Process launches' },
@@ -198,7 +259,14 @@ export function InventoryIdentity({ item }: { item: InventoryItem }) {
     return (
       <span className="inline-flex flex-wrap items-center gap-2">
         <span>{getEventKindLabel(value.event_kind ?? 'lifecycle')}</span>
-        <EvidenceSourceBadge source={value.evidence_source} />
+        {value.event_kind === 'process.exit' && (
+          <span className="break-all font-mono">· {value.identity}</span>
+        )}
+        {value.evidence_source === 'kernel' || value.evidence_source === 'kubernetes' ? (
+          <LifecycleSourceIcon source={value.evidence_source} focusable />
+        ) : (
+          <EvidenceSourceBadge source={value.evidence_source} />
+        )}
       </span>
     )
   return <span className="text-rose-200">Unsupported identity</span>

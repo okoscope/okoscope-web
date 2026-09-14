@@ -441,11 +441,20 @@ export function InboundEventBadge({ eventKind }: { eventKind: string }) {
   if (eventKind !== 'network.listen' && eventKind !== 'network.accept') return null
   const accept = eventKind === 'network.accept'
   const Icon = accept ? Network : DoorOpen
+  const label = accept ? 'ACCEPT' : 'LISTEN'
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-semibold ${accept ? 'border-violet-700 bg-violet-950 text-violet-200' : 'border-emerald-700 bg-emerald-950 text-emerald-200'}`}
+      aria-label={label}
+      className={`group/inbound relative ml-auto inline-flex shrink-0 items-center justify-center rounded-full border p-1.5 ${accept ? 'border-violet-700 bg-violet-950 text-violet-200' : 'border-emerald-700 bg-emerald-950 text-emerald-200'}`}
+      tabIndex={0}
     >
-      <Icon size={13} aria-hidden="true" /> {getEventKindLabel(eventKind)}
+      <Icon size={14} aria-hidden="true" />
+      <span
+        role="tooltip"
+        className="pointer-events-none absolute right-0 bottom-full z-20 mb-2 whitespace-nowrap rounded-md border border-slate-600 bg-slate-950 px-2 py-1 text-xs font-semibold text-slate-100 opacity-0 shadow-lg transition-opacity group-hover/inbound:opacity-100 group-focus-visible/inbound:opacity-100 motion-reduce:transition-none"
+      >
+        {label}
+      </span>
     </span>
   )
 }
@@ -1044,34 +1053,36 @@ export function RuntimeGroupList({
           key={group.id}
           className={isRecentlyFirstSeen(group.first_seen_at) ? 'border-amber-400/70' : ''}
         >
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <Link
-                  className="text-xl font-semibold text-cyan-200 transition hover:text-cyan-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
-                  to="/projects/$projectId/applications/$applicationId/runtime-groups/$groupId"
-                  params={{ projectId, applicationId, groupId: group.id }}
-                  search={search}
-                >
-                  {getEventKindLabel(group.event_kind, group.semantic_summary)}
-                </Link>
-                <InboundEventBadge eventKind={group.event_kind} />
-                <RuntimeGroupStatusBadge status={group.status} />
-                <PolicyState
-                  evaluation={group.policy_evaluation}
-                  suppression={group.active_suppression}
-                />
-                {isRecentlyFirstSeen(group.first_seen_at) && (
-                  <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-300">
-                    <Sparkles size={14} aria-hidden="true" /> Newly observed
-                  </span>
-                )}
-              </div>
-              <p className="mt-2 text-sm text-slate-400">
+          <div>
+            <div data-runtime-group-title-row className="flex min-w-0 items-start gap-3">
+              <Link
+                className="min-w-0 text-xl font-semibold text-cyan-200 transition hover:text-cyan-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
+                to="/projects/$projectId/applications/$applicationId/runtime-groups/$groupId"
+                params={{ projectId, applicationId, groupId: group.id }}
+                search={search}
+              >
+                {getEventKindLabel(group.event_kind, group.semantic_summary)}
+              </Link>
+              <InboundEventBadge eventKind={group.event_kind} />
+            </div>
+            <div data-runtime-group-state-row className="mt-2 flex flex-wrap items-center gap-2">
+              <RuntimeGroupStatusBadge status={group.status} />
+              <PolicyState
+                evaluation={group.policy_evaluation}
+                suppression={group.active_suppression}
+              />
+              {isRecentlyFirstSeen(group.first_seen_at) && (
+                <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-300">
+                  <Sparkles size={14} aria-hidden="true" /> Newly observed
+                </span>
+              )}
+            </div>
+            <div className="mt-2 flex flex-wrap items-start justify-between gap-2">
+              <p className="text-sm text-slate-400">
                 {group.namespace} · {group.workload_kind}/{group.workload_name}
               </p>
+              <p className="text-sm">{formatCount(group.occurrence_count)} observations</p>
             </div>
-            <p className="text-sm">{formatCount(group.occurrence_count)} observations</p>
           </div>
           <div className="mt-4">
             <SemanticSummary value={group.semantic_summary} />

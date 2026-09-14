@@ -24,6 +24,7 @@ import {
 } from './url-state'
 import { ApiClientError, type ApiClient } from '../../shared/api/client'
 import { contractFixture } from '../../shared/api/types'
+import { LocalizationProvider } from '../../shared/i18n'
 
 describe('runtime inventory URL state', () => {
   it('normalizes scope and bounds search while preserving opaque cursors', () => {
@@ -202,7 +203,82 @@ describe('runtime inventory safe presentation', () => {
       />,
     )
     expect(screen.getByText('Container terminated')).toBeVisible()
-    expect(screen.getByText('Kubernetes evidence')).toBeVisible()
+    expect(
+      screen.getByLabelText(
+        'Kubernetes evidence. Reported by Kubernetes or the container runtime.',
+      ),
+    ).toBeVisible()
+    expect(screen.queryByText('Kubernetes evidence')).not.toBeInTheDocument()
+  })
+
+  it('renders the exact terminated process identity with its evidence source', () => {
+    render(
+      <InventoryIdentity
+        item={{
+          ...contractFixture.inventoryItemDetail,
+          inventory_kind: 'lifecycle',
+          semantic_summary: {
+            event_kind: 'process.exit',
+            evidence_source: 'kernel',
+            identity: '/usr/local/bin/r-api',
+            termination: { type: 'exited', status: 0 },
+          } as unknown as typeof contractFixture.inventoryItemDetail.semantic_summary,
+        }}
+      />,
+    )
+
+    expect(screen.getByText('Process terminated')).toBeVisible()
+    expect(screen.getByText('· /usr/local/bin/r-api')).toHaveClass('break-all', 'font-mono')
+    expect(screen.getByLabelText('Kernel evidence. Observed by the Linux kernel.')).toHaveAttribute(
+      'tabindex',
+      '0',
+    )
+    expect(screen.queryByText('Kernel evidence')).not.toBeInTheDocument()
+  })
+
+  it('keeps a hostile terminated process identity inert', () => {
+    const identity = '<img src=x onerror=alert(1)>/very/long/process/identity'
+    const { container } = render(
+      <InventoryIdentity
+        item={{
+          ...contractFixture.inventoryItemDetail,
+          inventory_kind: 'lifecycle',
+          semantic_summary: {
+            event_kind: 'process.exit',
+            evidence_source: 'kernel',
+            identity,
+            termination: { type: 'exited', status: 0 },
+          } as unknown as typeof contractFixture.inventoryItemDetail.semantic_summary,
+        }}
+      />,
+    )
+
+    expect(screen.getByText(`· ${identity}`)).toHaveClass('break-all')
+    expect(container.querySelector('img')).toBeNull()
+  })
+
+  it('localizes the terminated process label without changing its server identity', async () => {
+    render(
+      <LocalizationProvider initialLocale="ru">
+        <InventoryIdentity
+          item={{
+            ...contractFixture.inventoryItemDetail,
+            inventory_kind: 'lifecycle',
+            semantic_summary: {
+              event_kind: 'process.exit',
+              evidence_source: 'kernel',
+              identity: '/usr/local/bin/r-api',
+              termination: { type: 'exited', status: 0 },
+            } as unknown as typeof contractFixture.inventoryItemDetail.semantic_summary,
+          }}
+        />
+      </LocalizationProvider>,
+    )
+
+    expect(await screen.findByText('Процесс завершён')).toBeVisible()
+    expect(screen.getByText(/\/usr\/local\/bin\/r-api/)).toBeVisible()
+    expect(screen.queryByText('Данные ядра')).not.toBeInTheDocument()
+    expect(screen.getByRole('tooltip', { name: 'Linux kernel' })).toBeInTheDocument()
   })
 
   it('accepts file activity search and operation filters', () => {

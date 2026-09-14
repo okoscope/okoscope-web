@@ -125,8 +125,10 @@ describe('data visualization presentation', () => {
       )
 
       expect(screen.getByText(eventLabel)).toBeVisible()
+      if (source === 'kernel') expect(screen.getByText('· /app/api')).toHaveClass('break-all')
       const sourceIcon = screen.getByLabelText(accessibleSource)
       expect(sourceIcon).toHaveClass('text-cyan-300')
+      expect(sourceIcon).not.toHaveAttribute('tabindex')
       const svg = sourceIcon.querySelector('svg')
       expect(svg).toHaveClass('size-4')
       expect(svg).toHaveAttribute('aria-hidden', 'true')
@@ -136,11 +138,12 @@ describe('data visualization presentation', () => {
       expect(sourceTooltip).toHaveTextContent(tooltip)
       expect(sourceTooltip).toHaveClass(
         'group-hover/source:opacity-100',
+        'group-focus-visible/source:opacity-100',
         'group-focus-visible/bar:opacity-100',
       )
       const row = screen.getByRole('button', { name: new RegExp(`${source}: 4 observations`) })
       expect(row).toHaveClass('group/bar')
-      expect(row.querySelector('.font-mono')?.childNodes).toHaveLength(2)
+      expect(row.querySelector('.font-mono')?.childNodes).toHaveLength(source === 'kernel' ? 3 : 2)
       expect(container.querySelector('[data-variant]')).toBeNull()
     },
   )

@@ -148,9 +148,9 @@ export function InventoryUserLabelEditor({
     mutationFn: () =>
       deleteInventoryUserLabel(api, projectId, applicationId, itemId, userLabel?.updated_at),
     onSuccess: async () => {
-      await refresh()
       setOpen(false)
       setStatus(t('behaviorLabelRemoved'))
+      await refresh()
     },
     onError: async (error) => {
       if (isConflict(error)) {

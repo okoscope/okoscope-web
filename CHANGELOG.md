@@ -9,6 +9,8 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Rendered missing heartbeat intervals as solid yellow outlined segments matching the received
+  interval geometry and shortened the legend label.
 - Kept organization invitation and project creation buttons compact and aligned with their
   adjacent fields on wider screens.
 - Limited Application health diagnostics to losses and delivery outcomes assigned to the selected

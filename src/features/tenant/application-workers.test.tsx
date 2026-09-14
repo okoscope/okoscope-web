@@ -290,13 +290,33 @@ describe('Application agent health', () => {
       await screen.findByRole('group', { name: /58 received, 1 missing, 1 unavailable/ }),
     ).toBeVisible()
     const receivedLegend = screen.getByText('signal received')
-    const missingLegend = screen.getByText('signal missing in known coverage')
+    const missingLegend = screen.getByText('signal missing')
     const unavailableLegend = screen.getByText('history unavailable')
     expect(receivedLegend).toBeVisible()
     expect(missingLegend).toBeVisible()
     expect(unavailableLegend).toBeVisible()
     expect(receivedLegend.firstElementChild).toHaveClass('bg-emerald-500/65')
-    expect(missingLegend.firstElementChild).toHaveClass('border-dashed')
+    expect(missingLegend.firstElementChild).toHaveClass(
+      'border',
+      'border-amber-300/90',
+      'bg-amber-500/65',
+      'shadow-[inset_0_2px_0_rgb(253_230_138_/_0.65)]',
+    )
+    expect(missingLegend.firstElementChild).not.toHaveClass('border-dashed')
+    const missingInterval = document.querySelector<HTMLButtonElement>(
+      'button[data-status="missing"]',
+    )
+    expect(missingInterval).toHaveClass(
+      'border',
+      'border-amber-300/90',
+      'bg-amber-500/65',
+      'shadow-[inset_0_3px_0_rgb(253_230_138_/_0.65)]',
+    )
+    expect(missingInterval).not.toHaveClass('border-dashed')
+    expect(missingInterval).toHaveAttribute(
+      'title',
+      expect.stringMatching(/^.+–.+: signal missing; diagnostic increase 0; no counter reset\.$/),
+    )
     expect(unavailableLegend.firstElementChild).toHaveClass(
       'shadow-[inset_0_-2px_0_rgb(71_85_105_/_0.65)]',
     )
@@ -307,6 +327,25 @@ describe('Application agent health', () => {
     expect(screen.queryByText('counter reset')).not.toBeInTheDocument()
     expect(screen.getAllByText('Decode failures: +2').length).toBeGreaterThan(0)
     expect(screen.getAllByText('1 counter resets').length).toBeGreaterThan(0)
+  })
+
+  it('uses the concise Russian missing-signal legend while preserving interval detail', async () => {
+    const points = healthAgent().timeline.map((point, index) =>
+      index === 1 ? { ...point, status: 'missing' as const } : point,
+    )
+    renderWorkers(endpointGet({ agents: healthPage([healthAgent({ timeline: points })]) }), 'ru')
+
+    expect(await screen.findByText('сигнал отсутствует')).toBeVisible()
+    expect(screen.queryByText('сигнал отсутствует в известном покрытии')).not.toBeInTheDocument()
+    const missingInterval = document.querySelector<HTMLButtonElement>(
+      'button[data-status="missing"]',
+    )
+    expect(missingInterval).toHaveAttribute(
+      'title',
+      expect.stringMatching(
+        /^.+–.+: сигнал пропущен; рост диагностики — 0; без сброса счётчика\.$/,
+      ),
+    )
   })
 
   it('renders unknown capabilities as inert text with strict scoped diagnostics', async () => {

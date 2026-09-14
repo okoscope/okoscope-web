@@ -5,8 +5,7 @@ import { formatTimestamp } from './format'
 const pointClasses = {
   received:
     'border-emerald-300/80 bg-emerald-500/65 shadow-[inset_0_3px_0_rgb(167_243_208_/_0.65)]',
-  missing:
-    'border-dashed border-amber-300/90 bg-[repeating-linear-gradient(135deg,transparent_0,transparent_3px,rgb(251_191_36_/_0.32)_3px,rgb(251_191_36_/_0.32)_5px)]',
+  missing: 'border-amber-300/90 bg-amber-500/65 shadow-[inset_0_3px_0_rgb(253_230_138_/_0.65)]',
   unavailable: 'border-slate-600 bg-slate-950 shadow-[inset_0_-3px_0_rgb(71_85_105_/_0.65)]',
 } as const
 
@@ -113,7 +112,7 @@ export function AgentHealthTimeline({
         <span className="inline-flex items-center gap-1.5">
           <span
             aria-hidden="true"
-            className="h-3 w-3 border border-dashed border-amber-300/90 bg-[repeating-linear-gradient(135deg,transparent_0,transparent_2px,rgb(251_191_36_/_0.32)_2px,rgb(251_191_36_/_0.32)_4px)]"
+            className="h-3 w-3 border border-amber-300/90 bg-amber-500/65 shadow-[inset_0_2px_0_rgb(253_230_138_/_0.65)]"
           />
           {t('agentTimelineMissing')}
         </span>

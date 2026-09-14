@@ -7,6 +7,10 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- Kept capability-name tooltips visible above the horizontally scrollable agent capability row.
+
 ### Changed
 
 - Replaced collapsed agent capability labels with an always-visible icon row that shows the full

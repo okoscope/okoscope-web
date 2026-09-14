@@ -16,7 +16,8 @@ import {
   SquareTerminal,
   type LucideIcon,
 } from 'lucide-react'
-import { useState } from 'react'
+import { type Dispatch, type SetStateAction, useId, useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { readinessOptions } from '../../shared/api/onboarding'
 import { applicationAgentHealthOptions } from '../../shared/api/queries'
 import type {
@@ -165,8 +166,107 @@ const knownCapabilities: CapabilityPresentation[] = [
   },
 ]
 
+type CapabilityTooltipState = {
+  anchor: HTMLElement
+  label: string
+}
+
+function CapabilityTooltip({
+  id,
+  tooltip,
+}: {
+  id: string
+  tooltip: CapabilityTooltipState | null
+}) {
+  const tooltipRef = useRef<HTMLSpanElement>(null)
+  const [position, setPosition] = useState({ left: 0, top: 0 })
+
+  useLayoutEffect(() => {
+    if (!tooltip || !tooltipRef.current) return
+    const anchor = tooltip.anchor.getBoundingClientRect()
+    const tooltipWidth = tooltipRef.current.getBoundingClientRect().width
+    const edgeGap = 8
+    const centeredLeft = anchor.left + anchor.width / 2
+    setPosition({
+      left: Math.min(
+        Math.max(centeredLeft, tooltipWidth / 2 + edgeGap),
+        window.innerWidth - tooltipWidth / 2 - edgeGap,
+      ),
+      top: anchor.top - edgeGap,
+    })
+  }, [tooltip])
+
+  if (!tooltip) return null
+
+  return createPortal(
+    <span
+      ref={tooltipRef}
+      id={id}
+      role="tooltip"
+      className="pointer-events-none fixed z-50 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-md border border-slate-600 bg-slate-950 px-2 py-1 text-xs font-medium text-slate-100 shadow-lg"
+      style={position}
+    >
+      {tooltip.label}
+    </span>,
+    document.body,
+  )
+}
+
+function CapabilityIcon({
+  active,
+  capability,
+  setFocusedTooltip,
+  setHoveredTooltip,
+  icon: Icon,
+  label,
+  tooltipId,
+}: {
+  active: boolean
+  capability: string
+  setFocusedTooltip: Dispatch<SetStateAction<CapabilityTooltipState | null>>
+  setHoveredTooltip: Dispatch<SetStateAction<CapabilityTooltipState | null>>
+  icon: LucideIcon
+  label: string
+  tooltipId: string
+}) {
+  const showTooltip = (
+    setTooltip: Dispatch<SetStateAction<CapabilityTooltipState | null>>,
+    event: React.SyntheticEvent<HTMLElement>,
+  ) => setTooltip({ anchor: event.currentTarget, label })
+  const hideTooltip = (
+    setTooltip: Dispatch<SetStateAction<CapabilityTooltipState | null>>,
+    event: React.SyntheticEvent<HTMLElement>,
+  ) => {
+    const anchor = event.currentTarget
+    setTooltip((current) => (current?.anchor === anchor ? null : current))
+  }
+
+  return (
+    <span
+      aria-describedby={tooltipId}
+      aria-label={label}
+      aria-disabled={active ? undefined : true}
+      role="img"
+      className={`relative inline-flex size-9 items-center justify-center rounded-lg border outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 ${active ? 'border-cyan-800/80 bg-cyan-950/50 text-cyan-200' : 'border-slate-800 bg-slate-950/40 text-slate-600'}`}
+      data-capability={capability}
+      data-active={active}
+      onBlur={(event) => hideTooltip(setFocusedTooltip, event)}
+      onFocus={(event) => showTooltip(setFocusedTooltip, event)}
+      onMouseEnter={(event) => showTooltip(setHoveredTooltip, event)}
+      onMouseLeave={(event) => hideTooltip(setHoveredTooltip, event)}
+      tabIndex={0}
+    >
+      <Icon aria-hidden="true" className="size-4" strokeWidth={1.8} />
+    </span>
+  )
+}
+
 function CapabilityList({ capabilities }: { capabilities: string[] }) {
   const t = useT()
+  const tooltipId = useId()
+  const [focusedTooltip, setFocusedTooltip] = useState<CapabilityTooltipState | null>(null)
+  const [hoveredTooltip, setHoveredTooltip] = useState<CapabilityTooltipState | null>(null)
+  const tooltip = focusedTooltip ?? hoveredTooltip
   const knownValues = new Set(
     capabilities.filter((capability) =>
       knownCapabilities.some(
@@ -187,44 +287,32 @@ function CapabilityList({ capabilities }: { capabilities: string[] }) {
         const label = t(labelKey)
         return (
           <li key={capability} className="shrink-0">
-            <span
-              aria-label={label}
-              aria-disabled={!active}
-              className={`group/capability relative inline-flex size-9 items-center justify-center rounded-lg border outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 ${active ? 'border-cyan-800/80 bg-cyan-950/50 text-cyan-200' : 'border-slate-800 bg-slate-950/40 text-slate-600'}`}
-              data-capability={capability}
-              data-active={active}
-              tabIndex={0}
-            >
-              <Icon aria-hidden="true" className="size-4" strokeWidth={1.8} />
-              <span
-                role="tooltip"
-                className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 -translate-x-1/2 whitespace-nowrap rounded-md border border-slate-600 bg-slate-950 px-2 py-1 text-xs font-medium text-slate-100 opacity-0 shadow-lg transition-opacity group-hover/capability:opacity-100 group-focus-visible/capability:opacity-100 motion-reduce:transition-none"
-              >
-                {label}
-              </span>
-            </span>
+            <CapabilityIcon
+              active={active}
+              capability={capability}
+              setFocusedTooltip={setFocusedTooltip}
+              setHoveredTooltip={setHoveredTooltip}
+              icon={Icon}
+              label={label}
+              tooltipId={tooltipId}
+            />
           </li>
         )
       })}
       {unknownCapabilities.map((capability) => (
         <li key={capability} className="shrink-0">
-          <span
-            aria-label={capability}
-            className="group/capability relative inline-flex size-9 items-center justify-center rounded-lg border border-cyan-800/80 bg-cyan-950/50 text-cyan-200 outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
-            data-capability={capability}
-            data-active="true"
-            tabIndex={0}
-          >
-            <CircleHelp aria-hidden="true" className="size-4" strokeWidth={1.8} />
-            <span
-              role="tooltip"
-              className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 -translate-x-1/2 whitespace-nowrap rounded-md border border-slate-600 bg-slate-950 px-2 py-1 font-mono text-xs font-medium text-slate-100 opacity-0 shadow-lg transition-opacity group-hover/capability:opacity-100 group-focus-visible/capability:opacity-100 motion-reduce:transition-none"
-            >
-              {capability}
-            </span>
-          </span>
+          <CapabilityIcon
+            active
+            capability={capability}
+            setFocusedTooltip={setFocusedTooltip}
+            setHoveredTooltip={setHoveredTooltip}
+            icon={CircleHelp}
+            label={capability}
+            tooltipId={tooltipId}
+          />
         </li>
       ))}
+      <CapabilityTooltip id={tooltipId} tooltip={tooltip} />
     </ul>
   )
 }

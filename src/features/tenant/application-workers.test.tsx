@@ -254,6 +254,7 @@ describe('Application agent health', () => {
     expect(screen.getByLabelText('Process execution')).toHaveAttribute('data-active', 'true')
     expect(screen.getByLabelText('Process termination')).toHaveAttribute('data-active', 'false')
     expect(screen.getByLabelText('Process termination')).toHaveAttribute('aria-disabled', 'true')
+    await userEvent.hover(screen.getByLabelText('Process execution'))
     expect(screen.getByText('Process execution')).toHaveAttribute('role', 'tooltip')
     expect(
       screen.queryByText('What this agent advertised, not proof that evidence was accepted.'),
@@ -267,7 +268,7 @@ describe('Application agent health', () => {
   it('localizes capability names and exposes tooltips to keyboard focus', async () => {
     renderWorkers(endpointGet(), 'ru')
     const capability = await screen.findByLabelText('Запуск процессов')
-    capability.focus()
+    await userEvent.click(capability)
     expect(capability).toHaveFocus()
     expect(screen.getByText('Запуск процессов')).toHaveAttribute('role', 'tooltip')
     expect(screen.getByLabelText('Наблюдение системных вызовов')).toHaveAttribute(
@@ -385,6 +386,7 @@ describe('Application agent health', () => {
     const unknown = screen.getByLabelText('future.signal/v2')
     expect(unknown).toHaveAttribute('data-active', 'true')
     expect(unknown).not.toHaveAttribute('aria-disabled')
+    await userEvent.hover(unknown)
     expect(screen.getByText('future.signal/v2')).toHaveAttribute('role', 'tooltip')
     expect(screen.getByText('Signal evidence unavailable')).toBeVisible()
     expect(

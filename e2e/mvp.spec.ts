@@ -251,12 +251,28 @@ test('shows heterogeneous agent health at a narrow viewport', async ({ page }) =
   const processExec = capabilityRow.getByLabel('Process execution')
   await expect(processExec).toHaveAttribute('data-active', 'true')
   await processExec.hover()
-  await expect(processExec.getByRole('tooltip')).toBeVisible()
+  const processExecTooltip = page.getByRole('tooltip', { name: 'Process execution' })
+  await expect(processExecTooltip).toBeVisible()
+  expect(
+    await capabilityRow.evaluate(
+      (row, tooltip) => !row.contains(tooltip),
+      await processExecTooltip.elementHandle(),
+    ),
+  ).toBe(true)
+  const tooltipBox = await processExecTooltip.boundingBox()
+  expect(tooltipBox?.x).toBeGreaterThanOrEqual(0)
+  expect((tooltipBox?.x ?? 0) + (tooltipBox?.width ?? 0)).toBeLessThanOrEqual(375)
   const processExit = capabilityRow.getByLabel('Process termination')
   await expect(processExit).toHaveAttribute('data-active', 'false')
   await expect(processExit).toHaveAttribute('aria-disabled', 'true')
   await processExit.focus()
-  await expect(processExit.getByRole('tooltip')).toBeVisible()
+  const processExitTooltip = page.getByRole('tooltip', { name: 'Process termination' })
+  await expect(processExitTooltip).toBeVisible()
+  await expect(processExecTooltip).toHaveCount(0)
+  await page.getByRole('heading', { name: 'Agent health and coverage' }).hover()
+  await expect(processExitTooltip).toBeVisible()
+  await processExit.blur()
+  await expect(processExitTooltip).toHaveCount(0)
   const futureCapability = capabilityRow.getByLabel('future.signal/v2')
   await expect(futureCapability).toHaveAttribute('data-active', 'true')
   await expect(futureCapability.locator('a')).toHaveCount(0)

@@ -214,6 +214,29 @@ describe('attention presentation', () => {
       'ru',
     )
     expect(await screen.findByRole('heading', { name: 'Требует внимания' })).toBeVisible()
+    const metrics = screen.getByRole('region', { name: 'Требует внимания' })
+    const metricLabels = [
+      'Новое за период',
+      'Открыто для разбора',
+      'Приложения с изменениями',
+      'Регрессии ресурсов',
+      'Проблемы уведомлений',
+      'Неуспешные доставки',
+    ]
+    expect(metrics.children).toHaveLength(metricLabels.length)
+    for (const label of metricLabels) {
+      const labelElement = screen.getByText(label)
+      expect(labelElement.parentElement).toHaveClass('flex', 'flex-col')
+      expect(labelElement.nextElementSibling).toHaveClass('mt-auto', 'pt-1')
+    }
+    expect(Array.from(metrics.querySelectorAll('strong'), (value) => value.textContent)).toEqual([
+      '7',
+      '12',
+      '1',
+      '0',
+      '1',
+      '14',
+    ])
     expect(screen.getAllByText('Commerce <script>alert(1)</script>').length).toBeGreaterThan(0)
     expect(document.querySelector('script')).toBeNull()
     expect(screen.getByRole('heading', { name: 'Приоритетная очередь' })).toBeVisible()

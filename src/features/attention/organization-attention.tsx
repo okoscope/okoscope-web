@@ -76,9 +76,14 @@ export function OrganizationAttention({
         <>
           <section aria-label={t('requiresAttention')} className="attention-metrics">
             {metrics.map(([label, value]) => (
-              <div key={label} className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+              <div
+                key={label}
+                className="flex flex-col rounded-xl border border-slate-800 bg-slate-900/60 p-4"
+              >
                 <span className="block text-sm text-slate-400">{label}</span>
-                <strong className="mt-1 block text-3xl">{formatNumber(locale, value)}</strong>
+                <strong className="mt-auto block pt-1 text-3xl">
+                  {formatNumber(locale, value)}
+                </strong>
               </div>
             ))}
           </section>

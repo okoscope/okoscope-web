@@ -384,6 +384,7 @@ export const legacyRussian: Record<string, string> = {
   Observed: 'Наблюдалось',
   Workload: 'Рабочая нагрузка',
   Command: 'Команда',
+  'Process command': 'Команда процесса',
   Node: 'Узел',
   Evidence: 'Данные',
   'Inventory evidence': 'Данные инвентаризации',

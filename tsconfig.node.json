@@ -15,8 +15,11 @@
     "vitest.config.ts",
     "playwright.config.ts",
     "playwright.real-backend.config.ts",
+    "playwright.group-same-events-real-backend.config.ts",
     "e2e/real-backend.setup.mjs",
     "e2e/real-backend.teardown.mjs",
+    "e2e/group-same-events-real-backend.setup.mjs",
+    "e2e/group-same-events-real-backend.teardown.mjs",
     "playwright.docs.config.ts",
     "playwright.screenshots.config.ts"
   ]

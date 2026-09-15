@@ -34,17 +34,15 @@ export function inventoryIdentityText(
 ) {
   if (kind === 'process' && isInventoryProcess(value)) return value.executable
   if (kind === 'destination' && isInventoryDestination(value))
-    return `${value.process_command} → ${value.destination_address}:${value.destination_port} (${value.address_family})`
-  if (kind === 'domain' && isInventoryDomain(value))
-    return `${value.process_command} → ${value.name} (${value.query_type})`
-  if (kind === 'syscall' && isInventorySyscall(value))
-    return `${value.process_command} → ${value.syscall}`
+    return `${value.destination_address}:${value.destination_port} (${value.address_family})`
+  if (kind === 'domain' && isInventoryDomain(value)) return `${value.name} (${value.query_type})`
+  if (kind === 'syscall' && isInventorySyscall(value)) return value.syscall
   if (kind === 'inbound_endpoint' && isInventoryInboundEndpoint(value))
     return `${value.transport.toUpperCase()} ${value.address_family.toUpperCase()} ${formatEndpoint(value.address_family, value.local_address, value.local_port)}`
   if (kind === 'file_activity' && isInventoryFileActivity(value))
     return value.operation === 'rename' && value.new_path
-      ? `${value.process_command} · rename · ${value.path} → ${value.new_path}`
-      : `${value.process_command} · ${value.operation} · ${value.path}`
+      ? `rename · ${value.path} → ${value.new_path}`
+      : `${value.operation} · ${value.path}`
   if (kind === 'lifecycle' && isInventoryLifecycle(value))
     return `${inventoryLifecycleIdentityText(value)} · ${value.evidence_source}`
   return 'Unsupported identity'

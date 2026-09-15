@@ -199,8 +199,7 @@ export type InventoryInboundEndpointIdentity =
   components['schemas']['InventoryInboundEndpointIdentity']
 export type InventoryLifecycleSemanticSummary =
   components['schemas']['InventoryLifecycleSemanticSummary']
-export type InventoryFileActivitySemanticSummary =
-  components['schemas']['FileActivitySemanticSummary']
+export type InventoryFileActivityIdentity = components['schemas']['InventoryFileActivityIdentity']
 export type InventoryFacet = components['schemas']['InventoryFacet']
 export type InventoryItem = components['schemas']['InventoryItem']
 export type InventoryItemPage = components['schemas']['InventoryItemPage']
@@ -552,7 +551,7 @@ export const contractFixture = {
   } satisfies InventoryListQuery,
   inventorySummary: {
     coverage: { closed_before: null, history_expired_before: null, detail_scope: 'raw' },
-    identity_version: 1,
+    identity_version: 2,
     item_count: 1,
     occurrence_count: 12,
     first_seen_at: '2026-08-17T00:00:00Z',
@@ -570,7 +569,7 @@ export const contractFixture = {
     project_id: '20000000-0000-4000-8000-000000000001',
     application_id: '30000000-0000-4000-8000-000000000001',
     inventory_kind: 'process',
-    identity_version: 1,
+    identity_version: 2,
     semantic_summary: { executable: '/app/payments' },
     user_label: null,
     first_seen_at: '2026-08-17T00:00:00Z',
@@ -686,7 +685,7 @@ export const contractFixture = {
   inventoryDistributions: [
     {
       coverage: { closed_before: null, history_expired_before: null, detail_scope: 'raw' },
-      identity_version: 1,
+      identity_version: 2,
       kind: 'process',
       total_item_count: 2,
       total_occurrence_count: 12,
@@ -703,7 +702,7 @@ export const contractFixture = {
     },
     {
       coverage: { closed_before: null, history_expired_before: null, detail_scope: 'raw' },
-      identity_version: 1,
+      identity_version: 2,
       kind: 'destination',
       total_item_count: 1,
       total_occurrence_count: 6,
@@ -711,7 +710,6 @@ export const contractFixture = {
         {
           identity_token: 'destination-token',
           semantic_summary: {
-            process_command: 'payments',
             address_family: 'ipv4',
             destination_address: '203.0.113.7',
             destination_port: 443,
@@ -725,7 +723,7 @@ export const contractFixture = {
     },
     {
       coverage: { closed_before: null, history_expired_before: null, detail_scope: 'raw' },
-      identity_version: 1,
+      identity_version: 2,
       kind: 'domain',
       total_item_count: 1,
       total_occurrence_count: 5,
@@ -733,7 +731,6 @@ export const contractFixture = {
         {
           identity_token: 'domain-token',
           semantic_summary: {
-            process_command: 'payments',
             name: 'api.example.com',
             query_type: 'A',
           },
@@ -746,14 +743,14 @@ export const contractFixture = {
     },
     {
       coverage: { closed_before: null, history_expired_before: null, detail_scope: 'raw' },
-      identity_version: 1,
+      identity_version: 2,
       kind: 'syscall',
       total_item_count: 1,
       total_occurrence_count: 9,
       entries: [
         {
           identity_token: 'syscall-token',
-          semantic_summary: { process_command: 'payments', syscall: 'epoll_wait' },
+          semantic_summary: { syscall: 'epoll_wait' },
           user_label: null,
           item_count: 1,
           occurrence_count: 9,
@@ -763,7 +760,7 @@ export const contractFixture = {
     },
     {
       coverage: { closed_before: null, history_expired_before: null, detail_scope: 'raw' },
-      identity_version: 1,
+      identity_version: 2,
       kind: 'process',
       total_item_count: 0,
       total_occurrence_count: 0,

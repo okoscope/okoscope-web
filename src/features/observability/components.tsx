@@ -9,6 +9,7 @@ import type {
   DnsContext,
   FirstSeenNotificationSummary,
   FileActivitySemanticSummary,
+  InventoryFileActivityIdentity,
   FileCreatePayload,
   FileModifyPayload,
   FileDeletePayload,
@@ -370,7 +371,11 @@ export function FilePathValue({ path, label = 'Syscall path' }: { path: string; 
 export const replacementLabel = (value: boolean | null | undefined) =>
   value === true ? 'Replaced' : value === false ? 'Not replaced' : 'Unknown'
 
-export function FileActivitySummary({ value }: { value: FileActivitySemanticSummary }) {
+export function FileActivitySummary({
+  value,
+}: {
+  value: FileActivitySemanticSummary | InventoryFileActivityIdentity
+}) {
   const rename = value.operation === 'rename'
   return (
     <dl
@@ -379,8 +384,12 @@ export function FileActivitySummary({ value }: { value: FileActivitySemanticSumm
     >
       <dt>Operation</dt>
       <dd className="capitalize">{value.operation}</dd>
-      <dt>Process</dt>
-      <dd className="break-all font-mono">{value.process_command}</dd>
+      {'process_command' in value && (
+        <>
+          <dt>Process</dt>
+          <dd className="break-all font-mono">{value.process_command}</dd>
+        </>
+      )}
       <dt>{rename ? 'Old syscall path' : 'Syscall path'}</dt>
       <dd className="min-w-0">
         <FilePathValue path={value.path} label={rename ? 'Old syscall path' : 'Syscall path'} />

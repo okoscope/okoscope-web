@@ -855,7 +855,6 @@ export async function mockApi(page: Page, role: 'owner' | 'member' = 'owner') {
         kind === 'file_activity'
           ? {
               operation: 'rename',
-              process_command: 'mv',
               path: '/tmp/old-<script>.txt',
               new_path: '/tmp/new.txt',
               replaced: null,
@@ -871,18 +870,17 @@ export async function mockApi(page: Page, role: 'owner' | 'member' = 'owner') {
               }
             : kind === 'destination'
               ? {
-                  process_command: 'gateway',
                   address_family: 'ipv4',
                   destination_address: '203.0.113.7',
                   destination_port: 443,
                 }
               : kind === 'domain'
-                ? { process_command: 'gateway', name: 'api.example.com', query_type: 'A' }
+                ? { name: 'api.example.com', query_type: 'A' }
                 : kind === 'syscall'
-                  ? { process_command: 'gateway', syscall: 'epoll_wait' }
+                  ? { syscall: 'epoll_wait' }
                   : inventoryItem.semantic_summary
       return json(route, {
-        identity_version: 1,
+        identity_version: 2,
         kind,
         total_item_count: 2,
         total_occurrence_count: 20,
@@ -921,7 +919,6 @@ export async function mockApi(page: Page, role: 'owner' | 'member' = 'owner') {
         kind === 'file_activity'
           ? {
               operation: 'rename',
-              process_command: 'mv',
               path: '/tmp/old-<script>.txt',
               new_path: '/tmp/new.txt',
               replaced: null,
@@ -937,15 +934,14 @@ export async function mockApi(page: Page, role: 'owner' | 'member' = 'owner') {
               }
             : kind === 'destination'
               ? {
-                  process_command: 'gateway',
                   address_family: 'ipv4',
                   destination_address: '203.0.113.7',
                   destination_port: 443,
                 }
               : kind === 'domain'
-                ? { process_command: 'gateway', name: 'api.example.com', query_type: 'A' }
+                ? { name: 'api.example.com', query_type: 'A' }
                 : kind === 'syscall'
-                  ? { process_command: 'gateway', syscall: 'epoll_wait' }
+                  ? { syscall: 'epoll_wait' }
                   : inventoryItem.semantic_summary
       return json(route, {
         items: [

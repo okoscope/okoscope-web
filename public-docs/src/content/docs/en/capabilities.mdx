@@ -61,6 +61,8 @@ Application diagnostics are positive changes during the selected range, not life
 
 Process execution tells you which executables ran inside the workloads you selected. Turn on processExit if you also want to see processes ending, and list the system calls you care about explicitly, ptrace and setns for example. This is a profile you configure, not a recording of every system call the kernel handled.
 
+Application inventory groups the same system call across Linux process threads. Open a retained raw occurrence when you need the originating process command. Runtime Groups remain process-aware, and process execution and termination identities are unchanged.
+
 The termination and restart views put kernel evidence and Kubernetes evidence side by side: the process, the container it belonged to, the exit code or signal, the reported reason and any related observations. Read them together. A SIGKILL on its own does not mean the process was killed for memory — that conclusion needs evidence that says so. And a container restarting is a different event from a child process exiting.
 
 <a id="network"></a>
@@ -70,12 +72,16 @@ Outbound connect observations give you the destination address and port, the add
 
 DNS is off by default. Switch it on and you get bounded observations of plaintext UDP and TCP traffic on port 53: names, A and AAAA addresses, CNAME relationships, the response code and the TTL. A recent matching answer can annotate a connection with a name, which is convenient, but one shared IP can belong to several names, and correlation is not causation. Encrypted DNS stays encrypted, and Okoscope never fills a gap with a reverse lookup.
 
+Application inventory presents one outbound endpoint or DNS question even when several Linux process threads produced it. The thread command remains visible on each retained raw occurrence and in the process-aware Runtime Groups linked from the item.
+
 <a id="files"></a>
 ## Experimental file activity
 
 File observation is opt-in, and you have to say what you want: which operations, and at least one normalized absolute prefix to include. Exclusions always win over inclusions. The syscall-path profile reports the successful operations it supports, using the paths the process passed in and the descriptor mappings it kept. It does not read file contents and does not resolve a canonical inode identity.
 
 Relative paths, symbolic-link aliases and memory-mapped writes fall outside what this profile promises to see. Modifications are aggregated over a fixed five-second window, so rapid writes collapse into one observation. A successful open with O_CREAT does not prove a file was created; only O_CREAT together with O_EXCL does. Start with one narrow path that holds nothing sensitive.
+
+Equivalent file operations over the same reported path are grouped across process threads in Application inventory. The originating command remains occurrence evidence.
 
 ```yaml
 observation:

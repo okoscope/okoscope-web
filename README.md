@@ -24,6 +24,15 @@ Application-scoped diagnostic snapshot; agents that omit it are rejected as inco
 Agent cards keep the supported capability icons visible in one row, dim capabilities that the
 agent did not advertise, and expose each localized capability name on hover or keyboard focus.
 
+Application inventory groups outbound destinations, domains, system calls, and file activity by
+their canonical behavior across process threads. The originating Linux process command remains
+available on each retained raw occurrence and in process-aware Runtime Groups. Policies created
+for those inventory kinds therefore apply to matching behavior from every thread in the
+Application, subject to their placement scope. Deployments that upgrade from the earlier
+thread-specific identity require an Application-scoped reset of runtime evidence, labels,
+policies, suppressions, and derived attention or notification state; they do not migrate that
+state.
+
 The product interface is a React single-page app. Public documentation is a statically generated
 Astro and Starlight site at `/docs/en/` and `/docs/ru/`. The application validates backend compatibility at startup and
 uses the backend's opaque `HttpOnly` session cookie for authentication. Browser requests include

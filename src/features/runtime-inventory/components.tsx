@@ -14,7 +14,7 @@ import type {
   InventoryDomainIdentity,
   InventoryFacet,
   InventoryFacetPage,
-  InventoryFileActivitySemanticSummary,
+  InventoryFileActivityIdentity,
   InventoryGroupPage,
   InventoryInboundEndpointIdentity,
   InventoryItem,
@@ -105,8 +105,6 @@ export const isInventoryProcess = (
 export const isInventoryDestination = (
   value: InventorySummaryValue,
 ): value is InventoryDestinationIdentity =>
-  'process_command' in value &&
-  typeof value.process_command === 'string' &&
   'destination_address' in value &&
   typeof value.destination_address === 'string' &&
   'destination_port' in value &&
@@ -115,8 +113,6 @@ export const isInventoryDestination = (
   (value.address_family === 'ipv4' || value.address_family === 'ipv6')
 
 export const isInventoryDomain = (value: InventorySummaryValue): value is InventoryDomainIdentity =>
-  'process_command' in value &&
-  typeof value.process_command === 'string' &&
   'name' in value &&
   typeof value.name === 'string' &&
   'query_type' in value &&
@@ -124,11 +120,7 @@ export const isInventoryDomain = (value: InventorySummaryValue): value is Invent
 
 export const isInventorySyscall = (
   value: InventorySummaryValue,
-): value is InventorySyscallIdentity =>
-  'process_command' in value &&
-  typeof value.process_command === 'string' &&
-  'syscall' in value &&
-  typeof value.syscall === 'string'
+): value is InventorySyscallIdentity => 'syscall' in value && typeof value.syscall === 'string'
 
 export const isInventoryInboundEndpoint = (
   value: InventorySummaryValue,
@@ -144,11 +136,9 @@ export const isInventoryInboundEndpoint = (
 
 export const isInventoryFileActivity = (
   value: InventorySummaryValue,
-): value is InventoryFileActivitySemanticSummary =>
+): value is InventoryFileActivityIdentity =>
   'operation' in value &&
   ['create', 'modify', 'delete', 'rename'].includes(String(value.operation)) &&
-  'process_command' in value &&
-  typeof value.process_command === 'string' &&
   'path' in value &&
   typeof value.path === 'string'
 
@@ -225,8 +215,7 @@ export function InventoryIdentity({ item }: { item: InventoryItem }) {
     return (
       <span className="inline-flex flex-wrap items-center gap-2 break-all font-mono">
         <span>
-          {value.process_command} → {value.destination_address}:{value.destination_port} (
-          {value.address_family})
+          {value.destination_address}:{value.destination_port} ({value.address_family})
         </span>
         <NetworkScopeBadge address={value.destination_address} />
       </span>
@@ -234,15 +223,11 @@ export function InventoryIdentity({ item }: { item: InventoryItem }) {
   if (item.inventory_kind === 'domain' && isInventoryDomain(value))
     return (
       <span className="break-all font-mono">
-        {value.process_command} → {value.name} ({value.query_type})
+        {value.name} ({value.query_type})
       </span>
     )
   if (item.inventory_kind === 'syscall' && isInventorySyscall(value))
-    return (
-      <span className="break-all font-mono">
-        {value.process_command} → {value.syscall}
-      </span>
-    )
+    return <span className="break-all font-mono">{value.syscall}</span>
   if (item.inventory_kind === 'inbound_endpoint' && isInventoryInboundEndpoint(value))
     return (
       <span className="inline-flex min-w-0 flex-col gap-2">
@@ -714,8 +699,8 @@ export function EvidenceList(props: EvidenceProps) {
           <h2 className="break-all font-semibold">
             {getEventKindLabel(item.event_kind)} · {formatTimestamp(item.observed_at)}
           </h2>
-          <dl className="details mt-3">
-            <dt>Command</dt>
+          <dl className="details mt-3" aria-label="Observation details">
+            <dt>Process command</dt>
             <dd className="break-all">{item.process_command}</dd>
             <dt>Node</dt>
             <dd className="break-all">{item.node_name}</dd>

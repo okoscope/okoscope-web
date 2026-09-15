@@ -2563,7 +2563,6 @@ export interface components {
              * @enum {string}
              */
             kind: "destination";
-            process_command: string;
             /** @enum {string} */
             address_family: "ipv4" | "ipv6";
             destination_address: string;
@@ -2575,7 +2574,6 @@ export interface components {
              * @enum {string}
              */
             kind: "domain";
-            process_command: string;
             name: string;
             query_type: string;
         };
@@ -2585,7 +2583,6 @@ export interface components {
              * @enum {string}
              */
             kind: "syscall";
-            process_command: string;
             syscall: string;
         };
         InboundBehaviorMatcher: {
@@ -2604,7 +2601,6 @@ export interface components {
              * @enum {string}
              */
             kind: "file_activity";
-            process_command: string;
             operation: string;
             path: string;
             new_path?: string;
@@ -4323,7 +4319,7 @@ export interface components {
          * @enum {string}
          */
         InventoryReleasePresence: "observed" | "not_observed" | "unknown";
-        InventorySemanticSummary: components["schemas"]["InventoryProcessIdentity"] | components["schemas"]["InventoryDestinationIdentity"] | components["schemas"]["InventoryDomainIdentity"] | components["schemas"]["InventorySyscallIdentity"] | components["schemas"]["InventoryInboundEndpointIdentity"] | components["schemas"]["FileActivitySemanticSummary"] | components["schemas"]["InventoryLifecycleSemanticSummary"];
+        InventorySemanticSummary: components["schemas"]["InventoryProcessIdentity"] | components["schemas"]["InventoryDestinationIdentity"] | components["schemas"]["InventoryDomainIdentity"] | components["schemas"]["InventorySyscallIdentity"] | components["schemas"]["InventoryInboundEndpointIdentity"] | components["schemas"]["InventoryFileActivityIdentity"] | components["schemas"]["InventoryLifecycleSemanticSummary"];
         /** @description User-visible lifecycle identity and termination context; identity_token remains an opaque filtering mechanism. */
         InventoryLifecycleSemanticSummary: (components["schemas"]["ProcessExitSemanticSummary"] & Record<string, never>) | (components["schemas"]["ContainerTerminationSemanticSummary"] & Record<string, never>) | (components["schemas"]["ContainerRestartSemanticSummary"] & Record<string, never>) | (components["schemas"]["RestartLoopSemanticSummary"] & Record<string, never>);
         InventoryProcessIdentity: {
@@ -4331,8 +4327,6 @@ export interface components {
             executable: string;
         };
         InventoryDestinationIdentity: {
-            /** @example payments */
-            process_command: string;
             /** @enum {string} */
             address_family: "ipv4" | "ipv6";
             /**
@@ -4344,18 +4338,23 @@ export interface components {
             destination_port: number;
         };
         InventoryDomainIdentity: {
-            /** @example payments */
-            process_command: string;
             /** @example api.example.com */
             name: string;
             /** @enum {string} */
             query_type: "A" | "AAAA";
         };
         InventorySyscallIdentity: {
-            /** @example payments */
-            process_command: string;
             /** @example epoll_wait */
             syscall: string;
+        };
+        InventoryFileActivityIdentity: {
+            operation: components["schemas"]["FileActivityOperation"];
+            /** @description Path reported by the process syscall. */
+            path: string;
+            /** @description Rename destination path reported by the process syscall. */
+            new_path?: string;
+            /** @description Whether rename replaced an existing destination; null means unknown. */
+            replaced?: boolean | null;
         };
         InventoryInboundEndpointIdentity: {
             /** @constant */

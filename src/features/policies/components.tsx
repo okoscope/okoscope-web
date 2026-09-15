@@ -97,15 +97,15 @@ export const suppressionBehaviorSummary = ({
     case 'process':
       return matcher.executable
     case 'destination':
-      return `${matcher.process_command} → ${matcher.destination_address}:${matcher.destination_port} (${matcher.address_family})`
+      return `${matcher.destination_address}:${matcher.destination_port} (${matcher.address_family})`
     case 'domain':
-      return `${matcher.process_command} → ${matcher.name} (${matcher.query_type})`
+      return `${matcher.name} (${matcher.query_type})`
     case 'syscall':
-      return `${matcher.process_command} → ${matcher.syscall}`
+      return matcher.syscall
     case 'inbound_endpoint':
       return `${matcher.transport.toUpperCase()} ${matcher.local_address}:${matcher.local_port}`
     case 'file_activity':
-      return `${matcher.process_command} → ${matcher.operation} ${matcher.path}${matcher.new_path ? ` → ${matcher.new_path}` : ''}`
+      return `${matcher.operation} ${matcher.path}${matcher.new_path ? ` → ${matcher.new_path}` : ''}`
     case 'lifecycle_process_exit':
     case 'lifecycle_container_termination':
     case 'lifecycle_container_restart':

@@ -23,7 +23,7 @@ import {
   summarySearch,
 } from './url-state'
 import { ApiClientError, type ApiClient } from '../../shared/api/client'
-import { contractFixture } from '../../shared/api/types'
+import { contractFixture, type InventoryItem } from '../../shared/api/types'
 import { LocalizationProvider } from '../../shared/i18n'
 
 describe('runtime inventory URL state', () => {
@@ -306,7 +306,7 @@ describe('runtime inventory safe presentation', () => {
           item={{
             ...contractFixture.inventoryItemDetail,
             inventory_kind: 'file_activity',
-            semantic_summary: { operation, process_command: 'worker', path },
+            semantic_summary: { operation, path },
           }}
         />,
       )
@@ -316,6 +316,45 @@ describe('runtime inventory safe presentation', () => {
       expect(container.querySelector('script')).toBeNull()
     },
   )
+
+  it.each([
+    [
+      'destination',
+      { address_family: 'ipv4', destination_address: '10.0.0.8', destination_port: 5432 },
+      '10.0.0.8:5432 (ipv4)',
+    ],
+    ['domain', { name: 'db.example.test', query_type: 'A' }, 'db.example.test (A)'],
+    ['syscall', { syscall: 'epoll_wait' }, 'epoll_wait'],
+    ['file_activity', { operation: 'modify', path: '/tmp/data' }, /\/tmp\/data/],
+  ] as const)(
+    'renders an application-scoped %s identity without a process command',
+    (kind, value, title) => {
+      render(
+        <InventoryIdentity
+          item={
+            {
+              ...contractFixture.inventoryItemDetail,
+              inventory_kind: kind,
+              semantic_summary: value,
+            } satisfies InventoryItem
+          }
+        />,
+      )
+      expect(screen.getByText(title)).toBeVisible()
+      expect(screen.queryByText(/actix-rt|worker/)).not.toBeInTheDocument()
+    },
+  )
+
+  it('shows the localized process command in accessible raw occurrence details', () => {
+    render(
+      <LocalizationProvider initialLocale="ru">
+        <EvidenceList kind="occurrences" page={contractFixture.inventoryOccurrencePage} />
+      </LocalizationProvider>,
+    )
+    const details = screen.getByLabelText('Данные наблюдений')
+    expect(details).toHaveTextContent('Команда процесса')
+    expect(details).toHaveTextContent('/app/payments')
+  })
 
   it.each([
     [false, false, 0],

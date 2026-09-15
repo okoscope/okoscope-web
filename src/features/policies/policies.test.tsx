@@ -64,14 +64,27 @@ describe('managed runtime policy presentation', () => {
       suppressionBehaviorSummary({
         behavior_matcher: {
           kind: 'destination',
-          process_command: '/usr/bin/payment-api',
           address_family: 'ipv4',
           destination_address: '10.0.0.8',
           destination_port: 8081,
         },
       }),
-    ).toBe('/usr/bin/payment-api → 10.0.0.8:8081 (ipv4)')
+    ).toBe('10.0.0.8:8081 (ipv4)')
   })
+
+  it.each([
+    [{ kind: 'domain', name: 'db.example.test', query_type: 'A' }, 'db.example.test (A)'],
+    [{ kind: 'syscall', syscall: 'epoll_wait' }, 'epoll_wait'],
+    [
+      { kind: 'file_activity', operation: 'rename', path: '/old', new_path: '/new' },
+      'rename /old → /new',
+    ],
+  ] as const)(
+    'describes an application-scoped matcher without a process command',
+    (matcher, title) => {
+      expect(suppressionBehaviorSummary({ behavior_matcher: matcher })).toBe(title)
+    },
+  )
 
   it('emits policy filters independently', async () => {
     const onChange = vi.fn()

@@ -68,8 +68,8 @@ test('explores Application Activity scope, views, cursors, and observation histo
 
   await page.getByRole('button', { name: /Domains/ }).click()
   await expect(page).toHaveURL(/kind=domain/)
-  await expect(page.getByRole('button', { name: /gateway → api\.example\.com/ })).toBeVisible()
-  await page.getByRole('button', { name: /gateway → api\.example\.com/ }).click()
+  await expect(page.getByRole('button', { name: /api\.example\.com \(A\)/ })).toBeVisible()
+  await page.getByRole('button', { name: /api\.example\.com \(A\)/ }).click()
   await expect(page).toHaveURL(/identity_token=domain-identity/)
   await page.getByRole('button', { name: /Process launches/ }).click()
   await expect(page.getByRole('button', { name: /<img src=x onerror=alert/ })).toBeVisible()
@@ -107,6 +107,7 @@ test('explores Application Activity scope, views, cursors, and observation histo
   await occurrencesTab.click()
   await expect(page).toHaveURL(/evidence=occurrences/)
   await expect(occurrencesTab).toHaveAttribute('aria-selected', 'true')
+  await expect(page.getByText('Process command')).toBeVisible()
   await page.getByText('Technical details').first().click()
   await expect(page.getByText('203.0.113.7')).toBeVisible()
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
@@ -150,7 +151,7 @@ test('withholds Application Activity observations on ownership mismatch', async 
         project_id: project.id,
         application_id: 'wrong',
         inventory_kind: 'process',
-        identity_version: 1,
+        identity_version: 2,
         semantic_summary: { executable: '/withheld' },
         user_label: null,
         first_seen_at: '2026-08-17T10:00:00Z',

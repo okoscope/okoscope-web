@@ -15,7 +15,7 @@ import { InventoryKindDistribution, TopBehaviorDistribution } from './visualizat
 
 const summary: InventorySummary = {
   coverage: { closed_before: null, history_expired_before: null, detail_scope: 'raw' },
-  identity_version: 1,
+  identity_version: 2,
   item_count: 4,
   occurrence_count: 126,
   first_seen_at: '2026-08-17T10:00:00Z',
@@ -42,7 +42,7 @@ describe('data visualization presentation', () => {
   it('formats inbound identities without client or deployment fields', () => {
     const distribution: InventoryDistribution = {
       coverage: { closed_before: null, history_expired_before: null, detail_scope: 'raw' },
-      identity_version: 1,
+      identity_version: 2,
       kind: 'inbound_endpoint',
       total_item_count: 1,
       total_occurrence_count: 18,
@@ -153,7 +153,7 @@ describe('data visualization presentation', () => {
   it('keeps derived and malformed lifecycle identities on the existing text fallback', () => {
     const distribution: InventoryDistribution = {
       coverage: { closed_before: null, history_expired_before: null, detail_scope: 'raw' },
-      identity_version: 1,
+      identity_version: 2,
       kind: 'lifecycle',
       total_item_count: 2,
       total_occurrence_count: 5,
@@ -216,7 +216,7 @@ describe('data visualization presentation', () => {
   it('sorts top behaviors and other by occurrence count descending', () => {
     const distribution: InventoryDistribution = {
       coverage: { closed_before: null, history_expired_before: null, detail_scope: 'raw' },
-      identity_version: 1,
+      identity_version: 2,
       kind: 'process',
       total_item_count: 4,
       total_occurrence_count: 30,
@@ -253,7 +253,7 @@ describe('data visualization presentation', () => {
     const user = userEvent.setup()
     const distribution: InventoryDistribution = {
       coverage: { closed_before: null, history_expired_before: null, detail_scope: 'raw' },
-      identity_version: 1,
+      identity_version: 2,
       kind: 'process',
       total_item_count: 3,
       total_occurrence_count: 10,

@@ -130,7 +130,7 @@ export const parseResourceSearch = (value: Record<string, unknown>): ResourceSea
   const range = ['6h', '24h', '7d', '30d'].includes(String(value.range))
     ? (value.range as ResourceSearch['range'])
     : '24h'
-  const step = value.step === 'hour' || range === '30d' ? 'hour' : 'minute'
+  const step = value.step === 'minute' && range !== '30d' ? 'minute' : 'hour'
   return {
     metric,
     range,

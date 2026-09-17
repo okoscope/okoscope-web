@@ -103,7 +103,7 @@ function ApplicationPage() {
               range: '24h',
               metric: 'memory_current_bytes',
               mode: 'per_ready_replica',
-              step: 'minute',
+              step: 'hour',
             }}
           >
             <div className="flex items-start justify-between gap-3">

@@ -62,6 +62,8 @@ const copy = {
     stale: 'Showing the previous result while newer data is loading.',
     releaseMarker: 'Release observed',
     chart: 'Resource history chart',
+    observedLegend: 'Observed data',
+    gapLegend: 'Interval without data',
     noLimit: 'No finite limit',
     coverageHelp: 'Incomplete intervals appear as gaps, never as zero.',
     range6h: '6 hr',
@@ -113,6 +115,8 @@ const copy = {
     stale: 'Показан предыдущий результат, пока загружаются новые данные.',
     releaseMarker: 'Зафиксирован релиз',
     chart: 'График истории ресурсов',
+    observedLegend: 'Наблюдаемые данные',
+    gapLegend: 'Интервал без данных',
     noLimit: 'Нет конечного лимита',
     coverageHelp: 'Неполные интервалы показаны разрывами и не превращаются в нули.',
     range6h: '6 ч',
@@ -343,6 +347,47 @@ const segments = (points: ResourceHistoryPoint[]) => {
   return result
 }
 
+const chartMilestones = (parts: ResourceHistoryPoint[][]) => {
+  const candidates = parts.flatMap((part) => {
+    if (part.length < 3) return part
+    return part.filter((point, index) => {
+      if (index === 0 || index === part.length - 1) return true
+      const previous = part[index - 1]?.value
+      const current = point.value
+      const next = part[index + 1]?.value
+      if (
+        previous === null ||
+        previous === undefined ||
+        current === null ||
+        next === null ||
+        next === undefined
+      )
+        return false
+      return (current - previous) * (next - current) <= 0
+    })
+  })
+  if (candidates.length <= 8) return candidates
+  return Array.from(
+    { length: 8 },
+    (_, index) => candidates[Math.round((index * (candidates.length - 1)) / 7)]!,
+  )
+}
+
+const chartTicks = (minimum: number, maximum: number, count: number) =>
+  Array.from({ length: count }, (_, index) => minimum + ((maximum - minimum) * index) / (count - 1))
+
+const hourlyTicks = (from: string, to: string) => {
+  const start = new Date(from).getTime()
+  const end = new Date(to).getTime()
+  const hour = 3_600_000
+  const durationHours = Math.max(1, Math.round((end - start) / hour))
+  const intervalHours = durationHours <= 24 ? 1 : durationHours <= 168 ? 6 : 24
+  const first = Math.ceil(start / (intervalHours * hour)) * intervalHours * hour
+  const result: Date[] = []
+  for (let value = first; value <= end; value += intervalHours * hour) result.push(new Date(value))
+  return result
+}
+
 function ResourceChart({ data, locale }: { data: ApplicationResourceHistory; locale: Locale }) {
   const text = copy[locale]
   const rendered =
@@ -352,18 +397,52 @@ function ResourceChart({ data, locale }: { data: ApplicationResourceHistory; loc
             index % Math.ceil(data.points.length / 240) === 0 || index === data.points.length - 1,
         )
       : data.points
-  const values = rendered.flatMap((point) => (point.value === null ? [] : [point.value]))
-  const max = Math.max(...values, 1)
-  const min = Math.min(...values, 0)
+  const values = rendered.flatMap((point) =>
+    point.value === null || !point.coverage.complete ? [] : [point.value],
+  )
+  const observedMax = Math.max(...values, 1)
+  const observedMin = Math.min(...values, observedMax)
+  const padding = Math.max((observedMax - observedMin) * 0.12, Math.abs(observedMax) * 0.02, 1)
+  const max = observedMax + padding
+  const min = Math.max(0, observedMin - padding)
+  const parts = segments(rendered)
+  const milestones = chartMilestones(parts)
+  const yTicks = chartTicks(min, max, 4)
+  const xTicks = hourlyTicks(data.from, data.to)
+  const dateFormatter = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' })
   const x = (point: ResourceHistoryPoint) =>
-    40 +
+    72 +
     ((new Date(point.from).getTime() - new Date(data.from).getTime()) /
       Math.max(1, new Date(data.to).getTime() - new Date(data.from).getTime())) *
-      820
-  const y = (value: number) => 260 - ((value - min) / Math.max(max - min, 1)) * 210
+      788
+  const xAt = (date: Date) =>
+    72 +
+    ((date.getTime() - new Date(data.from).getTime()) /
+      Math.max(1, new Date(data.to).getTime() - new Date(data.from).getTime())) *
+      788
+  const y = (value: number) => 260 - ((value - min) / Math.max(max - min, 1)) * 190
+  const dateGroups = xTicks.reduce<{ label: string; ticks: Date[] }[]>((groups, tick) => {
+    const label = dateFormatter.format(tick)
+    const current = groups.at(-1)
+    if (current?.label === label) current.ticks.push(tick)
+    else groups.push({ label, ticks: [tick] })
+    return groups
+  }, [])
   return (
     <Card>
       <h2 className="text-xl font-semibold">{metricLabel(data.metric, locale)}</h2>
+      <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-xs text-slate-300">
+        <span className="inline-flex items-center gap-2">
+          <span aria-hidden="true" className="h-0.5 w-8 bg-cyan-400" />
+          {text.observedLegend}
+        </span>
+        <span className="inline-flex items-center gap-2">
+          <svg aria-hidden="true" className="h-2 w-8" viewBox="0 0 32 8">
+            <line x1="0" x2="32" y1="4" y2="4" stroke="#fbbf24" strokeDasharray="6 4" />
+          </svg>
+          {text.gapLegend}
+        </span>
+      </div>
       <div
         className="mt-4 overflow-x-auto"
         role="region"
@@ -372,43 +451,111 @@ function ResourceChart({ data, locale }: { data: ApplicationResourceHistory; loc
       >
         <svg
           className="h-auto min-w-[720px]"
-          viewBox="0 0 900 310"
+          viewBox="0 0 900 340"
           role="img"
           aria-label={`${text.chart}: ${metricLabel(data.metric, locale)}`}
         >
-          <path d="M40 50V260H860" fill="none" stroke="#475569" />
-          <path d="M40 155H860" stroke="#334155" strokeDasharray="5 7" />
-          {segments(rendered).map((part, index) => {
-            const point = part[0]
-            if (part.length === 1 && point?.value !== null && point?.value !== undefined) {
-              const label = `${text.observed}: ${formatResourceValue(locale, point.value, data.unit)}`
-              return (
-                <circle
-                  key={`${point.from}-${index}`}
-                  data-resource-point="true"
-                  cx={x(point)}
-                  cy={y(point.value)}
-                  r="8"
-                  fill="#22d3ee"
-                  stroke="#f8fafc"
-                  strokeWidth="2"
-                  role="img"
-                  aria-label={label}
-                >
-                  <title>{label}</title>
-                </circle>
-              )
-            }
+          {yTicks.map((tick) => (
+            <g key={tick}>
+              <line x1="72" x2="860" y1={y(tick)} y2={y(tick)} stroke="#24364d" />
+              <text x="64" y={y(tick) + 4} fill="#94a3b8" fontSize="11" textAnchor="end">
+                {formatResourceValue(locale, tick, data.unit)}
+              </text>
+            </g>
+          ))}
+          {xTicks.map((tick, index) => {
+            const previous = xTicks[index - 1]
+            const beginsDate =
+              previous && dateFormatter.format(previous) !== dateFormatter.format(tick)
             return (
-              <polyline
-                key={index}
-                points={part.map((item) => `${x(item)},${y(item.value!)}`).join(' ')}
-                fill="none"
-                stroke="#22d3ee"
-                strokeWidth="4"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
+              <g key={tick.toISOString()}>
+                <line
+                  x1={xAt(tick)}
+                  x2={xAt(tick)}
+                  y1="70"
+                  y2="265"
+                  stroke={beginsDate ? '#64748b' : '#24364d'}
+                />
+                <line x1={xAt(tick)} x2={xAt(tick)} y1="260" y2="266" stroke="#64748b" />
+                <text x={xAt(tick)} y="282" fill="#94a3b8" fontSize="10" textAnchor="middle">
+                  {String(tick.getHours()).padStart(2, '0')}
+                </text>
+              </g>
+            )
+          })}
+          {dateGroups.map((group) => {
+            const first = group.ticks[0]!
+            const last = group.ticks.at(-1)!
+            return (
+              <text
+                key={group.label}
+                x={(xAt(first) + xAt(last)) / 2}
+                y="305"
+                fill="#94a3b8"
+                fontSize="11"
+                textAnchor="middle"
+              >
+                {group.label}
+              </text>
+            )
+          })}
+          <path d="M72 70V260H860" fill="none" stroke="#64748b" />
+          {parts.map((part, index) => (
+            <polyline
+              key={index}
+              data-resource-series="observed"
+              points={part.map((item) => `${x(item)},${y(item.value!)}`).join(' ')}
+              fill="none"
+              stroke="#22d3ee"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          ))}
+          {parts.slice(0, -1).map((part, index) => {
+            const next = parts[index + 1]
+            const start = part.at(-1)
+            const end = next?.[0]
+            if (!start || !end || start.value === null || end.value === null) return null
+            return (
+              <line
+                key={`${start.from}-${end.from}`}
+                data-resource-series="gap"
+                x1={x(start)}
+                x2={x(end)}
+                y1={y(start.value)}
+                y2={y(end.value)}
+                stroke="#fbbf24"
+                strokeWidth="2"
+                strokeDasharray="7 5"
+              >
+                <title>{text.gapLegend}</title>
+              </line>
+            )
+          })}
+          {milestones.map((point, index) => {
+            if (point.value === null) return null
+            const above = index % 2 === 0
+            return (
+              <g key={point.from} data-resource-milestone="true">
+                <line
+                  x1={x(point)}
+                  x2={x(point)}
+                  y1={y(point.value) - 9}
+                  y2={y(point.value) + 9}
+                  stroke="#67e8f9"
+                  strokeWidth="1"
+                />
+                <text
+                  x={x(point)}
+                  y={y(point.value) + (above ? -13 : 22)}
+                  fill="#e2e8f0"
+                  fontSize="10"
+                  textAnchor="middle"
+                >
+                  {formatResourceValue(locale, point.value, data.unit)}
+                </text>
+              </g>
             )
           })}
           {data.releases.slice(0, 30).map((marker) => {
@@ -422,8 +569,8 @@ function ResourceChart({ data, locale }: { data: ApplicationResourceHistory; loc
                 <line
                   x1={markerX}
                   x2={markerX}
-                  y1="42"
-                  y2="268"
+                  y1="64"
+                  y2="265"
                   stroke="#34d399"
                   strokeDasharray="4 5"
                 />
@@ -431,15 +578,6 @@ function ResourceChart({ data, locale }: { data: ApplicationResourceHistory; loc
               </g>
             )
           })}
-          <text x="40" y="292" fill="#94a3b8" fontSize="13">
-            {new Date(data.from).toLocaleString(locale)}
-          </text>
-          <text x="860" y="292" fill="#94a3b8" fontSize="13" textAnchor="end">
-            {new Date(data.to).toLocaleString(locale)}
-          </text>
-          <text x="45" y="45" fill="#94a3b8" fontSize="13">
-            {formatResourceValue(locale, max, data.unit)}
-          </text>
         </svg>
       </div>
     </Card>

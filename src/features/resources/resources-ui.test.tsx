@@ -75,10 +75,19 @@ describe('resource history', () => {
     expect(screen.getByText('Gateway 1.8')).toBeVisible()
     const chart = screen.getByRole('img', { name: 'Resource history chart: Memory current' })
     expect(chart).toBeVisible()
-    expect(chart.querySelectorAll('[data-resource-point="true"]')).toHaveLength(2)
-    expect(chart.querySelectorAll('polyline')).toHaveLength(0)
-    expect(screen.getByRole('img', { name: 'Observed value: 420 MiB' })).toBeVisible()
-    expect(screen.getByRole('img', { name: 'Observed value: 610 MiB' })).toBeVisible()
+    expect(chart.querySelectorAll('circle, [data-resource-point="true"]')).toHaveLength(0)
+    expect(chart.querySelectorAll('[data-resource-series="observed"]')).toHaveLength(2)
+    expect(chart.querySelectorAll('[data-resource-series="gap"]')).toHaveLength(1)
+    expect(chart.querySelector('[data-resource-series="observed"]')).toHaveAttribute(
+      'stroke-width',
+      '2',
+    )
+    expect(chart.querySelector('[data-resource-series="gap"]')).toHaveAttribute(
+      'stroke-dasharray',
+      '7 5',
+    )
+    expect(screen.getByText('Observed data')).toBeVisible()
+    expect(screen.getAllByText('Interval without data').length).toBeGreaterThanOrEqual(1)
     expect(get).toHaveBeenCalledWith(expect.stringContaining('mode=per_ready_replica'), {
       protected: true,
     })
@@ -258,7 +267,7 @@ describe('resource history', () => {
     expect(parseResourceSearch({ metric: 'host-secret', mode: 'raw', range: 'forever' })).toEqual({
       metric: 'memory_current_bytes',
       range: '24h',
-      step: 'minute',
+      step: 'hour',
       mode: 'total',
       release: undefined,
       container: undefined,
@@ -268,6 +277,42 @@ describe('resource history', () => {
       step: 'hour',
       container: undefined,
     })
+    expect(parseResourceSearch({ range: '24h', step: 'minute' })).toMatchObject({
+      range: '24h',
+      step: 'minute',
+    })
+  })
+
+  it('bounds meaningful value milestones to eight labels', async () => {
+    const start = new Date('2026-09-07T00:00:00Z')
+    const points = Array.from({ length: 16 }, (_, index) => ({
+      ...resourceHistoryFixture.points[0]!,
+      from: new Date(start.getTime() + index * 3_600_000).toISOString(),
+      to: new Date(start.getTime() + (index + 1) * 3_600_000).toISOString(),
+      value: index % 2 === 0 ? 100 : 200,
+      release: null,
+    }))
+    renderWithProviders(
+      <ResourceHistory
+        projectId="project"
+        applicationId="application"
+        search={{ ...initialSearch, step: 'hour' }}
+        onSearch={() => undefined}
+      />,
+      vi.fn().mockResolvedValue({
+        ...resourceHistoryFixture,
+        step: 'hour',
+        from: points[0]!.from,
+        to: points.at(-1)!.to,
+        points,
+        releases: [],
+      }),
+    )
+
+    const chart = await screen.findByRole('img', {
+      name: 'Resource history chart: Memory current',
+    })
+    expect(chart.querySelectorAll('[data-resource-milestone="true"]')).toHaveLength(8)
   })
 
   it('aligns time ranges to the requested step while preserving their duration', () => {
@@ -306,6 +351,10 @@ describe('release resource comparison', () => {
     expect(screen.getByRole('link', { name: 'Open full resource history' })).toHaveAttribute(
       'href',
       expect.stringContaining('release=target'),
+    )
+    expect(screen.getByRole('link', { name: 'Open full resource history' })).toHaveAttribute(
+      'href',
+      expect.stringContaining('step=hour'),
     )
   })
 

@@ -135,7 +135,7 @@ export function ResourceComparison({
           range: '24h',
           metric: 'memory_current_bytes',
           mode: 'per_ready_replica',
-          step: 'minute',
+          step: 'hour',
           release: targetReleaseId,
         }}
       >

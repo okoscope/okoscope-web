@@ -131,8 +131,8 @@ describe('resource history', () => {
     })
     const markers = chart.querySelectorAll('[data-resource-release-marker="true"]')
     expect(markers).toHaveLength(2)
-    expect(Number(markers[0]?.getAttribute('x1'))).toBe(72)
-    expect(Number(markers[1]?.getAttribute('x1'))).toBe(860)
+    expect(Number(markers[0]?.getAttribute('x1'))).toBe(82)
+    expect(Number(markers[1]?.getAttribute('x1'))).toBe(850)
     for (const marker of markers) {
       expect(marker).toHaveAttribute('x1', marker.getAttribute('x2'))
       expect(marker).toHaveAttribute('stroke', '#34d399')
@@ -338,7 +338,7 @@ describe('resource history', () => {
     })
   })
 
-  it('bounds meaningful value milestones to eight labels', async () => {
+  it('deduplicates repeated milestone labels while keeping at most eight', async () => {
     const start = new Date('2026-09-07T00:00:00Z')
     const points = Array.from({ length: 16 }, (_, index) => ({
       ...resourceHistoryFixture.points[0]!,
@@ -367,10 +367,16 @@ describe('resource history', () => {
     const chart = await screen.findByRole('img', {
       name: 'Resource history chart: Memory current',
     })
-    expect(chart.querySelectorAll('[data-resource-milestone="true"]')).toHaveLength(8)
+    const milestoneLabels = Array.from(
+      chart.querySelectorAll('[data-resource-milestone="true"] text'),
+      (label) => label.textContent,
+    )
+    expect(milestoneLabels).toHaveLength(2)
+    expect(new Set(milestoneLabels).size).toBe(milestoneLabels.length)
+    expect(milestoneLabels.length).toBeLessThanOrEqual(8)
   })
 
-  it('keeps flat zero-value milestone labels above the X axis', async () => {
+  it('does not duplicate a flat zero value already shown on the Y axis', async () => {
     const start = new Date('2026-09-07T00:00:00Z')
     const points = Array.from({ length: 24 }, (_, index) => ({
       ...resourceHistoryFixture.points[0]!,
@@ -402,13 +408,46 @@ describe('resource history', () => {
       name: 'Resource history chart: I/O write throughput',
     })
     const milestones = chart.querySelectorAll('[data-resource-milestone="true"]')
-    expect(milestones).toHaveLength(2)
-    for (const line of chart.querySelectorAll('[data-resource-milestone="true"] line')) {
-      expect(Number(line.getAttribute('y1'))).toBeGreaterThanOrEqual(70)
-      expect(Number(line.getAttribute('y2'))).toBeLessThanOrEqual(260)
-    }
-    for (const label of chart.querySelectorAll('[data-resource-milestone="true"] text'))
-      expect(Number(label.getAttribute('y'))).toBeLessThan(260)
+    expect(milestones).toHaveLength(0)
+    expect(chart.textContent).toContain('0 B/s')
+  })
+
+  it('labels the end of a significant drop at 14:00', async () => {
+    const mebibyte = 1024 * 1024
+    const start = new Date('2026-09-17T09:00:00Z')
+    const values = [36.1, 35.9, 35.8, 35.2, 35.1, 34.1, 34.1, 34.1]
+    const points = values.map((value, index) => ({
+      ...resourceHistoryFixture.points[0]!,
+      from: new Date(start.getTime() + index * 3_600_000).toISOString(),
+      to: new Date(start.getTime() + (index + 1) * 3_600_000).toISOString(),
+      value: value * mebibyte,
+      release: null,
+    }))
+    renderWithProviders(
+      <ResourceHistory
+        projectId="project"
+        applicationId="application"
+        search={{ ...initialSearch, step: 'hour' }}
+        onSearch={() => undefined}
+      />,
+      vi.fn().mockResolvedValue({
+        ...resourceHistoryFixture,
+        step: 'hour',
+        from: points[0]!.from,
+        to: points.at(-1)!.to,
+        points,
+        releases: [],
+      }),
+    )
+
+    const chart = await screen.findByRole('img', {
+      name: 'Resource history chart: Memory current',
+    })
+    const dropLabel = Array.from(
+      chart.querySelectorAll('[data-resource-milestone="true"] text'),
+    ).find((label) => label.textContent === '34.1 MiB')
+    expect(dropLabel).toBeDefined()
+    expect(Number(dropLabel?.getAttribute('x'))).toBeCloseTo(72 + (5 / 8) * 788)
   })
 
   it('aligns time ranges to the requested step while preserving their duration', () => {

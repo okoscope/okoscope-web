@@ -347,11 +347,19 @@ const segments = (points: ResourceHistoryPoint[]) => {
   return result
 }
 
-const chartMilestones = (parts: ResourceHistoryPoint[][]) => {
+const MAX_CHART_MILESTONES = 8
+const MIN_SLOPE_CHANGE_RATIO = 0.1
+
+const chartMilestones = (
+  parts: ResourceHistoryPoint[][],
+  valueRange: number,
+  labelFor: (value: number) => string,
+) => {
   const candidates = parts.flatMap((part) => {
-    if (part.length < 3) return part
-    return part.filter((point, index) => {
-      if (index === 0 || index === part.length - 1) return true
+    if (part.length < 3) return part.map((point) => ({ point, salience: Infinity, endpoint: true }))
+    return part.flatMap((point, index) => {
+      if (index === 0 || index === part.length - 1)
+        return [{ point, salience: Infinity, endpoint: true }]
       const previous = part[index - 1]?.value
       const current = point.value
       const next = part[index + 1]?.value
@@ -362,19 +370,33 @@ const chartMilestones = (parts: ResourceHistoryPoint[][]) => {
         next === null ||
         next === undefined
       )
-        return false
+        return []
       const previousDelta = current - previous
       const nextDelta = next - current
-      return (
-        previousDelta !== 0 && nextDelta !== 0 && Math.sign(previousDelta) !== Math.sign(nextDelta)
-      )
+      const salience = Math.abs(nextDelta - previousDelta) / Math.max(valueRange, 1)
+      return salience >= MIN_SLOPE_CHANGE_RATIO ? [{ point, salience, endpoint: false }] : []
     })
   })
-  if (candidates.length <= 8) return candidates
-  return Array.from(
-    { length: 8 },
-    (_, index) => candidates[Math.round((index * (candidates.length - 1)) / 7)]!,
-  )
+
+  const uniqueValues = new Map<string, (typeof candidates)[number]>()
+  for (const candidate of candidates) {
+    const value = candidate.point.value
+    if (value === null) continue
+    const label = labelFor(value)
+    const existing = uniqueValues.get(label)
+    if (
+      !existing ||
+      (existing.endpoint && !candidate.endpoint) ||
+      (existing.endpoint === candidate.endpoint && candidate.salience >= existing.salience)
+    )
+      uniqueValues.set(label, candidate)
+  }
+
+  return [...uniqueValues.values()]
+    .sort((left, right) => right.salience - left.salience)
+    .slice(0, MAX_CHART_MILESTONES)
+    .map(({ point }) => point)
+    .sort((left, right) => new Date(left.from).getTime() - new Date(right.from).getTime())
 }
 
 const chartTicks = (minimum: number, maximum: number, count: number) =>
@@ -410,8 +432,12 @@ function ResourceChart({ data, locale }: { data: ApplicationResourceHistory; loc
   const max = observedMax + padding
   const min = Math.max(0, observedMin - padding)
   const parts = segments(rendered)
-  const milestones = chartMilestones(parts)
   const yTicks = chartTicks(min, max, 4)
+  const valueLabel = (value: number) => formatResourceValue(locale, value, data.unit)
+  const tickLabels = new Set(yTicks.map(valueLabel))
+  const milestones = chartMilestones(parts, observedMax - observedMin, valueLabel).filter(
+    (point) => point.value !== null && !tickLabels.has(valueLabel(point.value)),
+  )
   const xTicks = hourlyTicks(data.from, data.to)
   const dateFormatter = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' })
   const x = (point: ResourceHistoryPoint) =>
@@ -573,7 +599,7 @@ function ResourceChart({ data, locale }: { data: ApplicationResourceHistory; loc
             })
             .slice(0, 30)
             .map((marker) => {
-              const markerX = xAt(new Date(marker.observed_at))
+              const markerX = Math.min(850, Math.max(82, xAt(new Date(marker.observed_at))))
               return (
                 <g key={`${marker.release.id}-${marker.observed_at}`}>
                   <line

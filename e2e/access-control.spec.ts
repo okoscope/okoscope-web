@@ -259,6 +259,80 @@ test('keeps platform organization submit buttons compact on desktop and full wid
   await expect(page.getByRole('button', { name: 'Создать', exact: true })).toBeVisible()
 })
 
+test('keeps Organization invitation submit button compact on desktop and full width on mobile', async ({
+  page,
+}) => {
+  const context = {
+    user: {
+      id: 'owner-1',
+      email: 'owner@example.com',
+      display_name: 'Owner',
+      email_verified: true,
+      preferred_locale: 'en',
+    },
+    platform_role: null,
+    organizations: [{ id: 'org-1', name: 'Acme', slug: 'acme', role: 'owner' }],
+    active_organization: { id: 'org-1', name: 'Acme', slug: 'acme', role: 'owner' },
+    active_role: 'owner',
+    requires_organization_selection: false,
+    privileged_until: null,
+    capabilities: {
+      ...capabilities,
+      manage_organization: true,
+      organization_roles_grantable: ['owner', 'admin', 'member'],
+    },
+  }
+  await page.route('**/api/v1/**', (route) => {
+    const path = new URL(route.request().url()).pathname
+    if (path === '/api/v1/build-info')
+      return json(route, {
+        service_version: '1',
+        git_commit: 'test',
+        api_version: 'v1',
+        required_database_migration: 26,
+      })
+    if (path === '/api/v1/setup/status') return json(route, { state: 'ready' })
+    if (path === '/api/v1/auth/me') return json(route, context)
+    if (path.startsWith('/api/v1/organizations/org-1/'))
+      return json(route, { items: [], next_cursor: null })
+    return json(route, {}, 404)
+  })
+
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.goto('/access')
+
+  const button = page.getByRole('button', { name: 'Invite', exact: true })
+  const email = page.getByLabel('Email', { exact: true })
+  await expect(button).toBeVisible()
+  await expect(button).toHaveJSProperty('type', 'submit')
+  const desktopButtonBox = await button.boundingBox()
+  const desktopEmailBox = await email.boundingBox()
+  const desktopFormBox = await button.locator('xpath=ancestor::form').boundingBox()
+  expect(desktopButtonBox).not.toBeNull()
+  expect(desktopEmailBox).not.toBeNull()
+  expect(desktopFormBox).not.toBeNull()
+  expect(desktopButtonBox!.width).toBeLessThan(desktopFormBox!.width / 3)
+  expect(desktopButtonBox!.height).toBeLessThanOrEqual(desktopEmailBox!.height)
+  expect(
+    Math.abs(
+      desktopButtonBox!.y +
+        desktopButtonBox!.height -
+        (desktopEmailBox!.y + desktopEmailBox!.height),
+    ),
+  ).toBeLessThan(1)
+
+  await page.setViewportSize({ width: 375, height: 812 })
+  const mobileButtonBox = await button.boundingBox()
+  const mobileFormBox = await button.locator('xpath=ancestor::form').boundingBox()
+  expect(mobileButtonBox).not.toBeNull()
+  expect(mobileFormBox).not.toBeNull()
+  expect(Math.abs(mobileButtonBox!.width - mobileFormBox!.width)).toBeLessThan(1)
+
+  await page.evaluate(() => localStorage.setItem('okoscope.locale', 'ru'))
+  await page.reload()
+  await expect(page.getByRole('button', { name: 'Пригласить', exact: true })).toBeVisible()
+})
+
 test('adds an eligible Organization member through server-derived Project grants', async ({
   page,
 }) => {

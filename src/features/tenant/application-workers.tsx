@@ -67,7 +67,6 @@ function HealthSummary({ readiness }: { readiness: ConnectionReadiness }) {
   const t = useT()
   const presentation = getReadinessPresentation(readiness)
   const timestamps = [
-    [t('credentialLastUsed'), readiness.credential_last_used_at],
     [t('firstEvent'), readiness.first_event_at],
     [t('lastEvent'), readiness.last_event_at],
   ] as const
@@ -88,7 +87,7 @@ function HealthSummary({ readiness }: { readiness: ConnectionReadiness }) {
       {presentation.actionKey && (
         <p className="mt-2 text-sm font-medium text-cyan-200">{t(presentation.actionKey)}</p>
       )}
-      <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-5">
+      <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <dt className="text-slate-500">{t('reportingNodes')}</dt>
           <dd className="mt-1 font-mono text-slate-200">{readiness.reporting_nodes}</dd>

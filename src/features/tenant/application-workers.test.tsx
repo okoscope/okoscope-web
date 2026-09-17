@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import {
   createMemoryHistory,
@@ -203,6 +203,65 @@ describe('worker signal freshness', () => {
 })
 
 describe('Application agent health', () => {
+  it.each([
+    [
+      'en',
+      ['Reporting nodes', 'First event', 'Last event', 'Signal freshness window'],
+      'Credential last used',
+      'seconds',
+    ],
+    [
+      'ru',
+      ['Активных узлов', 'Первое событие', 'Последнее событие', 'Окно свежести сигнала'],
+      'Последнее использование credential',
+      'секунд',
+    ],
+  ] as const)(
+    'renders the four observation-health metrics without credential usage in %s',
+    async (locale, labels, removedLabel, secondsLabel) => {
+      renderWorkers(endpointGet(), locale)
+
+      const summary = await screen.findByRole('status', {
+        name: locale === 'en' ? 'Receiving runtime events' : 'Получаем runtime-события',
+      })
+      const terms = within(summary).getAllByRole('term')
+      expect(terms).toHaveLength(4)
+      for (const label of labels) expect(within(summary).getByText(label)).toBeVisible()
+      expect(within(summary).queryByText(removedLabel)).not.toBeInTheDocument()
+      expect(within(summary).getByText(`300 ${secondsLabel}`)).toBeVisible()
+    },
+  )
+
+  it('keeps missing event timestamps explicit after removing credential usage', async () => {
+    renderWorkers(
+      endpointGet({
+        health: readiness({
+          credential_last_used_at: null,
+          first_event_at: null,
+          last_event_at: null,
+        }),
+      }),
+    )
+
+    const summary = await screen.findByRole('status', { name: 'Receiving runtime events' })
+    expect(within(summary).getAllByText('Not reported')).toHaveLength(2)
+    expect(within(summary).getAllByRole('term')).toHaveLength(4)
+  })
+
+  it('keeps observation-health loading and failure states independent of agent health', async () => {
+    const pendingHealth = new Promise<ConnectionReadiness>(() => undefined)
+    const pending = renderWorkers(endpointGet({ health: () => pendingHealth }))
+    expect(await screen.findByText('Checking observation health…')).toBeVisible()
+    expect(await screen.findByText('worker-amd64-01')).toBeVisible()
+    pending.unmount()
+
+    renderWorkers(endpointGet({ health: new Error('readiness unavailable') }))
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Observation health could not be refreshed',
+    )
+    expect(await screen.findByText('worker-amd64-01')).toBeVisible()
+  })
+
   it.each([
     ['1h', 60, 60, '1 hour'],
     ['6h', 300, 72, '6 hours'],

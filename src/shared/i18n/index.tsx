@@ -242,7 +242,6 @@ export const englishMessages = {
   checkingObservationHealth: 'Checking observation health…',
   observationHealthUnavailable:
     'Observation health could not be refreshed. Worker timestamps remain available, but their freshness is unknown.',
-  credentialLastUsed: 'Credential last used',
   firstEvent: 'First event',
   signalFreshnessWindow: 'Signal freshness window',
   secondsCount: '{count} seconds',
@@ -941,7 +940,6 @@ export const russianMessages = {
   checkingObservationHealth: 'Проверяем состояние наблюдения…',
   observationHealthUnavailable:
     'Не удалось обновить состояние наблюдения. Время сигналов узлов доступно, но их свежесть неизвестна.',
-  credentialLastUsed: 'Последнее использование credential',
   firstEvent: 'Первое событие',
   signalFreshnessWindow: 'Окно свежести сигнала',
   secondsCount: '{count} секунд',

@@ -7,6 +7,11 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- Simplified the Application observation-health summary by removing the credential last-used
+  timestamp while retaining credential usage details in the credentials table.
+
 ## [0.3.1] - 2026-09-15
 
 ### Fixed

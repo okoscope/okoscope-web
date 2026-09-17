@@ -240,7 +240,13 @@ test('shows heterogeneous agent health at a narrow viewport', async ({ page }) =
   await page.goto(`/projects/${project.id}/applications/${application.id}`)
   await authenticate(page)
   await expect(page.getByRole('heading', { name: 'Agent health and coverage' })).toBeVisible()
-  await expect(page.getByRole('status', { name: 'Agent reporting is stale' })).toBeVisible()
+  const observationSummary = page.getByRole('status', { name: 'Agent reporting is stale' })
+  await expect(observationSummary).toBeVisible()
+  await expect(observationSummary.locator('dt')).toHaveCount(4)
+  for (const label of ['Reporting nodes', 'First event', 'Last event', 'Signal freshness window']) {
+    await expect(observationSummary.getByText(label, { exact: true })).toBeVisible()
+  }
+  await expect(observationSummary.getByText('Credential last used')).toHaveCount(0)
   await expect(page.getByText('worker-amd64-01')).toBeVisible()
   await expect(page.getByText(/6.9.2/)).toBeVisible()
   await expect(page.getByText('Advertised capabilities · 2')).toBeVisible()
@@ -348,6 +354,20 @@ test('links an empty agent health state to localized readiness guidance', async 
   await authenticate(page)
   await page.evaluate(() => localStorage.setItem('okoscope.locale', 'ru'))
   await page.reload()
+
+  const observationSummary = page.getByRole('status', {
+    name: 'Данные агента устарели',
+  })
+  await expect(observationSummary.locator('dt')).toHaveCount(4)
+  for (const label of [
+    'Активных узлов',
+    'Первое событие',
+    'Последнее событие',
+    'Окно свежести сигнала',
+  ]) {
+    await expect(observationSummary.getByText(label, { exact: true })).toBeVisible()
+  }
+  await expect(observationSummary.getByText('Последнее использование credential')).toHaveCount(0)
 
   const emptyState = page.getByText(
     'Ни один агент ещё не сообщил данные о здоровье этого приложения.',

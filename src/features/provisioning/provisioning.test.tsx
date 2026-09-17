@@ -10,18 +10,21 @@ import {
 import { describe, expect, it, vi } from 'vitest'
 import type { ApiClient } from '../../shared/api/client'
 import { ApiProvider } from '../../shared/api/context'
+import { LocalizationProvider } from '../../shared/i18n'
 import { AgentCredentials, credentialStatus } from './credentials'
 import { ConnectAgent } from './connect-agent'
 import { NamedResourceForm, slugify, validateNamedResource } from './entity-form'
 
-function providers(node: React.ReactNode, api: Partial<ApiClient>) {
+function providers(node: React.ReactNode, api: Partial<ApiClient>, locale: 'en' | 'ru' = 'en') {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   })
   return {
     ...render(
       <QueryClientProvider client={queryClient}>
-        <ApiProvider value={api as ApiClient}>{node}</ApiProvider>
+        <ApiProvider value={api as ApiClient}>
+          <LocalizationProvider initialLocale={locale}>{node}</LocalizationProvider>
+        </ApiProvider>
       </QueryClientProvider>,
     ),
     queryClient,
@@ -144,10 +147,31 @@ describe('Agent credentials', () => {
     })
     const remove = vi.fn().mockResolvedValue(undefined)
     providers(<AgentCredentials projectId="p" applicationId="a" />, { get, delete: remove })
+    expect(await screen.findByRole('columnheader', { name: 'Last used' })).toBeVisible()
     await userEvent.click(await screen.findByRole('button', { name: 'Revoke' }))
     expect(screen.getByRole('dialog')).toHaveTextContent('last active credential')
     await userEvent.click(screen.getByRole('button', { name: 'Confirm revoke' }))
     await waitFor(() => expect(remove).toHaveBeenCalledOnce())
+  })
+
+  it('retains the localized Last used column in Russian', async () => {
+    const get = vi.fn().mockResolvedValue({
+      items: [
+        {
+          id: '1',
+          name: 'default',
+          token_hint: '…abcd',
+          created_at: '2026-01-01T00:00:00Z',
+          last_used_at: '2026-01-02T00:00:00Z',
+          revoked_at: null,
+        },
+      ],
+    })
+    providers(<AgentCredentials projectId="p" applicationId="a" />, { get }, 'ru')
+
+    expect(
+      await screen.findByRole('columnheader', { name: 'Последнее использование' }),
+    ).toBeVisible()
   })
 
   it('issues a credential, keeps it out of query cache, and clears the modal', async () => {

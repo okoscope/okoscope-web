@@ -464,7 +464,9 @@ function InvitationPanel({
             />
           </label>
           <Role ui={ui} value={role} roles={roles} onChange={setRole} />
-          <Button disabled={pending}>{pending ? ui.pending : ui.invite}</Button>
+          <Button className="self-end sm:w-fit" disabled={pending}>
+            {pending ? ui.pending : ui.invite}
+          </Button>
         </form>
       )}
       {(failure !== null || error != null) && (

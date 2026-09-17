@@ -2,6 +2,77 @@ import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 import { authenticate, mockApi } from './fixtures'
 
+test('keeps all Application navigation cards accessible and consistently illustrated', async ({
+  page,
+}) => {
+  const { project, application } = await mockApi(page)
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.goto(`/projects/${project.id}/applications/${application.id}`)
+  await authenticate(page)
+
+  const cards = [
+    ['Application resources', 'gauge', 'resources'],
+    ['Managed runtime policies', 'shield-check', 'policies'],
+    ['Application Activity', 'activity', 'runtime-inventory'],
+    ['New discoveries', 'sparkles', 'runtime-groups'],
+    ['Releases and changes', 'git-compare-arrows', 'releases'],
+    ['Requires attention', 'triangle-alert', 'attention'],
+  ] as const
+
+  for (const [name, icon, destination] of cards) {
+    const card = page.getByRole('link', { name: new RegExp(`^${name}`) })
+    const title = card.locator('strong')
+    const decorativeIcon = card.locator(`svg.lucide-${icon}`)
+    await expect(card).toHaveAttribute('href', new RegExp(`/${destination}(?:\\?|$)`))
+    await expect(decorativeIcon).toHaveCount(1)
+    await expect(decorativeIcon).toHaveAttribute('aria-hidden', 'true')
+    await expect(decorativeIcon).toHaveClass(/h-6/)
+    await expect(decorativeIcon).toHaveClass(/w-6/)
+    await expect(decorativeIcon).toHaveClass(/shrink-0/)
+    await expect(decorativeIcon).toHaveClass(/text-cyan-300/)
+
+    const cardBox = await card.boundingBox()
+    const titleBox = await title.boundingBox()
+    const iconBox = await decorativeIcon.boundingBox()
+    expect(cardBox).not.toBeNull()
+    expect(titleBox).not.toBeNull()
+    expect(iconBox).not.toBeNull()
+    expect(Math.abs(titleBox!.y - iconBox!.y)).toBeLessThanOrEqual(1)
+    expect(titleBox!.x + titleBox!.width).toBeLessThanOrEqual(iconBox!.x)
+    const iconRightInset = cardBox!.x + cardBox!.width - (iconBox!.x + iconBox!.width)
+    expect(iconRightInset).toBeGreaterThanOrEqual(16)
+    expect(iconRightInset).toBeLessThanOrEqual(18)
+  }
+
+  const firstCard = page.getByRole('link', { name: /^Application resources/ })
+  const secondCard = page.getByRole('link', { name: /^Managed runtime policies/ })
+  const firstDesktopBox = await firstCard.boundingBox()
+  const secondDesktopBox = await secondCard.boundingBox()
+  expect(firstDesktopBox).not.toBeNull()
+  expect(secondDesktopBox).not.toBeNull()
+  expect(Math.abs(firstDesktopBox!.y - secondDesktopBox!.y)).toBeLessThanOrEqual(1)
+
+  const attentionCard = page.getByRole('link', { name: /^Requires attention/ })
+  await expect(attentionCard.locator('[class*="amber"]')).toHaveCount(0)
+  await attentionCard.focus()
+  await expect(attentionCard).toBeFocused()
+
+  await page.setViewportSize({ width: 375, height: 812 })
+  const firstMobileBox = await firstCard.boundingBox()
+  const secondMobileBox = await secondCard.boundingBox()
+  expect(firstMobileBox).not.toBeNull()
+  expect(secondMobileBox).not.toBeNull()
+  expect(secondMobileBox!.y).toBeGreaterThan(firstMobileBox!.y + firstMobileBox!.height)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
+    true,
+  )
+
+  await page.evaluate(() => localStorage.setItem('okoscope.locale', 'ru'))
+  await page.reload()
+  await expect(page.getByRole('link', { name: /^Ресурсы приложения/ })).toBeVisible()
+  await expect(page.getByRole('link', { name: /^Требует внимания/ })).toBeVisible()
+})
+
 test('opens resource history, preserves controls in the URL, and localizes at mobile width', async ({
   page,
 }) => {

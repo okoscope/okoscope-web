@@ -1,6 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link, Outlet, createFileRoute, useLocation } from '@tanstack/react-router'
-import { CircleAlert, Gauge } from 'lucide-react'
+import {
+  Activity,
+  Gauge,
+  GitCompareArrows,
+  ShieldCheck,
+  Sparkles,
+  TriangleAlert,
+} from 'lucide-react'
 import { useEffect } from 'react'
 import { formatCount, formatTimestamp } from '../features/tenant/format'
 import { ApplicationWorkers } from '../features/tenant/application-workers'
@@ -99,8 +106,10 @@ function ApplicationPage() {
               step: 'minute',
             }}
           >
-            <Gauge className="mb-2 h-5 w-5 text-cyan-300" aria-hidden="true" />
-            <strong className="block text-lg">{t('applicationResources')}</strong>
+            <div className="flex items-start justify-between gap-3">
+              <strong className="text-lg">{t('applicationResources')}</strong>
+              <Gauge className="h-6 w-6 shrink-0 text-cyan-300" aria-hidden="true" />
+            </div>
             <span className="mt-1 block text-sm text-slate-400">
               {t('applicationResourcesHelp')}
             </span>
@@ -110,7 +119,10 @@ function ApplicationPage() {
             to="/projects/$projectId/applications/$applicationId/policies"
             params={{ projectId, applicationId }}
           >
-            <strong className="block text-lg">Managed runtime policies</strong>
+            <div className="flex items-start justify-between gap-3">
+              <strong className="text-lg">Managed runtime policies</strong>
+              <ShieldCheck className="h-6 w-6 shrink-0 text-cyan-300" aria-hidden="true" />
+            </div>
             <span className="mt-1 block text-sm text-slate-400">
               Classify expected behavior, review policy revisions, and manage temporary
               suppressions.
@@ -121,7 +133,10 @@ function ApplicationPage() {
             to="/projects/$projectId/applications/$applicationId/runtime-inventory"
             params={{ projectId, applicationId }}
           >
-            <strong className="block text-lg">Application Activity</strong>
+            <div className="flex items-start justify-between gap-3">
+              <strong className="text-lg">Application Activity</strong>
+              <Activity className="h-6 w-6 shrink-0 text-cyan-300" aria-hidden="true" />
+            </div>
             <span className="mt-1 block text-sm text-slate-400">
               Processes, connections, and domains observed in this application.
             </span>
@@ -131,7 +146,10 @@ function ApplicationPage() {
             to="/projects/$projectId/applications/$applicationId/runtime-groups"
             params={{ projectId, applicationId }}
           >
-            <strong className="block text-lg">New discoveries</strong>
+            <div className="flex items-start justify-between gap-3">
+              <strong className="text-lg">New discoveries</strong>
+              <Sparkles className="h-6 w-6 shrink-0 text-cyan-300" aria-hidden="true" />
+            </div>
             <span className="mt-1 block text-sm text-slate-400">
               Newly observed behavior to review. A discovery is not automatically a problem.
             </span>
@@ -141,25 +159,23 @@ function ApplicationPage() {
             to="/projects/$projectId/applications/$applicationId/releases"
             params={{ projectId, applicationId }}
           >
-            <strong className="block text-lg">Releases and changes</strong>
+            <div className="flex items-start justify-between gap-3">
+              <strong className="text-lg">Releases and changes</strong>
+              <GitCompareArrows className="h-6 w-6 shrink-0 text-cyan-300" aria-hidden="true" />
+            </div>
             <span className="mt-1 block text-sm text-slate-400">
               Compare observed activity between releases.
             </span>
           </Link>
           <Link
-            className="relative overflow-hidden rounded-xl border border-slate-700 p-4 transition hover:border-slate-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
+            className="rounded-xl border border-slate-700 p-4 transition hover:border-slate-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
             to="/projects/$projectId/applications/$applicationId/attention"
             params={{ projectId, applicationId }}
           >
-            <span
-              aria-hidden="true"
-              className="absolute right-0 top-0 h-10 w-10 bg-amber-500/20 [clip-path:polygon(0_0,100%_0,100%_100%)]"
-            />
-            <CircleAlert
-              aria-hidden="true"
-              className="absolute right-1.5 top-1.5 h-3.5 w-3.5 text-amber-300"
-            />
-            <strong className="block text-lg">{t('requiresAttention')}</strong>
+            <div className="flex items-start justify-between gap-3">
+              <strong className="text-lg">{t('requiresAttention')}</strong>
+              <TriangleAlert className="h-6 w-6 shrink-0 text-cyan-300" aria-hidden="true" />
+            </div>
             <span className="mt-1 block text-sm text-slate-400">
               {t('applicationAttentionLinkHelp')}
             </span>

@@ -93,6 +93,61 @@ describe('resource history', () => {
     })
   })
 
+  it('keeps release markers inside the chart plotting area', async () => {
+    const releases = [
+      {
+        ...resourceHistoryFixture.releases[0]!,
+        observed_at: resourceHistoryFixture.from,
+        release: { id: 'start', display_name: 'At range start' },
+      },
+      {
+        ...resourceHistoryFixture.releases[0]!,
+        observed_at: resourceHistoryFixture.to,
+        release: { id: 'end', display_name: 'At range end' },
+      },
+      {
+        ...resourceHistoryFixture.releases[0]!,
+        observed_at: '2026-09-07T11:00:00Z',
+        release: { id: 'before', display_name: 'Before range' },
+      },
+      {
+        ...resourceHistoryFixture.releases[0]!,
+        observed_at: '2026-09-07T13:00:00Z',
+        release: { id: 'after', display_name: 'After range' },
+      },
+    ]
+    renderWithProviders(
+      <ResourceHistory
+        projectId="project"
+        applicationId="application"
+        search={initialSearch}
+        onSearch={() => undefined}
+      />,
+      vi.fn().mockResolvedValue({ ...resourceHistoryFixture, releases }),
+    )
+
+    const chart = await screen.findByRole('img', {
+      name: 'Resource history chart: Memory current',
+    })
+    const markers = chart.querySelectorAll('[data-resource-release-marker="true"]')
+    expect(markers).toHaveLength(2)
+    expect(Number(markers[0]?.getAttribute('x1'))).toBe(72)
+    expect(Number(markers[1]?.getAttribute('x1'))).toBe(860)
+    for (const marker of markers) {
+      expect(marker).toHaveAttribute('x1', marker.getAttribute('x2'))
+      expect(marker).toHaveAttribute('stroke', '#34d399')
+      expect(marker).toHaveAttribute('stroke-dasharray', '4 5')
+    }
+    const releaseTitles = Array.from(chart.querySelectorAll('title')).filter((title) =>
+      title.textContent?.startsWith('Release observed:'),
+    )
+    expect(releaseTitles).toHaveLength(2)
+    expect(chart.textContent).toContain('At range start')
+    expect(chart.textContent).toContain('At range end')
+    expect(chart.textContent).not.toContain('Before range')
+    expect(chart.textContent).not.toContain('After range')
+  })
+
   it('updates metric, range, resolution, normalization, and bounded high-cardinality containers', async () => {
     const get = vi.fn().mockResolvedValue({
       ...resourceHistoryFixture,
@@ -313,6 +368,47 @@ describe('resource history', () => {
       name: 'Resource history chart: Memory current',
     })
     expect(chart.querySelectorAll('[data-resource-milestone="true"]')).toHaveLength(8)
+  })
+
+  it('keeps flat zero-value milestone labels above the X axis', async () => {
+    const start = new Date('2026-09-07T00:00:00Z')
+    const points = Array.from({ length: 24 }, (_, index) => ({
+      ...resourceHistoryFixture.points[0]!,
+      from: new Date(start.getTime() + index * 3_600_000).toISOString(),
+      to: new Date(start.getTime() + (index + 1) * 3_600_000).toISOString(),
+      value: 0,
+      release: null,
+    }))
+    renderWithProviders(
+      <ResourceHistory
+        projectId="project"
+        applicationId="application"
+        search={{ ...initialSearch, metric: 'io_write_bytes', step: 'hour' }}
+        onSearch={() => undefined}
+      />,
+      vi.fn().mockResolvedValue({
+        ...resourceHistoryFixture,
+        metric: 'io_write_bytes',
+        unit: 'bytes_per_second',
+        step: 'hour',
+        from: points[0]!.from,
+        to: points.at(-1)!.to,
+        points,
+        releases: [],
+      }),
+    )
+
+    const chart = await screen.findByRole('img', {
+      name: 'Resource history chart: I/O write throughput',
+    })
+    const milestones = chart.querySelectorAll('[data-resource-milestone="true"]')
+    expect(milestones).toHaveLength(2)
+    for (const line of chart.querySelectorAll('[data-resource-milestone="true"] line')) {
+      expect(Number(line.getAttribute('y1'))).toBeGreaterThanOrEqual(70)
+      expect(Number(line.getAttribute('y2'))).toBeLessThanOrEqual(260)
+    }
+    for (const label of chart.querySelectorAll('[data-resource-milestone="true"] text'))
+      expect(Number(label.getAttribute('y'))).toBeLessThan(260)
   })
 
   it('aligns time ranges to the requested step while preserving their duration', () => {

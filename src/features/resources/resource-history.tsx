@@ -363,7 +363,11 @@ const chartMilestones = (parts: ResourceHistoryPoint[][]) => {
         next === undefined
       )
         return false
-      return (current - previous) * (next - current) <= 0
+      const previousDelta = current - previous
+      const nextDelta = next - current
+      return (
+        previousDelta !== 0 && nextDelta !== 0 && Math.sign(previousDelta) !== Math.sign(nextDelta)
+      )
     })
   })
   if (candidates.length <= 8) return candidates
@@ -535,20 +539,21 @@ function ResourceChart({ data, locale }: { data: ApplicationResourceHistory; loc
           })}
           {milestones.map((point, index) => {
             if (point.value === null) return null
-            const above = index % 2 === 0
+            const pointY = y(point.value)
+            const above = pointY > 235 || (pointY >= 95 && index % 2 === 0)
             return (
               <g key={point.from} data-resource-milestone="true">
                 <line
                   x1={x(point)}
                   x2={x(point)}
-                  y1={y(point.value) - 9}
-                  y2={y(point.value) + 9}
+                  y1={Math.max(70, pointY - 9)}
+                  y2={Math.min(260, pointY + 9)}
                   stroke="#67e8f9"
                   strokeWidth="1"
                 />
                 <text
                   x={x(point)}
-                  y={y(point.value) + (above ? -13 : 22)}
+                  y={pointY + (above ? -13 : 22)}
                   fill="#e2e8f0"
                   fontSize="10"
                   textAnchor="middle"
@@ -558,26 +563,32 @@ function ResourceChart({ data, locale }: { data: ApplicationResourceHistory; loc
               </g>
             )
           })}
-          {data.releases.slice(0, 30).map((marker) => {
-            const markerX =
-              40 +
-              ((new Date(marker.observed_at).getTime() - new Date(data.from).getTime()) /
-                Math.max(1, new Date(data.to).getTime() - new Date(data.from).getTime())) *
-                820
-            return (
-              <g key={`${marker.release.id}-${marker.observed_at}`}>
-                <line
-                  x1={markerX}
-                  x2={markerX}
-                  y1="64"
-                  y2="265"
-                  stroke="#34d399"
-                  strokeDasharray="4 5"
-                />
-                <title>{`${text.releaseMarker}: ${marker.release.display_name}`}</title>
-              </g>
-            )
-          })}
+          {data.releases
+            .filter((marker) => {
+              const observedAt = new Date(marker.observed_at).getTime()
+              return (
+                observedAt >= new Date(data.from).getTime() &&
+                observedAt <= new Date(data.to).getTime()
+              )
+            })
+            .slice(0, 30)
+            .map((marker) => {
+              const markerX = xAt(new Date(marker.observed_at))
+              return (
+                <g key={`${marker.release.id}-${marker.observed_at}`}>
+                  <line
+                    data-resource-release-marker="true"
+                    x1={markerX}
+                    x2={markerX}
+                    y1="64"
+                    y2="265"
+                    stroke="#34d399"
+                    strokeDasharray="4 5"
+                  />
+                  <title>{`${text.releaseMarker}: ${marker.release.display_name}`}</title>
+                </g>
+              )
+            })}
         </svg>
       </div>
     </Card>

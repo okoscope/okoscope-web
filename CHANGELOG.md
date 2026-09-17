@@ -7,6 +7,13 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-09-17
+
+### Fixed
+
+- Kept Application resource-chart release markers and zero-value milestone labels inside the
+  plotting area so they no longer overlap axis labels.
+
 ## [0.3.2] - 2026-09-17
 
 ### Changed
@@ -72,7 +79,8 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Agent freshness now follows the server-provided bound instead of a
   client-owned inactivity threshold.
 
-[Unreleased]: https://github.com/okoscope/okoscope-web/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/okoscope/okoscope-web/compare/v0.3.3...HEAD
+[0.3.3]: https://github.com/okoscope/okoscope-web/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/okoscope/okoscope-web/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/okoscope/okoscope-web/compare/v0.2.3...v0.3.1
 [0.2.3]: https://github.com/okoscope/okoscope-web/compare/v0.2.2...v0.2.3

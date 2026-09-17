@@ -349,6 +349,15 @@ const segments = (points: ResourceHistoryPoint[]) => {
 
 const MAX_CHART_MILESTONES = 8
 const MIN_SLOPE_CHANGE_RATIO = 0.1
+const CHART_TOP = 70
+const CHART_BOTTOM = 260
+const CHART_LEFT = 72
+const CHART_RIGHT = 860
+const MILESTONE_LABEL_GLYPH_WIDTH = 6
+const MILESTONE_LABEL_HORIZONTAL_PADDING = 4
+const MILESTONE_LABEL_POINT_GAP = 6
+const MILESTONE_LABEL_TOP_OFFSET = 12
+const MILESTONE_LABEL_BOTTOM_OFFSET = 2
 
 const chartMilestones = (
   parts: ResourceHistoryPoint[][],
@@ -373,7 +382,7 @@ const chartMilestones = (
         return []
       const previousDelta = current - previous
       const nextDelta = next - current
-      const salience = Math.abs(nextDelta - previousDelta) / Math.max(valueRange, 1)
+      const salience = Math.abs(nextDelta - previousDelta) / Math.max(valueRange, Number.EPSILON)
       return salience >= MIN_SLOPE_CHANGE_RATIO ? [{ point, salience, endpoint: false }] : []
     })
   })
@@ -402,6 +411,99 @@ const chartMilestones = (
 const chartTicks = (minimum: number, maximum: number, count: number) =>
   Array.from({ length: count }, (_, index) => minimum + ((maximum - minimum) * index) / (count - 1))
 
+type MilestoneLabelLayout = {
+  point: ResourceHistoryPoint
+  label: string
+  x: number
+  y: number
+  position: 'above' | 'below'
+}
+
+type ChartSegment = {
+  start: { x: number; y: number }
+  end: { x: number; y: number }
+}
+
+type LabelBox = { left: number; right: number; top: number; bottom: number }
+
+const segmentIntersectsBox = (segment: ChartSegment, box: LabelBox) => {
+  let near = 0
+  let far = 1
+  const clip = (origin: number, delta: number, minimum: number, maximum: number) => {
+    if (delta === 0) return origin > minimum && origin < maximum
+    const first = (minimum - origin) / delta
+    const second = (maximum - origin) / delta
+    near = Math.max(near, Math.min(first, second))
+    far = Math.min(far, Math.max(first, second))
+    return near < far
+  }
+  return (
+    clip(segment.start.x, segment.end.x - segment.start.x, box.left, box.right) &&
+    clip(segment.start.y, segment.end.y - segment.start.y, box.top, box.bottom) &&
+    near < far
+  )
+}
+
+const layoutMilestoneLabels = (
+  milestones: ResourceHistoryPoint[],
+  xFor: (point: ResourceHistoryPoint) => number,
+  yFor: (value: number) => number,
+  labelFor: (value: number) => string,
+  seriesSegments: ChartSegment[],
+) => {
+  const occupied: LabelBox[] = []
+  const layouts: MilestoneLabelLayout[] = []
+
+  for (const [index, point] of Array.from(milestones.entries()).reverse()) {
+    if (point.value === null) continue
+    const label = labelFor(point.value)
+    const width = label.length * MILESTONE_LABEL_GLYPH_WIDTH + MILESTONE_LABEL_HORIZONTAL_PADDING
+    const pointX = xFor(point)
+    const pointY = yFor(point.value)
+    const prefersAbove = pointY > 235 || (pointY >= 95 && index % 2 === 0)
+    const positions: MilestoneLabelLayout['position'][] = prefersAbove
+      ? ['above', 'below']
+      : ['below', 'above']
+    const leftX = pointX - width / 2 - MILESTONE_LABEL_POINT_GAP
+    const rightX = pointX + width / 2 + MILESTONE_LABEL_POINT_GAP
+    const horizontalPositions = index % 2 === 0 ? [leftX, rightX] : [rightX, leftX]
+
+    for (const position of positions) {
+      const labelY = pointY + (position === 'above' ? -13 : 22)
+      for (const labelX of horizontalPositions) {
+        const box = {
+          left: labelX - width / 2,
+          right: labelX + width / 2,
+          top: labelY - MILESTONE_LABEL_TOP_OFFSET,
+          bottom: labelY + MILESTONE_LABEL_BOTTOM_OFFSET,
+        }
+        const insidePlot =
+          box.left >= CHART_LEFT &&
+          box.right <= CHART_RIGHT &&
+          box.top >= CHART_TOP &&
+          box.bottom <= CHART_BOTTOM
+        const overlaps = occupied.some(
+          (other) =>
+            box.left < other.right &&
+            box.right > other.left &&
+            box.top < other.bottom &&
+            box.bottom > other.top,
+        )
+        const crossesSeries = seriesSegments.some((segment) => segmentIntersectsBox(segment, box))
+        if (!insidePlot || overlaps || crossesSeries) continue
+        occupied.push(box)
+        layouts.push({ point, label, x: labelX, y: labelY, position })
+        break
+      }
+      if (layouts.at(-1)?.point === point) break
+    }
+  }
+
+  return layouts.sort(
+    (left, right) => new Date(left.point.from).getTime() - new Date(right.point.from).getTime(),
+  )
+}
+
 const hourlyTicks = (from: string, to: string) => {
   const start = new Date(from).getTime()
   const end = new Date(to).getTime()
@@ -426,9 +528,14 @@ function ResourceChart({ data, locale }: { data: ApplicationResourceHistory; loc
   const values = rendered.flatMap((point) =>
     point.value === null || !point.coverage.complete ? [] : [point.value],
   )
-  const observedMax = Math.max(...values, 1)
-  const observedMin = Math.min(...values, observedMax)
-  const padding = Math.max((observedMax - observedMin) * 0.12, Math.abs(observedMax) * 0.02, 1)
+  const observedMax = values.length ? Math.max(...values) : 1
+  const observedMin = values.length ? Math.min(...values) : 0
+  const fallbackPadding = observedMax === 0 && observedMin === 0 ? 1 : Number.EPSILON
+  const padding = Math.max(
+    (observedMax - observedMin) * 0.12,
+    Math.abs(observedMax) * 0.02,
+    fallbackPadding,
+  )
   const max = observedMax + padding
   const min = Math.max(0, observedMin - padding)
   const parts = segments(rendered)
@@ -450,7 +557,14 @@ function ResourceChart({ data, locale }: { data: ApplicationResourceHistory; loc
     ((date.getTime() - new Date(data.from).getTime()) /
       Math.max(1, new Date(data.to).getTime() - new Date(data.from).getTime())) *
       788
-  const y = (value: number) => 260 - ((value - min) / Math.max(max - min, 1)) * 190
+  const y = (value: number) => 260 - ((value - min) / Math.max(max - min, Number.EPSILON)) * 190
+  const seriesSegments = parts.flatMap((part) =>
+    part.slice(1).map((point, index) => ({
+      start: { x: x(part[index]!), y: y(part[index]!.value!) },
+      end: { x: x(point), y: y(point.value!) },
+    })),
+  )
+  const milestoneLayouts = layoutMilestoneLabels(milestones, x, y, valueLabel, seriesSegments)
   const dateGroups = xTicks.reduce<{ label: string; ticks: Date[] }[]>((groups, tick) => {
     const label = dateFormatter.format(tick)
     const current = groups.at(-1)
@@ -563,28 +677,24 @@ function ResourceChart({ data, locale }: { data: ApplicationResourceHistory; loc
               </line>
             )
           })}
-          {milestones.map((point, index) => {
-            if (point.value === null) return null
-            const pointY = y(point.value)
-            const above = pointY > 235 || (pointY >= 95 && index % 2 === 0)
+          {milestoneLayouts.map((layout) => {
+            const pointY = y(layout.point.value!)
             return (
-              <g key={point.from} data-resource-milestone="true">
+              <g
+                key={layout.point.from}
+                data-resource-milestone="true"
+                data-resource-label-position={layout.position}
+              >
                 <line
-                  x1={x(point)}
-                  x2={x(point)}
+                  x1={x(layout.point)}
+                  x2={x(layout.point)}
                   y1={Math.max(70, pointY - 9)}
                   y2={Math.min(260, pointY + 9)}
                   stroke="#67e8f9"
                   strokeWidth="1"
                 />
-                <text
-                  x={x(point)}
-                  y={pointY + (above ? -13 : 22)}
-                  fill="#e2e8f0"
-                  fontSize="10"
-                  textAnchor="middle"
-                >
-                  {formatResourceValue(locale, point.value, data.unit)}
+                <text x={layout.x} y={layout.y} fill="#e2e8f0" fontSize="10" textAnchor="middle">
+                  {layout.label}
                 </text>
               </g>
             )

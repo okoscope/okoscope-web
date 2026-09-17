@@ -112,7 +112,12 @@ export function formatResourceValue(locale: Locale, value: number | null, unit: 
     return new Intl.NumberFormat(locale, { style: 'percent', maximumFractionDigits: 1 }).format(
       value,
     )
-  const formatted = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(value)
+  const formatted = new Intl.NumberFormat(
+    locale,
+    unit === 'cores' && value !== 0 && Math.abs(value) < 0.01
+      ? { maximumSignificantDigits: 3 }
+      : { maximumFractionDigits: 2 },
+  ).format(value)
   const suffix: Partial<Record<ResourceUnit, string>> = {
     cores: locale === 'ru' ? ' ядра' : ' cores',
     seconds: ' s',

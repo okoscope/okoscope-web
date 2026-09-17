@@ -18,7 +18,12 @@ import {
   resourceComparisonFixture,
   resourceHistoryFixture,
 } from './fixtures'
-import { parseResourceSearch, resourceRange, type ResourceSearch } from './model'
+import {
+  formatResourceValue,
+  parseResourceSearch,
+  resourceRange,
+  type ResourceSearch,
+} from './model'
 import { ResourceComparison } from './resource-comparison'
 import { ResourceHistory } from './resource-history'
 
@@ -338,13 +343,14 @@ describe('resource history', () => {
     })
   })
 
-  it('deduplicates repeated milestone labels while keeping at most eight', async () => {
+  it('deduplicates repeated milestone labels while keeping at most eight feasible labels', async () => {
     const start = new Date('2026-09-07T00:00:00Z')
-    const points = Array.from({ length: 16 }, (_, index) => ({
+    const values = [50, 100, 200, 100, 200, 100, 200, 100, 200, 250]
+    const points = values.map((value, index) => ({
       ...resourceHistoryFixture.points[0]!,
-      from: new Date(start.getTime() + index * 3_600_000).toISOString(),
-      to: new Date(start.getTime() + (index + 1) * 3_600_000).toISOString(),
-      value: index % 2 === 0 ? 100 : 200,
+      from: new Date(start.getTime() + index * 3 * 3_600_000).toISOString(),
+      to: new Date(start.getTime() + (index * 3 + 1) * 3_600_000).toISOString(),
+      value,
       release: null,
     }))
     renderWithProviders(
@@ -371,7 +377,8 @@ describe('resource history', () => {
       chart.querySelectorAll('[data-resource-milestone="true"] text'),
       (label) => label.textContent,
     )
-    expect(milestoneLabels).toHaveLength(2)
+    expect(milestoneLabels.length).toBeGreaterThan(0)
+    expect(milestoneLabels).toEqual(expect.arrayContaining(['100 B', '200 B']))
     expect(new Set(milestoneLabels).size).toBe(milestoneLabels.length)
     expect(milestoneLabels.length).toBeLessThanOrEqual(8)
   })
@@ -410,6 +417,10 @@ describe('resource history', () => {
     const milestones = chart.querySelectorAll('[data-resource-milestone="true"]')
     expect(milestones).toHaveLength(0)
     expect(chart.textContent).toContain('0 B/s')
+    const observedPoints = chart
+      .querySelector('[data-resource-series="observed"]')
+      ?.getAttribute('points')
+    expect(observedPoints).not.toMatch(/NaN|Infinity/)
   })
 
   it('labels the end of a significant drop at 14:00', async () => {
@@ -443,11 +454,313 @@ describe('resource history', () => {
     const chart = await screen.findByRole('img', {
       name: 'Resource history chart: Memory current',
     })
-    const dropLabel = Array.from(
-      chart.querySelectorAll('[data-resource-milestone="true"] text'),
-    ).find((label) => label.textContent === '34.1 MiB')
+    const dropMilestone = Array.from(
+      chart.querySelectorAll('[data-resource-milestone="true"]'),
+    ).find((milestone) => milestone.querySelector('text')?.textContent === '34.1 MiB')
+    const dropLabel = dropMilestone?.querySelector('text')
+    const dropStem = dropMilestone?.querySelector('line')
+    const pointX = 72 + (5 / 8) * 788
     expect(dropLabel).toBeDefined()
-    expect(Number(dropLabel?.getAttribute('x'))).toBeCloseTo(72 + (5 / 8) * 788)
+    expect(Number(dropStem?.getAttribute('x1'))).toBeCloseTo(pointX)
+    expect(dropStem).toHaveAttribute('x1', dropStem?.getAttribute('x2'))
+    expect(Number(dropLabel?.getAttribute('x'))).not.toBeCloseTo(pointX)
+  })
+
+  it('keeps dense milestone labels from overlapping and gives contested space to the newest', async () => {
+    const start = new Date('2026-09-17T08:00:00Z')
+    const values = [100, 200, 101, 199, 102, 198, 103]
+    const points = values.map((value, index) => ({
+      ...resourceHistoryFixture.points[0]!,
+      from: new Date(start.getTime() + index * 60_000).toISOString(),
+      to: new Date(start.getTime() + (index + 1) * 60_000).toISOString(),
+      value,
+      release: null,
+    }))
+    renderWithProviders(
+      <ResourceHistory
+        projectId="project"
+        applicationId="application"
+        search={initialSearch}
+        onSearch={() => undefined}
+      />,
+      vi.fn().mockResolvedValue({
+        ...resourceHistoryFixture,
+        from: start.toISOString(),
+        to: new Date(start.getTime() + 24 * 3_600_000).toISOString(),
+        points,
+        releases: [],
+      }),
+    )
+
+    const chart = await screen.findByRole('img', {
+      name: 'Resource history chart: Memory current',
+    })
+    const labels = Array.from(
+      chart.querySelectorAll<SVGTextElement>('[data-resource-milestone="true"] text'),
+    )
+    // The chart uses 10 px centered SVG text. JSDOM has no SVG getBBox(), so approximate
+    // each glyph as 6 px wide and the baseline box as 12 px tall, with 2 px visual padding.
+    const boxes = labels.map((label) => {
+      const x = Number(label.getAttribute('x'))
+      const y = Number(label.getAttribute('y'))
+      const width = (label.textContent?.length ?? 0) * 6 + 4
+      return {
+        label: label.textContent,
+        left: x - width / 2,
+        right: x + width / 2,
+        top: y - 12,
+        bottom: y + 2,
+      }
+    })
+    const overlaps = boxes.flatMap((left, index) =>
+      boxes
+        .slice(index + 1)
+        .flatMap((right) =>
+          left.left < right.right &&
+          left.right > right.left &&
+          left.top < right.bottom &&
+          left.bottom > right.top
+            ? [`${left.label}/${right.label}`]
+            : [],
+        ),
+    )
+    const labelText = labels.map((label) => label.textContent)
+
+    expect.soft(overlaps).toEqual([])
+    for (const box of boxes) {
+      expect.soft(box.left).toBeGreaterThanOrEqual(72)
+      expect.soft(box.right).toBeLessThanOrEqual(860)
+      expect.soft(box.top).toBeGreaterThanOrEqual(70)
+      expect.soft(box.bottom).toBeLessThanOrEqual(260)
+    }
+    expect.soft(labelText).toContain('103 B')
+    expect.soft(labelText).not.toContain('100 B')
+  })
+
+  it('clamps milestone label boxes inside both horizontal plot edges', async () => {
+    const from = '2026-09-17T08:00:00.000Z'
+    const to = '2026-09-17T09:00:00.000Z'
+    const points = [
+      { ...resourceHistoryFixture.points[0]!, from, to, value: 100, release: null },
+      { ...resourceHistoryFixture.points[0]!, from: to, to, value: 200, release: null },
+    ]
+    renderWithProviders(
+      <ResourceHistory
+        projectId="project"
+        applicationId="application"
+        search={initialSearch}
+        onSearch={() => undefined}
+      />,
+      vi.fn().mockResolvedValue({
+        ...resourceHistoryFixture,
+        from,
+        to,
+        points,
+        releases: [],
+      }),
+    )
+
+    const chart = await screen.findByRole('img', {
+      name: 'Resource history chart: Memory current',
+    })
+    const labels = Array.from(
+      chart.querySelectorAll<SVGTextElement>('[data-resource-milestone="true"] text'),
+    )
+    expect(labels).toHaveLength(2)
+    for (const label of labels) {
+      const x = Number(label.getAttribute('x'))
+      const width = (label.textContent?.length ?? 0) * 6 + 4
+      expect(x - width / 2).toBeGreaterThanOrEqual(72)
+      expect(x + width / 2).toBeLessThanOrEqual(860)
+    }
+  })
+
+  it('keeps observed-series segments out of milestone label boxes', async () => {
+    const mebibyte = 1024 * 1024
+    const start = new Date('2026-09-17T08:00:00Z')
+    const values = [28.1, 28.9, 29.1, 28.2]
+    const points = values.map((value, index) => ({
+      ...resourceHistoryFixture.points[0]!,
+      from: new Date(start.getTime() + index * 3_600_000).toISOString(),
+      to: new Date(start.getTime() + (index + 1) * 3_600_000).toISOString(),
+      value: value * mebibyte,
+      release: null,
+    }))
+    renderWithProviders(
+      <ResourceHistory
+        projectId="project"
+        applicationId="application"
+        search={{ ...initialSearch, step: 'hour' }}
+        onSearch={() => undefined}
+      />,
+      vi.fn().mockResolvedValue({
+        ...resourceHistoryFixture,
+        step: 'hour',
+        from: start.toISOString(),
+        to: new Date(start.getTime() + 24 * 3_600_000).toISOString(),
+        points,
+        releases: [],
+      }),
+    )
+
+    const chart = await screen.findByRole('img', {
+      name: 'Resource history chart: Memory current',
+    })
+    const boxes = Array.from(
+      chart.querySelectorAll<SVGTextElement>('[data-resource-milestone="true"] text'),
+      (label) => {
+        const x = Number(label.getAttribute('x'))
+        const y = Number(label.getAttribute('y'))
+        const width = (label.textContent?.length ?? 0) * 6 + 4
+        return {
+          label: label.textContent,
+          left: x - width / 2,
+          right: x + width / 2,
+          top: y - 12,
+          bottom: y + 2,
+        }
+      },
+    )
+    const segmentIntersectsBox = (
+      startPoint: { x: number; y: number },
+      endPoint: { x: number; y: number },
+      box: (typeof boxes)[number],
+    ) => {
+      let near = 0
+      let far = 1
+      const clip = (origin: number, delta: number, minimum: number, maximum: number) => {
+        if (delta === 0) return origin > minimum && origin < maximum
+        const first = (minimum - origin) / delta
+        const second = (maximum - origin) / delta
+        near = Math.max(near, Math.min(first, second))
+        far = Math.min(far, Math.max(first, second))
+        return near < far
+      }
+      return (
+        clip(startPoint.x, endPoint.x - startPoint.x, box.left, box.right) &&
+        clip(startPoint.y, endPoint.y - startPoint.y, box.top, box.bottom) &&
+        near < far
+      )
+    }
+    const intersections = Array.from(
+      chart.querySelectorAll<SVGPolylineElement>('[data-resource-series="observed"]'),
+    ).flatMap((polyline) => {
+      const vertices = (polyline.getAttribute('points') ?? '')
+        .trim()
+        .split(/\s+/)
+        .map((pair) => {
+          const [x, y] = pair.split(',').map(Number)
+          return { x: x!, y: y! }
+        })
+      return vertices.slice(1).flatMap((endPoint, index) => {
+        const startPoint = vertices[index]!
+        return boxes.flatMap((box) =>
+          segmentIntersectsBox(startPoint, endPoint, box)
+            ? [`${box.label}: ${startPoint.x},${startPoint.y} -> ${endPoint.x},${endPoint.y}`]
+            : [],
+        )
+      })
+    })
+
+    expect(intersections).toEqual([])
+  })
+
+  it('preserves tiny nonzero CPU values and scales their visible variation', async () => {
+    const start = new Date('2026-09-17T08:00:00Z')
+    const values = [0, 0.0004, 0.0008, 0.0005]
+    const points = values.map((value, index) => ({
+      ...resourceHistoryFixture.points[0]!,
+      from: new Date(start.getTime() + index * 60_000).toISOString(),
+      to: new Date(start.getTime() + (index + 1) * 60_000).toISOString(),
+      value,
+      release: null,
+      limit: null,
+    }))
+    renderWithProviders(
+      <ResourceHistory
+        projectId="project"
+        applicationId="application"
+        search={{ ...initialSearch, metric: 'cpu_usage_cores' }}
+        onSearch={() => undefined}
+      />,
+      vi.fn().mockResolvedValue({
+        ...resourceHistoryFixture,
+        metric: 'cpu_usage_cores',
+        unit: 'cores',
+        from: points[0]!.from,
+        to: points.at(-1)!.to,
+        points,
+        releases: [],
+      }),
+      'ru',
+    )
+
+    const chart = await screen.findByRole('img', {
+      name: 'График истории ресурсов: Использование CPU',
+    })
+    const summaryValue = screen
+      .getByText('Наблюдаемое значение', { selector: 'dt' })
+      .parentElement?.querySelector('dd')?.textContent
+    const tableText = screen.getByRole('region', {
+      name: 'Таблица значений для клавиатурной навигации',
+    }).textContent
+    expect.soft(summaryValue).toBe('0,0005 ядра')
+    expect.soft(tableText).toContain('0,0004 ядра')
+    expect.soft(tableText).toContain('0,0008 ядра')
+    expect.soft(tableText).toContain('0,0005 ядра')
+    expect.soft(tableText).toContain('0 ядра')
+
+    const observed = chart.querySelector<SVGPolylineElement>('[data-resource-series="observed"]')
+    const yValues = (observed?.getAttribute('points') ?? '')
+      .trim()
+      .split(/\s+/)
+      .map((pair) => Number(pair.split(',')[1]))
+    expect.soft(Math.max(...yValues) - Math.min(...yValues)).toBeGreaterThan(50)
+  })
+
+  it('keeps a constant tiny nonzero CPU series finite and visible', async () => {
+    const start = new Date('2026-09-17T08:00:00Z')
+    const points = Array.from({ length: 3 }, (_, index) => ({
+      ...resourceHistoryFixture.points[0]!,
+      from: new Date(start.getTime() + index * 60_000).toISOString(),
+      to: new Date(start.getTime() + (index + 1) * 60_000).toISOString(),
+      value: 0.0004,
+      release: null,
+      limit: null,
+    }))
+    renderWithProviders(
+      <ResourceHistory
+        projectId="project"
+        applicationId="application"
+        search={{ ...initialSearch, metric: 'cpu_usage_cores' }}
+        onSearch={() => undefined}
+      />,
+      vi.fn().mockResolvedValue({
+        ...resourceHistoryFixture,
+        metric: 'cpu_usage_cores',
+        unit: 'cores',
+        from: points[0]!.from,
+        to: points.at(-1)!.to,
+        points,
+        releases: [],
+      }),
+    )
+
+    const chart = await screen.findByRole('img', {
+      name: 'Resource history chart: CPU use',
+    })
+    expect(screen.getAllByText('0.0004 cores').length).toBeGreaterThan(1)
+    const coordinates = chart
+      .querySelector('[data-resource-series="observed"]')
+      ?.getAttribute('points')
+    expect(coordinates).not.toMatch(/NaN|Infinity/)
+    const yValues = (coordinates ?? '')
+      .trim()
+      .split(/\s+/)
+      .map((pair) => Number(pair.split(',')[1]))
+    expect(new Set(yValues).size).toBe(1)
+    expect(yValues[0]).toBeGreaterThanOrEqual(70)
+    expect(yValues[0]).toBeLessThanOrEqual(260)
   })
 
   it('aligns time ranges to the requested step while preserving their duration', () => {
@@ -465,6 +778,20 @@ describe('resource history', () => {
     } finally {
       vi.useRealTimers()
     }
+  })
+})
+
+describe('resource value formatting', () => {
+  it('preserves tiny cores without changing zero, ordinary cores, or other units', () => {
+    expect(formatResourceValue('en', 0.0004, 'cores')).toBe('0.0004 cores')
+    expect(formatResourceValue('ru', 0.0004, 'cores')).toBe('0,0004 ядра')
+    expect(formatResourceValue('en', -0.0004567, 'cores')).toBe('-0.000457 cores')
+    expect(formatResourceValue('en', 0, 'cores')).toBe('0 cores')
+    expect(formatResourceValue('en', 0.01, 'cores')).toBe('0.01 cores')
+    expect(formatResourceValue('en', 1.234, 'cores')).toBe('1.23 cores')
+    expect(formatResourceValue('en', 1024, 'bytes')).toBe('1 KiB')
+    expect(formatResourceValue('en', 0.125, 'ratio')).toBe('12.5%')
+    expect(formatResourceValue('en', 42, 'count')).toBe('42')
   })
 })
 

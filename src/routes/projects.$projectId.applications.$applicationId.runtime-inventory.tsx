@@ -2,12 +2,19 @@ import { RetentionCoverage } from '../features/runtime-retention/coverage'
 import { useQuery } from '@tanstack/react-query'
 import { Link, Outlet, createFileRoute, useLocation, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
-import { InventoryFilterFields, InventoryList } from '../features/runtime-inventory/components'
 import {
+  DnsGroupList,
+  InventoryFilterFields,
+  InventoryList,
+} from '../features/runtime-inventory/components'
+import {
+  DnsGroupDistributionView,
   InventoryKindDistribution,
   TopBehaviorDistribution,
 } from '../features/runtime-inventory/visualization'
 import {
+  dnsGroupDistributionOptions,
+  dnsGroupListOptions,
   inventoryFacetOptions,
   inventoryDistributionOptions,
   inventoryListOptions,
@@ -48,8 +55,25 @@ function RuntimeInventoryPage() {
   const project = useQuery(projectOptions(api, projectId))
   const application = useQuery(applicationOptions(api, projectId, applicationId))
   const summary = useQuery(inventorySummaryOptions(api, projectId, applicationId, search))
-  const distribution = useQuery(inventoryDistributionOptions(api, projectId, applicationId, search))
-  const list = useQuery(inventoryListOptions(api, projectId, applicationId, search))
+  const distribution = useQuery({
+    ...inventoryDistributionOptions(api, projectId, applicationId, search),
+    enabled: search.kind !== 'domain',
+  })
+  const list = useQuery({
+    ...inventoryListOptions(api, projectId, applicationId, search),
+    enabled: search.kind !== 'domain',
+  })
+  const dnsDistribution = useQuery({
+    ...dnsGroupDistributionOptions(api, projectId, applicationId, search),
+    enabled: search.kind === 'domain',
+  })
+  const dnsList = useQuery({
+    ...dnsGroupListOptions(api, projectId, applicationId, search),
+    enabled: search.kind === 'domain',
+  })
+  const dnsOverview = useQuery(
+    dnsGroupListOptions(api, projectId, applicationId, { ...search, cursor: undefined }),
+  )
   const releases = useQuery(releasesOptions(api, projectId, applicationId, {}))
   const cluster = useQuery(
     inventoryFacetOptions(
@@ -152,7 +176,9 @@ function RuntimeInventoryPage() {
     workload_name: workloadName.data,
     container_name: container.data,
   }
-  const cursorError = isInvalidCursorError(list.error)
+  const activeList = search.kind === 'domain' ? dnsList : list
+  const activeDistribution = search.kind === 'domain' ? dnsDistribution : distribution
+  const cursorError = isInvalidCursorError(activeList.error)
   return (
     <div className="space-y-6">
       <nav aria-label="Breadcrumb" className="breadcrumbs">
@@ -204,36 +230,46 @@ function RuntimeInventoryPage() {
           <InventoryKindDistribution
             summary={summary.data}
             activeKind={search.kind}
+            domainGroupCount={dnsOverview.data?.total_group_count}
             onKind={(kind) => setScope({ kind })}
           />
         )}
-        {distribution.isPending ? (
+        {activeDistribution.isPending ? (
           <Loading label="Loading activity distribution…" />
-        ) : distribution.isError && !distribution.data ? (
+        ) : activeDistribution.isError && !activeDistribution.data ? (
           <ApiErrorPanel
             title="Could not load activity distribution"
-            error={distribution.error}
-            onRetry={() => void distribution.refetch()}
+            error={activeDistribution.error}
+            onRetry={() => void activeDistribution.refetch()}
           />
-        ) : distribution.data.total_occurrence_count === 0 ? (
+        ) : search.kind === 'domain' && dnsDistribution.data?.total_observation_count === 0 ? (
+          <EmptyState
+            title="No DNS destinations to visualize"
+            description="No recorded DNS observations match the selected filters."
+          />
+        ) : search.kind !== 'domain' && distribution.data?.total_occurrence_count === 0 ? (
           <EmptyState
             title="No activity to visualize"
             description="No recorded observations match the selected activity type and filters."
           />
         ) : (
           <div className="flex h-full flex-col gap-6">
-            {distribution.isError && (
+            {activeDistribution.isError && (
               <ApiErrorPanel
                 title="Activity distribution may be stale"
-                error={distribution.error}
-                onRetry={() => void distribution.refetch()}
+                error={activeDistribution.error}
+                onRetry={() => void activeDistribution.refetch()}
               />
             )}
-            <TopBehaviorDistribution
-              distribution={distribution.data}
-              selectedToken={search.identity_token}
-              onIdentity={(identity_token) => setScope({ identity_token })}
-            />
+            {search.kind === 'domain' && dnsDistribution.data ? (
+              <DnsGroupDistributionView distribution={dnsDistribution.data} />
+            ) : distribution.data ? (
+              <TopBehaviorDistribution
+                distribution={distribution.data}
+                selectedToken={search.identity_token}
+                onIdentity={(identity_token) => setScope({ identity_token })}
+              />
+            ) : null}
           </div>
         )}
       </div>
@@ -293,9 +329,9 @@ function RuntimeInventoryPage() {
           Clear filters
         </Button>
       </div>
-      {list.isPending ? (
+      {activeList.isPending ? (
         <Loading label={`Loading ${getActivityPresentation(search.kind).itemLabel}…`} />
-      ) : list.isError ? (
+      ) : activeList.isError ? (
         cursorError ? (
           <Card role="alert" className="border-amber-700">
             <h2 className="text-xl font-semibold">This cursor is no longer valid</h2>
@@ -309,11 +345,11 @@ function RuntimeInventoryPage() {
         ) : (
           <ApiErrorPanel
             title="Could not load Application Activity"
-            error={list.error}
-            onRetry={() => void list.refetch()}
+            error={activeList.error}
+            onRetry={() => void activeList.refetch()}
           />
         )
-      ) : list.data.items.length === 0 ? (
+      ) : activeList.data?.items.length === 0 ? (
         <EmptyState
           title={search.cursor ? 'End of activity results' : 'No activity observed'}
           description={
@@ -322,21 +358,29 @@ function RuntimeInventoryPage() {
               : 'No items match the active application scope and filters.'
           }
         />
-      ) : (
+      ) : search.kind === 'domain' && dnsList.data ? (
+        <DnsGroupList
+          groups={dnsList.data.items}
+          projectId={projectId}
+          applicationId={applicationId}
+          search={search}
+          view={activityView}
+        />
+      ) : list.data ? (
         <InventoryList
           items={list.data.items}
           projectId={projectId}
           applicationId={applicationId}
           view={activityView}
         />
-      )}
-      {list.data && (
+      ) : null}
+      {activeList.data && (
         <PaginationControls
-          nextCursor={list.data.next_cursor}
+          nextCursor={activeList.data.next_cursor}
           onNext={(cursor) => void navigate({ search: { ...search, cursor } })}
         />
       )}
-      {search.cursor && list.data?.items.length === 0 && (
+      {search.cursor && activeList.data?.items.length === 0 && (
         <Button variant="outline" onClick={clearCursor}>
           Return to first page
         </Button>

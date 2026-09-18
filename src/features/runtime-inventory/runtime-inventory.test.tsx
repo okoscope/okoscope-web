@@ -9,6 +9,9 @@ import {
   inventoryKinds,
 } from './components'
 import {
+  dnsGroupDistributionOptions,
+  dnsGroupListOptions,
+  dnsGroupVariantsOptions,
   expectedEvidencePath,
   inventoryEvidenceOptions,
   inventoryFacetPath,
@@ -69,6 +72,40 @@ describe('runtime inventory URL state', () => {
 })
 
 describe('runtime inventory query boundary', () => {
+  it('uses additive DNS group routes with stable scoped filters', async () => {
+    const get = vi.fn().mockResolvedValue({ items: [], next_cursor: null })
+    const api = { get } as unknown as ApiClient
+    const search = {
+      kind: 'domain' as const,
+      namespace: 'production',
+      search: 'expanded.cluster.local',
+      verdict: 'requires_review' as const,
+      cursor: 'opaque cursor',
+    }
+
+    await dnsGroupListOptions(api, 'project /', 'application ?', search).queryFn?.({
+      signal: AbortSignal.abort(),
+    } as never)
+    await dnsGroupDistributionOptions(api, 'project /', 'application ?', search).queryFn?.({
+      signal: AbortSignal.abort(),
+    } as never)
+    await dnsGroupVariantsOptions(api, 'project /', 'application ?', 'group #', search).queryFn?.({
+      signal: AbortSignal.abort(),
+    } as never)
+
+    expect(get.mock.calls[0]?.[0]).toContain(
+      '/runtime-inventory/dns-groups?namespace=production&search=expanded.cluster.local&verdict=requires_review&cursor=opaque+cursor&limit=50',
+    )
+    expect(get.mock.calls[1]?.[0]).toContain(
+      '/runtime-inventory/dns-groups/distribution?namespace=production&search=expanded.cluster.local&verdict=requires_review&limit=5',
+    )
+    expect(get.mock.calls[2]?.[0]).toContain(
+      '/runtime-inventory/dns-groups/group%20%23/variants?namespace=production&verdict=requires_review&limit=50',
+    )
+    expect(get.mock.calls[2]?.[0]).not.toContain('search=')
+    expect(get).toHaveBeenCalledTimes(3)
+  })
+
   it('partitions cache identity by every scope and cursor input', () => {
     const first = inventoryKeys.list('p', 'a', { kind: 'process', namespace: 'one' })
     const second = inventoryKeys.list('p', 'a', { kind: 'process', namespace: 'two' })

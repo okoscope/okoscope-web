@@ -33,6 +33,11 @@ thread-specific identity require an Application-scoped reset of runtime evidence
 policies, suppressions, and derived attention or notification state; they do not migrate that
 state.
 
+For the domain view, the server additionally presents logical DNS destinations that consolidate
+A/AAAA questions and confidently corroborated Kubernetes search expansions. The UI keeps every
+exact resolver question available as a DNS resolution variant linked to its existing evidence
+history; this presentation layer does not change raw observations or policy identity.
+
 The product interface is a React single-page app. Public documentation is a statically generated
 Astro and Starlight site at `/docs/en/` and `/docs/ru/`. The application validates backend compatibility at startup and
 uses the backend's opaque `HttpOnly` session cookie for authentication. Browser requests include

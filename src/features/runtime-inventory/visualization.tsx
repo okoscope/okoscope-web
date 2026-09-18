@@ -1,4 +1,9 @@
-import type { InventoryDistribution, InventoryKind, InventorySummary } from '../../shared/api/types'
+import type {
+  DnsGroupDistribution,
+  InventoryDistribution,
+  InventoryKind,
+  InventorySummary,
+} from '../../shared/api/types'
 import { Card } from '../../shared/ui/card'
 import { HorizontalBars } from '../../shared/ui/horizontal-bars'
 import { formatCount } from '../tenant/format'
@@ -52,10 +57,12 @@ export function InventoryKindDistribution({
   summary,
   activeKind,
   onKind,
+  domainGroupCount,
 }: {
   summary: InventorySummary
   activeKind: InventoryKind
   onKind: (kind: InventoryKind) => void
+  domainGroupCount?: number | undefined
 }) {
   const { locale } = useLocalization()
   const localized = (value: string) => (locale === 'ru' ? (legacyRussian[value] ?? value) : value)
@@ -81,12 +88,55 @@ export function InventoryKindDistribution({
               accessibleLabel: localized(label),
               value: value?.occurrence_count ?? 0,
               selected: kind === activeKind,
-              meta: `${formatCount(value?.item_count ?? 0)} unique behaviors`,
+              meta:
+                kind === 'domain'
+                  ? domainGroupCount === undefined
+                    ? 'Logical DNS destination count unavailable'
+                    : `${formatCount(domainGroupCount)} logical DNS destinations`
+                  : `${formatCount(value?.item_count ?? 0)} unique behaviors`,
               onSelect: () => onKind(kind),
             }
           }),
         )}
       />
+    </Card>
+  )
+}
+
+export function DnsGroupDistributionView({ distribution }: { distribution: DnsGroupDistribution }) {
+  const entries = distribution.entries.map(({ group }) => ({
+    id: group.group_token,
+    label: <span className="break-all font-mono">{group.display_name}</span>,
+    accessibleLabel: group.display_name,
+    value: group.observation_count,
+    selected: false,
+    meta: `${formatCount(group.variant_count)} DNS resolution variants`,
+    onSelect: () => undefined,
+  }))
+  if (distribution.other)
+    entries.push({
+      id: 'other',
+      label: <span>Other observed DNS destinations</span>,
+      accessibleLabel: 'Other observed DNS destinations',
+      value: distribution.other.observation_count,
+      selected: false,
+      meta: `${formatCount(distribution.other.group_count)} logical DNS destinations`,
+      onSelect: () => undefined,
+    })
+  return (
+    <Card className="h-full">
+      <h2 className="text-xl font-semibold">Most observed DNS destinations</h2>
+      <p className="mt-1 text-sm text-slate-400">
+        Share of {formatCount(distribution.total_observation_count)} matching recorded DNS
+        observations across the complete filtered result, not only this list page.
+      </p>
+      <div className="mt-4">
+        <HorizontalBars
+          ariaLabel="Most observed DNS destinations"
+          total={distribution.total_observation_count}
+          items={byOccurrenceCountDescending(entries)}
+        />
+      </div>
     </Card>
   )
 }

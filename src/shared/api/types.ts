@@ -191,6 +191,11 @@ export type ReleaseResourceComparisonQuery = NonNullable<
   operations['getReleaseResourceComparison']['parameters']['query']
 >
 export type InventoryKind = components['schemas']['InventoryKind']
+export type DnsLogicalGroup = components['schemas']['DnsLogicalGroup']
+export type DnsGroupPage = components['schemas']['DnsGroupPage']
+export type DnsGroupVariant = components['schemas']['DnsGroupVariant']
+export type DnsGroupVariantPage = components['schemas']['DnsGroupVariantPage']
+export type DnsGroupDistribution = components['schemas']['DnsGroupDistribution']
 export type InventoryProcessIdentity = components['schemas']['InventoryProcessIdentity']
 export type InventoryDestinationIdentity = components['schemas']['InventoryDestinationIdentity']
 export type InventoryDomainIdentity = components['schemas']['InventoryDomainIdentity']

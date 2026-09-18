@@ -265,6 +265,26 @@ const resourceAttentionRecommendation = {
 const inventoryItemId = '10000000-0000-4000-8000-000000000001'
 const unsafeInventoryText = "<img src=x onerror=alert('inventory')>"
 const inventoryBase = `/api/v1/projects/${project.id}/applications/${application.id}/runtime-inventory`
+const dnsGroupToken = 'dns-group-s3'
+const dnsVariantItemId = '10000000-0000-4000-8000-000000000002'
+const dnsGroup = {
+  group_token: dnsGroupToken,
+  display_name: 's3.twcstorage.ru',
+  process_command: '/usr/local/bin/r-api',
+  grouping_reason: 'kubernetes_search_expansion',
+  confidence: 'high',
+  first_seen_at: '2026-08-17T10:00:00Z',
+  last_seen_at: '2026-08-18T10:00:00Z',
+  observation_count: 30,
+  variant_count: 2,
+  query_types: ['A', 'AAAA'],
+  release_count: 2,
+  cluster_count: 1,
+  namespace_count: 1,
+  workload_count: 1,
+  pod_count: 2,
+  container_count: 1,
+}
 const inventoryItem = {
   id: inventoryItemId,
   project_id: project.id,
@@ -828,6 +848,66 @@ export async function mockApi(page: Page, role: 'owner' | 'member' = 'owner') {
           { kind: 'syscall', item_count: 1, occurrence_count: 60 },
           { kind: 'inbound_endpoint', item_count: 1, occurrence_count: 18 },
         ],
+      })
+    if (path === `${inventoryBase}/dns-groups/distribution`)
+      return json(route, {
+        total_group_count: 1,
+        total_observation_count: 30,
+        entries: [{ group: dnsGroup }],
+        other: null,
+      })
+    if (path === `${inventoryBase}/dns-groups`)
+      return json(route, {
+        items: [dnsGroup],
+        next_cursor: null,
+        total_group_count: 1,
+        total_observation_count: 30,
+      })
+    if (path === `${inventoryBase}/dns-groups/${dnsGroupToken}/variants`)
+      return json(route, {
+        items: [
+          {
+            item_id: dnsVariantItemId,
+            name: 's3.twcstorage.ru',
+            query_type: 'A',
+            first_seen_at: dnsGroup.first_seen_at,
+            last_seen_at: dnsGroup.last_seen_at,
+            observation_count: 18,
+          },
+          {
+            item_id: '10000000-0000-4000-8000-000000000003',
+            name: 's3.twcstorage.ru.production.svc.cluster.local',
+            query_type: 'AAAA',
+            first_seen_at: dnsGroup.first_seen_at,
+            last_seen_at: dnsGroup.last_seen_at,
+            observation_count: 12,
+          },
+        ],
+        next_cursor: null,
+      })
+    if (path === `${inventoryBase}/${dnsVariantItemId}`)
+      return json(route, {
+        ...inventoryDetail,
+        id: dnsVariantItemId,
+        inventory_kind: 'domain',
+        semantic_summary: { name: 's3.twcstorage.ru', query_type: 'A' },
+      })
+    if (path === `${inventoryBase}/${dnsVariantItemId}/releases`)
+      return json(route, {
+        items: [
+          {
+            release_id: targetRelease.id,
+            release_display_name: targetRelease.display_name,
+            version: targetRelease.version,
+            deployed_at: targetRelease.deployed_at,
+            presence: 'observed',
+            occurrence_count: 18,
+            first_seen_at: dnsGroup.first_seen_at,
+            last_seen_at: dnsGroup.last_seen_at,
+            release_evidence_count: 55,
+          },
+        ],
+        next_cursor: null,
       })
     if (path === `${inventoryBase}/${inventoryItemId}/user-label`) {
       if (route.request().method() === 'PUT') {

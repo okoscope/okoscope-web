@@ -1,6 +1,9 @@
 import { queryOptions } from '@tanstack/react-query'
 import { ApiClientError, type ApiClient } from '../../shared/api/client'
 import type {
+  DnsGroupDistribution,
+  DnsGroupPage,
+  DnsGroupVariantPage,
   InventoryFacet,
   InventoryDistribution,
   InventoryFacetPage,
@@ -32,8 +35,27 @@ const query = (input: Record<string, string | number | boolean | undefined>) => 
   )
   return params.toString() ? `?${params}` : ''
 }
+const dnsGroupSearch = (search: InventorySearch) => {
+  const scope = summarySearch(search)
+  return {
+    release_id: scope.release_id,
+    cluster_id: scope.cluster_id,
+    namespace: scope.namespace,
+    workload_kind: scope.workload_kind,
+    workload_name: scope.workload_name,
+    container_name: scope.container_name,
+    observed_from: scope.observed_from,
+    observed_to: scope.observed_to,
+    search: scope.search,
+    verdict: scope.verdict,
+    suppressed: scope.suppressed,
+    evaluation_pending: scope.evaluation_pending,
+  }
+}
 const base = (projectId: string, applicationId: string) =>
   `/api/v1/projects/${encodeURIComponent(projectId)}/applications/${encodeURIComponent(applicationId)}/runtime-inventory`
+const dnsBase = (projectId: string, applicationId: string) =>
+  `${base(projectId, applicationId)}/dns-groups`
 
 const userLabelPath = (projectId: string, applicationId: string, itemId: string) =>
   `${base(projectId, applicationId)}/${encodeURIComponent(itemId)}/user-label`
@@ -63,6 +85,35 @@ export const deleteInventoryUserLabel = (
   )
 
 export const inventoryKeys = {
+  dnsDistribution: (projectId: string, applicationId: string, search: InventorySearch) =>
+    [
+      'runtime-inventory-dns-distribution',
+      projectId,
+      applicationId,
+      normalized(dnsGroupSearch(search)),
+    ] as const,
+  dnsList: (projectId: string, applicationId: string, search: InventorySearch) =>
+    [
+      'runtime-inventory-dns-list',
+      projectId,
+      applicationId,
+      normalized({ ...dnsGroupSearch(search), cursor: search.cursor }),
+    ] as const,
+  dnsVariants: (
+    projectId: string,
+    applicationId: string,
+    groupToken: string,
+    search: InventorySearch,
+    cursor?: string,
+  ) =>
+    [
+      'runtime-inventory-dns-variants',
+      projectId,
+      applicationId,
+      groupToken,
+      normalized(dnsGroupSearch(search)),
+      cursor ?? null,
+    ] as const,
   summary: (projectId: string, applicationId: string, search: InventorySearch) =>
     [
       'runtime-inventory-summary',
@@ -116,6 +167,53 @@ export const inventoryKeys = {
       cursor ?? null,
     ] as const,
 }
+
+export const dnsGroupDistributionOptions = (
+  api: ApiClient,
+  projectId: string,
+  applicationId: string,
+  search: InventorySearch,
+) =>
+  queryOptions({
+    queryKey: inventoryKeys.dnsDistribution(projectId, applicationId, search),
+    queryFn: ({ signal }) =>
+      api.get<DnsGroupDistribution>(
+        `${dnsBase(projectId, applicationId)}/distribution${query({ ...dnsGroupSearch(search), limit: INVENTORY_DISTRIBUTION_SIZE })}`,
+        { protected: true, signal },
+      ),
+  })
+
+export const dnsGroupListOptions = (
+  api: ApiClient,
+  projectId: string,
+  applicationId: string,
+  search: InventorySearch,
+) =>
+  queryOptions({
+    queryKey: inventoryKeys.dnsList(projectId, applicationId, search),
+    queryFn: ({ signal }) =>
+      api.get<DnsGroupPage>(
+        `${dnsBase(projectId, applicationId)}${query({ ...dnsGroupSearch(search), cursor: search.cursor, limit: INVENTORY_PAGE_SIZE })}`,
+        { protected: true, signal },
+      ),
+  })
+
+export const dnsGroupVariantsOptions = (
+  api: ApiClient,
+  projectId: string,
+  applicationId: string,
+  groupToken: string,
+  search: InventorySearch,
+  cursor?: string,
+) =>
+  queryOptions({
+    queryKey: inventoryKeys.dnsVariants(projectId, applicationId, groupToken, search, cursor),
+    queryFn: ({ signal }) =>
+      api.get<DnsGroupVariantPage>(
+        `${dnsBase(projectId, applicationId)}/${encodeURIComponent(groupToken)}/variants${query({ ...dnsGroupSearch(search), search: undefined, cursor, limit: INVENTORY_PAGE_SIZE })}`,
+        { protected: true, signal },
+      ),
+  })
 
 export const inventorySummaryOptions = (
   api: ApiClient,

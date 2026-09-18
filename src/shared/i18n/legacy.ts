@@ -10,6 +10,10 @@ export const legacyRussian: Record<string, string> = {
   'First Ready': 'Первая готовность',
   Ended: 'Завершён',
   Pods: 'Поды',
+  Clusters: 'Кластеры',
+  Namespaces: 'Пространства имён',
+  Workloads: 'Нагрузки',
+  Containers: 'Контейнеры',
   'Ready Pods': 'Готовые поды',
   of: 'из',
   'workload Ready Pods': 'готовых подов workload',
@@ -217,6 +221,27 @@ export const legacyRussian: Record<string, string> = {
   'DNS request': 'DNS-запрос',
   'dns request': 'DNS-запрос',
   'DNS response': 'DNS-ответ',
+  'Observed DNS destination': 'Наблюдаемое DNS-назначение',
+  'Exact DNS resolution variants': 'Точные варианты DNS-разрешения',
+  'DNS resolution variants (': 'Варианты DNS-разрешения (',
+  'Loading DNS resolution variants…': 'Загрузка вариантов DNS-разрешения…',
+  'Could not load DNS resolution variants.': 'Не удалось загрузить варианты DNS-разрешения.',
+  'No exact DNS evidence remains in the selected scope.':
+    'В выбранной области не осталось точных DNS-наблюдений.',
+  'Next variants': 'Следующие варианты',
+  'First variants': 'Первые варианты',
+  'Query types:': 'Типы запросов:',
+  'Process:': 'Процесс:',
+  'Kubernetes DNS search expansion generated resolver questions for this destination. Exact questions remain available below.':
+    'Поисковое расширение DNS в Kubernetes создало варианты запросов резолвера для этого назначения. Точные запросы доступны ниже.',
+  'Most observed DNS destinations': 'Наиболее наблюдаемые DNS-назначения',
+  'Other observed DNS destinations': 'Прочие наблюдаемые DNS-назначения',
+  'Logical DNS destination count unavailable': 'Число логических DNS-назначений недоступно',
+  'No DNS destinations to visualize': 'Нет DNS-назначений для визуализации',
+  'No recorded DNS observations match the selected filters.':
+    'Нет записанных DNS-наблюдений, соответствующих выбранным фильтрам.',
+  'matching recorded DNS observations across the complete filtered result, not only this list page.':
+    'соответствующих записанных DNS-наблюдений во всём отфильтрованном результате, а не только на этой странице.',
   'System call': 'Системный вызов',
   'Observed activity': 'Наблюдаемое действие',
   'Opened port': 'Открыт порт',
@@ -790,6 +815,12 @@ function localize(value: string, locale: Locale): string {
   const uniqueIdentities = value.match(/^(\d[\d\s.,]*) unique identities$/)
   if (uniqueIdentities)
     return `${uniqueIdentities[1]} ${russianCountNoun(uniqueIdentities[1]!, 'уникальная идентичность', 'уникальные идентичности', 'уникальных идентичностей')}`
+  const dnsVariants = value.match(/^(\d[\d\s.,]*) DNS resolution variants$/)
+  if (dnsVariants)
+    return `${dnsVariants[1]} ${russianCountNoun(dnsVariants[1]!, 'вариант DNS-разрешения', 'варианта DNS-разрешения', 'вариантов DNS-разрешения')}`
+  const logicalDnsDestinations = value.match(/^(\d[\d\s.,]*) logical DNS destinations$/)
+  if (logicalDnsDestinations)
+    return `${logicalDnsDestinations[1]} ${russianCountNoun(logicalDnsDestinations[1]!, 'логическое DNS-назначение', 'логических DNS-назначения', 'логических DNS-назначений')}`
   const observedBehavior = value.match(/^(Most|Other) observed (.+)$/)
   if (observedBehavior)
     return `${observedBehavior[1] === 'Most' ? 'Наиболее наблюдаемые' : 'Прочие наблюдаемые'} ${localize(observedBehavior[2]!, locale)}`

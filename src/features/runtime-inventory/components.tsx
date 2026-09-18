@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
+import { useQuery } from '@tanstack/react-query'
 import { Cpu } from 'lucide-react'
-import type { ChangeEvent } from 'react'
+import { useState, type ChangeEvent } from 'react'
 import { formatCount, formatTimestamp } from '../tenant/format'
 import {
   EndpointValue,
@@ -10,6 +11,7 @@ import {
   NetworkScopeBadge,
 } from '../observability/components'
 import type {
+  DnsLogicalGroup,
   InventoryDestinationIdentity,
   InventoryDomainIdentity,
   InventoryFacet,
@@ -29,6 +31,7 @@ import type {
   InventorySyscallIdentity,
   Release,
 } from '../../shared/api/types'
+import { useApi } from '../../shared/api/context'
 import { Button } from '../../shared/ui/button'
 import { Card } from '../../shared/ui/card'
 import type { InventorySearch } from './url-state'
@@ -40,6 +43,7 @@ import {
   InventoryUserLabelEditor,
   InventoryUserLabelHeading,
 } from './user-label'
+import { dnsGroupVariantsOptions } from './queries'
 
 function KubernetesSourceIcon() {
   return (
@@ -378,6 +382,165 @@ export function InventoryList({
               </div>
             ))}
           </div>
+        </Card>
+      ))}
+    </div>
+  )
+}
+
+function DnsVariantList({
+  group,
+  projectId,
+  applicationId,
+  search,
+}: {
+  group: DnsLogicalGroup
+  projectId: string
+  applicationId: string
+  search: InventorySearch
+}) {
+  const api = useApi()
+  const [open, setOpen] = useState(false)
+  const [cursor, setCursor] = useState<string>()
+  const variants = useQuery({
+    ...dnsGroupVariantsOptions(api, projectId, applicationId, group.group_token, search, cursor),
+    enabled: open,
+  })
+  return (
+    <details
+      className="mt-5 border-t border-slate-700 pt-4"
+      onToggle={(event) => setOpen(event.currentTarget.open)}
+    >
+      <summary className="cursor-pointer font-medium text-cyan-200">
+        DNS resolution variants ({formatCount(group.variant_count)})
+      </summary>
+      {open && variants.isPending ? (
+        <p className="mt-3 text-sm text-slate-400">Loading DNS resolution variants…</p>
+      ) : variants.isError ? (
+        <div className="mt-3" role="alert">
+          <p className="text-sm text-rose-200">Could not load DNS resolution variants.</p>
+          <Button className="mt-2" variant="outline" onClick={() => void variants.refetch()}>
+            Retry
+          </Button>
+        </div>
+      ) : variants.data?.items.length === 0 ? (
+        <p className="mt-3 text-sm text-slate-400">
+          No exact DNS evidence remains in the selected scope.
+        </p>
+      ) : (
+        <>
+          <ul className="mt-3 divide-y divide-slate-800" aria-label="Exact DNS resolution variants">
+            {variants.data?.items.map((variant) => (
+              <li
+                key={variant.item_id}
+                className="flex flex-wrap items-center justify-between gap-3 py-3"
+              >
+                <span className="min-w-0">
+                  <span className="block break-all font-mono">
+                    {variant.name} ({variant.query_type})
+                  </span>
+                  <span className="text-xs text-slate-400">
+                    {formatCount(variant.observation_count)} DNS observations
+                  </span>
+                </span>
+                <Button asChild variant="outline">
+                  <Link
+                    to="/projects/$projectId/applications/$applicationId/runtime-inventory/$itemId"
+                    params={{ projectId, applicationId, itemId: variant.item_id }}
+                    search={{ evidence: 'releases' }}
+                  >
+                    Observation history
+                  </Link>
+                </Button>
+              </li>
+            ))}
+          </ul>
+          {variants.data?.next_cursor && (
+            <Button
+              className="mt-3"
+              variant="outline"
+              onClick={() => setCursor(variants.data?.next_cursor ?? undefined)}
+            >
+              Next variants
+            </Button>
+          )}
+          {cursor && (
+            <Button className="mt-3 ml-2" variant="ghost" onClick={() => setCursor(undefined)}>
+              First variants
+            </Button>
+          )}
+        </>
+      )}
+    </details>
+  )
+}
+
+export function DnsGroupList({
+  groups,
+  projectId,
+  applicationId,
+  search,
+  view = 'list',
+}: {
+  groups: DnsLogicalGroup[]
+  projectId: string
+  applicationId: string
+  search: InventorySearch
+  view?: 'grid' | 'list'
+}) {
+  return (
+    <div data-view={view} className={view === 'grid' ? 'grid gap-5 lg:grid-cols-2' : 'space-y-5'}>
+      {groups.map((group) => (
+        <Card key={group.group_token} className="inventory-item-card">
+          <p className="eyebrow">Observed DNS destination</p>
+          <h2 className="mt-2 break-all font-mono text-lg font-semibold">{group.display_name}</h2>
+          <p className="mt-2 break-all text-sm text-slate-400">
+            Process: <span className="font-mono">{group.process_command}</span>
+          </p>
+          <p className="mt-2 text-sm text-slate-300">
+            Query types: {group.query_types.join(', ')} ·{' '}
+            {`${formatCount(group.variant_count)} DNS resolution variants`}
+          </p>
+          {group.grouping_reason === 'kubernetes_search_expansion' && (
+            <p className="mt-2 rounded-md border border-cyan-800/70 bg-cyan-950/30 px-3 py-2 text-sm text-cyan-100">
+              Kubernetes DNS search expansion generated resolver questions for this destination.
+              Exact questions remain available below.
+            </p>
+          )}
+          <dl className="details mt-5 text-sm">
+            <dt>First observed</dt>
+            <dd>{formatTimestamp(group.first_seen_at)}</dd>
+            <dt>Last observed</dt>
+            <dd>{formatTimestamp(group.last_seen_at)}</dd>
+            <dt>DNS observations</dt>
+            <dd>{formatCount(group.observation_count)}</dd>
+          </dl>
+          <div className="inventory-item-metrics mt-5 grid grid-cols-3 border-t pt-4 text-sm sm:grid-cols-6">
+            {[
+              ['Releases', group.release_count],
+              ['Clusters', group.cluster_count],
+              ['Namespaces', group.namespace_count],
+              ['Workloads', group.workload_count],
+              ['Pods', group.pod_count],
+              ['Containers', group.container_count],
+            ].map(([label, value]) => (
+              <div
+                key={String(label)}
+                className="min-w-0 border-l px-3 first:border-l-0 first:pl-0"
+              >
+                <strong className="block text-lg leading-none text-slate-100">
+                  {formatCount(Number(value))}
+                </strong>
+                <span className="mt-1.5 block truncate text-xs text-slate-400">{label}</span>
+              </div>
+            ))}
+          </div>
+          <DnsVariantList
+            group={group}
+            projectId={projectId}
+            applicationId={applicationId}
+            search={search}
+          />
         </Card>
       ))}
     </div>

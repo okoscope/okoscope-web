@@ -7,6 +7,13 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.6] - 2026-09-18
+
+### Changed
+
+- Present Application inventory domains as logical DNS destinations with expandable exact DNS
+  resolution variants, while preserving raw evidence and policy identities.
+
 ## [0.3.3] - 2026-09-17
 
 ### Fixed
@@ -79,7 +86,8 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Agent freshness now follows the server-provided bound instead of a
   client-owned inactivity threshold.
 
-[Unreleased]: https://github.com/okoscope/okoscope-web/compare/v0.3.3...HEAD
+[Unreleased]: https://github.com/okoscope/okoscope-web/compare/v0.3.6...HEAD
+[0.3.6]: https://github.com/okoscope/okoscope-web/compare/v0.3.5...v0.3.6
 [0.3.3]: https://github.com/okoscope/okoscope-web/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/okoscope/okoscope-web/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/okoscope/okoscope-web/compare/v0.2.3...v0.3.1

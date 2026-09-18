@@ -748,6 +748,67 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/{project_id}/applications/{application_id}/runtime-inventory/dns-groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+                application_id: components["parameters"]["ApplicationId"];
+            };
+            cookie?: never;
+        };
+        /** @description Returns logical DNS presentation groups. Exact domain inventory identities and evidence remain available through the existing runtime-inventory routes. */
+        get: operations["listApplicationRuntimeInventoryDnsGroups"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/applications/{application_id}/runtime-inventory/dns-groups/distribution": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+                application_id: components["parameters"]["ApplicationId"];
+            };
+            cookie?: never;
+        };
+        /** @description Returns a complete-scope top-N logical DNS distribution whose entries and other bucket reconcile with the complete logical-group and exact-observation totals. */
+        get: operations["getApplicationRuntimeInventoryDnsGroupDistribution"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/applications/{application_id}/runtime-inventory/dns-groups/{group_token}/variants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+                application_id: components["parameters"]["ApplicationId"];
+                group_token: string;
+            };
+            cookie?: never;
+        };
+        /** @description Returns bounded exact DNS identities contributing to one logical group. item_id addresses the unchanged exact inventory detail and history routes. */
+        get: operations["listApplicationRuntimeInventoryDnsGroupVariants"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{project_id}/applications/{application_id}/runtime-inventory/distribution": {
         parameters: {
             query?: never;
@@ -4314,6 +4375,78 @@ export interface components {
         };
         /** @enum {string} */
         InventoryKind: "process" | "destination" | "domain" | "syscall" | "inbound_endpoint" | "file_activity" | "lifecycle";
+        /** @enum {string} */
+        DnsGroupingReason: "canonical_name" | "kubernetes_search_expansion";
+        /** @enum {string} */
+        DnsGroupingConfidence: "exact" | "high";
+        DnsLogicalGroup: {
+            /** @description Deterministic opaque token bound to the tenant */
+            group_token: string;
+            display_name: string;
+            process_command: string;
+            grouping_reason: components["schemas"]["DnsGroupingReason"];
+            confidence: components["schemas"]["DnsGroupingConfidence"];
+            first_seen_at: components["schemas"]["Timestamp"];
+            last_seen_at: components["schemas"]["Timestamp"];
+            /** Format: int64 */
+            observation_count: number;
+            /** Format: int64 */
+            variant_count: number;
+            query_types: ("A" | "AAAA")[];
+            /** Format: int64 */
+            release_count: number;
+            /** Format: int64 */
+            cluster_count: number;
+            /** Format: int64 */
+            namespace_count: number;
+            /** Format: int64 */
+            workload_count: number;
+            /** Format: int64 */
+            pod_count: number;
+            /** Format: int64 */
+            container_count: number;
+        };
+        DnsGroupPage: {
+            coverage: components["schemas"]["RuntimeRetentionCoverage"];
+            items: components["schemas"]["DnsLogicalGroup"][];
+            next_cursor: string | null;
+            /** Format: int64 */
+            total_group_count: number;
+            /** Format: int64 */
+            total_observation_count: number;
+        };
+        DnsGroupVariant: {
+            item_id: components["schemas"]["Uuid"];
+            name: string;
+            /** @enum {string} */
+            query_type: "A" | "AAAA";
+            first_seen_at: components["schemas"]["Timestamp"];
+            last_seen_at: components["schemas"]["Timestamp"];
+            /** Format: int64 */
+            observation_count: number;
+        };
+        DnsGroupVariantPage: {
+            items: components["schemas"]["DnsGroupVariant"][];
+            next_cursor: string | null;
+        };
+        DnsGroupDistributionOther: {
+            /** Format: int64 */
+            group_count: number;
+            /** Format: int64 */
+            observation_count: number;
+        };
+        DnsGroupDistributionEntry: {
+            group: components["schemas"]["DnsLogicalGroup"];
+        };
+        DnsGroupDistribution: {
+            coverage: components["schemas"]["RuntimeRetentionCoverage"];
+            /** Format: int64 */
+            total_group_count: number;
+            /** Format: int64 */
+            total_observation_count: number;
+            entries: components["schemas"]["DnsGroupDistributionEntry"][];
+            other: components["schemas"]["DnsGroupDistributionOther"] | null;
+        };
         /**
          * @description Evidence-qualified state; not_observed does not prove behavior cannot occur.
          * @enum {string}
@@ -5094,6 +5227,33 @@ export interface components {
                 "application/json": components["schemas"]["InventorySummary"];
             };
         };
+        /** @description Bounded logical DNS presentation-group page */
+        DnsGroupPage: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["DnsGroupPage"];
+            };
+        };
+        /** @description Bounded exact DNS resolution variants for a logical group */
+        DnsGroupVariantPage: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["DnsGroupVariantPage"];
+            };
+        };
+        /** @description Complete-scope bounded logical DNS distribution */
+        DnsGroupDistribution: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["DnsGroupDistribution"];
+            };
+        };
         /** @description Complete-scope bounded runtime inventory distribution */
         InventoryDistribution: {
             headers: {
@@ -5418,6 +5578,18 @@ export interface components {
         ApplicationId: string;
         CredentialId: string;
         InventoryItemId: string;
+        DnsGroupReleaseId: string;
+        DnsGroupClusterId: string;
+        DnsGroupNamespace: string;
+        DnsGroupWorkloadKind: string;
+        DnsGroupWorkloadName: string;
+        DnsGroupContainerName: string;
+        DnsGroupObservedFrom: string;
+        DnsGroupObservedTo: string;
+        DnsGroupSearch: string;
+        DnsGroupVerdict: components["schemas"]["PolicyVerdict"];
+        DnsGroupSuppressed: boolean;
+        DnsGroupEvaluationPending: boolean;
         PolicyId: string;
         GroupId: string;
         ReleaseId: string;
@@ -6768,6 +6940,104 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["InventorySummary"];
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    listApplicationRuntimeInventoryDnsGroups: {
+        parameters: {
+            query?: {
+                release_id?: components["parameters"]["DnsGroupReleaseId"];
+                cluster_id?: components["parameters"]["DnsGroupClusterId"];
+                namespace?: components["parameters"]["DnsGroupNamespace"];
+                workload_kind?: components["parameters"]["DnsGroupWorkloadKind"];
+                workload_name?: components["parameters"]["DnsGroupWorkloadName"];
+                container_name?: components["parameters"]["DnsGroupContainerName"];
+                observed_from?: components["parameters"]["DnsGroupObservedFrom"];
+                observed_to?: components["parameters"]["DnsGroupObservedTo"];
+                search?: components["parameters"]["DnsGroupSearch"];
+                verdict?: components["parameters"]["DnsGroupVerdict"];
+                suppressed?: components["parameters"]["DnsGroupSuppressed"];
+                evaluation_pending?: components["parameters"]["DnsGroupEvaluationPending"];
+                cursor?: string;
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+                application_id: components["parameters"]["ApplicationId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["DnsGroupPage"];
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    getApplicationRuntimeInventoryDnsGroupDistribution: {
+        parameters: {
+            query?: {
+                release_id?: components["parameters"]["DnsGroupReleaseId"];
+                cluster_id?: components["parameters"]["DnsGroupClusterId"];
+                namespace?: components["parameters"]["DnsGroupNamespace"];
+                workload_kind?: components["parameters"]["DnsGroupWorkloadKind"];
+                workload_name?: components["parameters"]["DnsGroupWorkloadName"];
+                container_name?: components["parameters"]["DnsGroupContainerName"];
+                observed_from?: components["parameters"]["DnsGroupObservedFrom"];
+                observed_to?: components["parameters"]["DnsGroupObservedTo"];
+                search?: components["parameters"]["DnsGroupSearch"];
+                verdict?: components["parameters"]["DnsGroupVerdict"];
+                suppressed?: components["parameters"]["DnsGroupSuppressed"];
+                evaluation_pending?: components["parameters"]["DnsGroupEvaluationPending"];
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+                application_id: components["parameters"]["ApplicationId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["DnsGroupDistribution"];
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    listApplicationRuntimeInventoryDnsGroupVariants: {
+        parameters: {
+            query?: {
+                release_id?: components["parameters"]["DnsGroupReleaseId"];
+                cluster_id?: components["parameters"]["DnsGroupClusterId"];
+                namespace?: components["parameters"]["DnsGroupNamespace"];
+                workload_kind?: components["parameters"]["DnsGroupWorkloadKind"];
+                workload_name?: components["parameters"]["DnsGroupWorkloadName"];
+                container_name?: components["parameters"]["DnsGroupContainerName"];
+                observed_from?: components["parameters"]["DnsGroupObservedFrom"];
+                observed_to?: components["parameters"]["DnsGroupObservedTo"];
+                verdict?: components["parameters"]["DnsGroupVerdict"];
+                suppressed?: components["parameters"]["DnsGroupSuppressed"];
+                evaluation_pending?: components["parameters"]["DnsGroupEvaluationPending"];
+                cursor?: string;
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+                application_id: components["parameters"]["ApplicationId"];
+                group_token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["DnsGroupVariantPage"];
             400: components["responses"]["Error"];
             401: components["responses"]["Error"];
             404: components["responses"]["Error"];

@@ -68,9 +68,28 @@ test('explores Application Activity scope, views, cursors, and observation histo
 
   await page.getByRole('button', { name: /Domains/ }).click()
   await expect(page).toHaveURL(/kind=domain/)
-  await expect(page.getByRole('button', { name: /api\.example\.com \(A\)/ })).toBeVisible()
-  await page.getByRole('button', { name: /api\.example\.com \(A\)/ }).click()
-  await expect(page).toHaveURL(/identity_token=domain-identity/)
+  await expect(page.getByRole('heading', { name: 's3.twcstorage.ru' })).toBeVisible()
+  await expect(page.getByText('Query types: A, AAAA · 2 DNS resolution variants')).toBeVisible()
+  await expect(page.getByText(/Kubernetes DNS search expansion generated/)).toBeVisible()
+  await page.getByText('DNS resolution variants (2)').click()
+  await expect(page.getByRole('list', { name: 'Exact DNS resolution variants' })).toContainText(
+    's3.twcstorage.ru.production.svc.cluster.local (AAAA)',
+  )
+  const exactDnsHistory = page.getByRole('link', { name: 'Observation history' }).first()
+  await expect(exactDnsHistory).toHaveAttribute(
+    'href',
+    /runtime-inventory\/10000000-0000-4000-8000-000000000002\?evidence=releases/,
+  )
+  await exactDnsHistory.click()
+  await expect(page).toHaveURL(
+    /runtime-inventory\/10000000-0000-4000-8000-000000000002\?evidence=releases/,
+  )
+  await expect(page.getByText('s3.twcstorage.ru (A)')).toBeVisible()
+  await page
+    .getByRole('navigation', { name: 'Breadcrumb' })
+    .getByRole('link', { name: 'Application Activity' })
+    .click()
+  await page.getByText('Advanced filters').click()
   await page.getByRole('button', { name: /Process launches/ }).click()
   await expect(page.getByRole('button', { name: /<img src=x onerror=alert/ })).toBeVisible()
   await expect(page.locator('img')).toHaveCount(0)
@@ -126,6 +145,100 @@ test('explores Application Activity scope, views, cursors, and observation histo
   await expect(page).toHaveURL(/cursor=terminal/)
   await page.getByRole('button', { name: 'Return to first page' }).first().click()
   await expect(page).not.toHaveURL(/cursor=/)
+})
+
+test('presents grouped DNS evidence accessibly in Russian at a narrow viewport', async ({
+  page,
+}) => {
+  const { project, application } = await mockApi(page)
+  await page.setViewportSize({ width: 375, height: 800 })
+  await page.goto(
+    `/projects/${project.id}/applications/${application.id}/runtime-inventory?kind=domain`,
+  )
+  await authenticate(page)
+  await page.evaluate(() => localStorage.setItem('okoscope.locale', 'ru'))
+  await page.reload()
+
+  await expect(page.getByRole('heading', { name: 's3.twcstorage.ru' })).toBeVisible()
+  await expect(page.getByText('Типы запросов: A, AAAA · 2 варианта DNS-разрешения')).toBeVisible()
+  await expect(page.getByText('Кластеры')).toBeVisible()
+  await expect(page.getByText('Пространства имён')).toBeVisible()
+  await expect(page.getByText('Нагрузки', { exact: true })).toBeVisible()
+  await expect(page.getByText('Контейнеры')).toBeVisible()
+  await expect(page.getByText(/Clusters|Namespaces|Workloads|Containers/)).toHaveCount(0)
+  await page.getByText('Варианты DNS-разрешения (2)').click()
+  await expect(page.getByRole('list', { name: 'Точные варианты DNS-разрешения' })).toBeVisible()
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+})
+
+test('shows grouped DNS empty states', async ({ page }) => {
+  const { project, application } = await mockApi(page)
+  await page.route('**/runtime-inventory/dns-groups/distribution**', (route) =>
+    route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({
+        total_group_count: 0,
+        total_observation_count: 0,
+        entries: [],
+        other: null,
+      }),
+    }),
+  )
+  await page.route(/\/runtime-inventory\/dns-groups(?:\?.*)?$/, (route) =>
+    route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({
+        items: [],
+        next_cursor: null,
+        total_group_count: 0,
+        total_observation_count: 0,
+      }),
+    }),
+  )
+  await page.goto(
+    `/projects/${project.id}/applications/${application.id}/runtime-inventory?kind=domain`,
+  )
+  await authenticate(page)
+
+  await expect(
+    page.getByRole('heading', { name: 'No DNS destinations to visualize' }),
+  ).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'No activity observed' })).toBeVisible()
+})
+
+test('shows grouped DNS request errors without falling back to exact domain APIs', async ({
+  page,
+}) => {
+  const { project, application } = await mockApi(page)
+  let exactDomainRequests = 0
+  page.on('request', (request) => {
+    const url = new URL(request.url())
+    if (
+      url.pathname.startsWith('/api/v1/') &&
+      url.pathname.endsWith('/runtime-inventory') &&
+      url.searchParams.get('kind') === 'domain'
+    )
+      exactDomainRequests += 1
+  })
+  await page.route('**/runtime-inventory/dns-groups**', (route) =>
+    route.fulfill({
+      status: 500,
+      contentType: 'application/json',
+      body: JSON.stringify({ error: 'internal', message: 'DNS groups unavailable' }),
+    }),
+  )
+  await page.goto(
+    `/projects/${project.id}/applications/${application.id}/runtime-inventory?kind=domain`,
+  )
+  await authenticate(page)
+
+  await expect(
+    page.getByRole('heading', { name: 'Could not load activity distribution' }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Could not load Application Activity' }),
+  ).toBeVisible()
+  expect(exactDomainRequests).toBe(0)
 })
 
 test('Application Activity is keyboard accessible at a narrow viewport', async ({ page }) => {

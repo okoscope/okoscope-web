@@ -150,6 +150,10 @@ function RuntimeInventoryPage() {
     setFacetCursors({})
     void navigate({ search: changeInventoryScope(search, updates) })
   }
+  const setDnsGroup = (name?: string) => {
+    setSearchText(name ?? '')
+    setScope({ search: name })
+  }
   const clearCursor = () => {
     const next = { ...search }
     delete next.cursor
@@ -262,7 +266,11 @@ function RuntimeInventoryPage() {
               />
             )}
             {search.kind === 'domain' && dnsDistribution.data ? (
-              <DnsGroupDistributionView distribution={dnsDistribution.data} />
+              <DnsGroupDistributionView
+                distribution={dnsDistribution.data}
+                selectedName={search.search}
+                onGroup={setDnsGroup}
+              />
             ) : distribution.data ? (
               <TopBehaviorDistribution
                 distribution={distribution.data}

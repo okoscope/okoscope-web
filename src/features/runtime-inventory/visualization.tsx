@@ -5,7 +5,7 @@ import type {
   InventorySummary,
 } from '../../shared/api/types'
 import { Card } from '../../shared/ui/card'
-import { HorizontalBars } from '../../shared/ui/horizontal-bars'
+import { HorizontalBars, type HorizontalBarItem } from '../../shared/ui/horizontal-bars'
 import { formatCount } from '../tenant/format'
 import {
   formatEndpoint,
@@ -103,15 +103,23 @@ export function InventoryKindDistribution({
   )
 }
 
-export function DnsGroupDistributionView({ distribution }: { distribution: DnsGroupDistribution }) {
-  const entries = distribution.entries.map(({ group }) => ({
+export function DnsGroupDistributionView({
+  distribution,
+  selectedName,
+  onGroup,
+}: {
+  distribution: DnsGroupDistribution
+  selectedName?: string | undefined
+  onGroup: (name?: string) => void
+}) {
+  const entries: HorizontalBarItem[] = distribution.entries.map(({ group }) => ({
     id: group.group_token,
     label: <span className="break-all font-mono">{group.display_name}</span>,
     accessibleLabel: group.display_name,
     value: group.observation_count,
-    selected: false,
+    selected: group.display_name === selectedName,
     meta: `${formatCount(group.variant_count)} DNS resolution variants`,
-    onSelect: () => undefined,
+    onSelect: () => onGroup(group.display_name === selectedName ? undefined : group.display_name),
   }))
   if (distribution.other)
     entries.push({
@@ -121,7 +129,7 @@ export function DnsGroupDistributionView({ distribution }: { distribution: DnsGr
       value: distribution.other.observation_count,
       selected: false,
       meta: `${formatCount(distribution.other.group_count)} logical DNS destinations`,
-      onSelect: () => undefined,
+      onSelect: undefined,
     })
   return (
     <Card className="h-full">

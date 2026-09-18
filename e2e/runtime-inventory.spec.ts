@@ -171,6 +171,36 @@ test('presents grouped DNS evidence accessibly in Russian at a narrow viewport',
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
 })
 
+test('selects and clears a DNS destination without debounce reverting the route', async ({
+  page,
+}) => {
+  const { project, application } = await mockApi(page)
+  await page.goto(
+    `/projects/${project.id}/applications/${application.id}/runtime-inventory?kind=domain`,
+  )
+  await authenticate(page)
+
+  const destination = page.getByRole('button', {
+    name: /s3\.twcstorage\.ru: 30 observations/,
+  })
+  const search = page.getByLabel('Search application activity')
+
+  await expect(destination).toHaveAttribute('aria-pressed', 'false')
+  await destination.click()
+  await expect(destination).toHaveAttribute('aria-pressed', 'true')
+  await expect(search).toHaveValue('s3.twcstorage.ru')
+  await expect(page).toHaveURL(/search=s3(?:\.|%2E)twcstorage(?:\.|%2E)ru/)
+
+  await page.waitForTimeout(350)
+  await expect(destination).toHaveAttribute('aria-pressed', 'true')
+  await expect(search).toHaveValue('s3.twcstorage.ru')
+  await expect(page).toHaveURL(/search=s3(?:\.|%2E)twcstorage(?:\.|%2E)ru/)
+
+  await destination.click()
+  await expect(search).toHaveValue('')
+  await expect(page).not.toHaveURL(/search=/)
+})
+
 test('shows grouped DNS empty states', async ({ page }) => {
   const { project, application } = await mockApi(page)
   await page.route('**/runtime-inventory/dns-groups/distribution**', (route) =>

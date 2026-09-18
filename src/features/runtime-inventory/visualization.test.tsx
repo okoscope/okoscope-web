@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import type {
+  DnsGroupDistribution,
   InventoryDistribution,
   InventoryLifecycleSemanticSummary,
   InventorySummary,
@@ -11,7 +12,11 @@ import {
   formatSignedCount,
   safePercentage,
 } from '../../shared/ui/horizontal-bars'
-import { InventoryKindDistribution, TopBehaviorDistribution } from './visualization'
+import {
+  DnsGroupDistributionView,
+  InventoryKindDistribution,
+  TopBehaviorDistribution,
+} from './visualization'
 
 const summary: InventorySummary = {
   coverage: { closed_before: null, history_expired_before: null, detail_scope: 'raw' },
@@ -30,6 +35,88 @@ const summary: InventorySummary = {
 }
 
 describe('data visualization presentation', () => {
+  it('selects a logical DNS destination, clears it on repeat, and keeps other inert', async () => {
+    const onGroup = vi.fn()
+    const user = userEvent.setup()
+    const distribution: DnsGroupDistribution = {
+      coverage: { closed_before: null, history_expired_before: null, detail_scope: 'raw' },
+      total_group_count: 3,
+      total_observation_count: 12,
+      entries: [
+        {
+          group: {
+            group_token: 'dns-group',
+            display_name: '<html-to-pdf.rstat.svc>',
+            process_command: 'dns',
+            grouping_reason: 'kubernetes_search_expansion',
+            confidence: 'high',
+            first_seen_at: '2026-09-17T10:00:00Z',
+            last_seen_at: '2026-09-18T10:00:00Z',
+            observation_count: 10,
+            variant_count: 3,
+            query_types: ['A', 'AAAA'],
+            release_count: 1,
+            cluster_count: 1,
+            namespace_count: 1,
+            workload_count: 1,
+            pod_count: 1,
+            container_count: 1,
+          },
+        },
+        {
+          group: {
+            group_token: 'other-dns-group',
+            display_name: 's3.twcstorage.ru',
+            process_command: 'dns',
+            grouping_reason: 'canonical_name',
+            confidence: 'high',
+            first_seen_at: '2026-09-17T10:00:00Z',
+            last_seen_at: '2026-09-18T10:00:00Z',
+            observation_count: 5,
+            variant_count: 1,
+            query_types: ['A'],
+            release_count: 1,
+            cluster_count: 1,
+            namespace_count: 1,
+            workload_count: 1,
+            pod_count: 1,
+            container_count: 1,
+          },
+        },
+      ],
+      other: { group_count: 2, observation_count: 2 },
+    }
+    const { container, rerender } = render(
+      <DnsGroupDistributionView distribution={distribution} onGroup={onGroup} />,
+    )
+
+    const destination = screen.getByRole('button', {
+      name: /<html-to-pdf\.rstat\.svc>: 10 observations/,
+    })
+    expect(destination).toHaveAttribute('aria-pressed', 'false')
+    expect(container.querySelector('html-to-pdf.rstat.svc')).toBeNull()
+    await user.click(destination)
+    expect(onGroup).toHaveBeenLastCalledWith('<html-to-pdf.rstat.svc>')
+
+    rerender(
+      <DnsGroupDistributionView
+        distribution={distribution}
+        selectedName="<html-to-pdf.rstat.svc>"
+        onGroup={onGroup}
+      />,
+    )
+    const selected = screen.getByRole('button', {
+      name: /<html-to-pdf\.rstat\.svc>: 10 observations/,
+    })
+    expect(selected).toHaveAttribute('aria-pressed', 'true')
+    expect(
+      screen.getByRole('button', { name: /s3\.twcstorage\.ru: 5 observations/ }),
+    ).toHaveAttribute('aria-pressed', 'false')
+    await user.click(selected)
+    expect(onGroup).toHaveBeenLastCalledWith(undefined)
+    expect(screen.getByText('Other observed DNS destinations').closest('button')).toBeNull()
+  })
+
   it('calculates safe percentages and signed counts', () => {
     expect(safePercentage(12, 126)).toBeCloseTo(9.523)
     expect(safePercentage(10, 0)).toBe(0)

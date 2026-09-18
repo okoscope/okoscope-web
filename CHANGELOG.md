@@ -7,6 +7,13 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.7] - 2026-09-18
+
+### Fixed
+
+- Restored selecting and clearing logical DNS destinations from the Application Activity
+  distribution while keeping the aggregate Other bucket non-interactive.
+
 ## [0.3.6] - 2026-09-18
 
 ### Changed
@@ -86,7 +93,8 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Agent freshness now follows the server-provided bound instead of a
   client-owned inactivity threshold.
 
-[Unreleased]: https://github.com/okoscope/okoscope-web/compare/v0.3.6...HEAD
+[Unreleased]: https://github.com/okoscope/okoscope-web/compare/v0.3.7...HEAD
+[0.3.7]: https://github.com/okoscope/okoscope-web/compare/v0.3.6...v0.3.7
 [0.3.6]: https://github.com/okoscope/okoscope-web/compare/v0.3.5...v0.3.6
 [0.3.3]: https://github.com/okoscope/okoscope-web/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/okoscope/okoscope-web/compare/v0.3.1...v0.3.2

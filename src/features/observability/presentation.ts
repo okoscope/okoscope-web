@@ -109,9 +109,9 @@ type ActivityPresentation = {
 
 const activityCopy: Record<InventoryKind, ActivityPresentation> = {
   process: {
-    itemLabel: 'Process launches',
-    countLabel: 'launches',
-    behaviorLabel: 'Process launch',
+    itemLabel: 'Executable executions',
+    countLabel: 'executions',
+    behaviorLabel: 'Executable execution',
   },
   destination: {
     itemLabel: 'Outbound connections',
@@ -155,7 +155,10 @@ export function getEventKindLabel(
     if ('operation' in summary && 'path' in summary) return `File ${String(summary.operation)}`
   }
   const known: Record<string, string> = {
-    ProcessExec: 'Process launch',
+    'process.start': 'Process created',
+    ProcessStart: 'Process created',
+    'process.exec': 'Executable executed',
+    ProcessExec: 'Executable executed',
     NetworkConnect: 'Outbound connection',
     NetworkDnsQuery: 'DNS request',
     NetworkDnsResponse: 'DNS response',

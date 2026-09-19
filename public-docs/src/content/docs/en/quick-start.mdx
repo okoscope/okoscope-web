@@ -178,9 +178,9 @@ kubectl -n okoscope-system logs daemonset/okoscope-agent-okoscope-agent --tail=1
 
 Once the agent is connected, generate activity in the selected Deployment.
 
-Process execution events describe new starts; processes that were already running do not produce past execution events retroactively.
+Process creation and executable-execution observations are not reconstructed retroactively. A process that was already running when observation began has no historical creation event; only a later observed `exec` produces an execution event.
 
-1. Send a normal application request or run a controlled test that starts a process or opens a network connection.
+1. Send a normal application request or run a controlled test that creates a process, executes a program, or opens a network connection.
 2. Wait for **Receiving runtime events** in the wizard. If it reports a missing workload or an access error, follow its diagnostic message.
 3. Click **Open application**, select a recent time window and find an event with the expected workload and timestamp in **Runtime groups** or **Inventory**.
 

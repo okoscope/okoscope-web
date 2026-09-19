@@ -7,6 +7,18 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Application Activity now distinguishes process creation, executable execution, and leader
+  termination, and presents bounded named-thread lifecycle aggregates with explicit baseline,
+  overflow, truncation, and observation-gap evidence.
+
+### Changed
+
+- Historical mixed process-exit evidence is labeled legacy/unclassified instead of asserting
+  leader termination, and non-leader thread exits no longer appear as stopped processes when the
+  backend reports classified lifecycle evidence.
+
 ## [0.3.7] - 2026-09-18
 
 ### Fixed

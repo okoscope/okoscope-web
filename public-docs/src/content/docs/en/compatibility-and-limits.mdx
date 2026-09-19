@@ -72,6 +72,8 @@ Configuration controls every observation profile. processExec is set explicitly;
 
 Collection is bounded from several sides at once: queue capacity, batch size, events per second, and how many Application streams a single agent keeps. DNS adds its own limits on transactions, reassembly and captured bytes, and inbound accept has a separate rate bound. If a required probe cannot attach, the agent stays unready instead of pretending otherwise. Watch the loss and capacity counters and measure your own workload — there is no universal number for overhead and no promise of completeness.
 
+Thread lifecycle collection is bounded by process/task state, name buckets, snapshot size and returned windows. Names beyond the per-process capacity are counted under **Other thread names** and reported as overflow. A late observer may initialize active threads from a bounded `/proc` snapshot, but that snapshot cannot reconstruct earlier creation or rename history. If the snapshot is unavailable, races, or is truncated, or if kernel, decoding, attribution, capacity, or delivery gaps occur, the API marks the baseline or window incomplete. A bounded summary can also be marked `truncated`; its totals are lower bounds rather than zeros or exact lifetime values.
+
 <a id="evidence"></a>
 ## Evidence boundaries
 

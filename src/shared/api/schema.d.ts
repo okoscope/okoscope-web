@@ -728,6 +728,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/{project_id}/applications/{application_id}/thread-activity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+                application_id: components["parameters"]["ApplicationId"];
+            };
+            cookie?: never;
+        };
+        /** @description Returns bounded named-thread aggregate windows. Responses are never cached. */
+        get: operations["listApplicationThreadActivityWindows"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/applications/{application_id}/thread-activity/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+                application_id: components["parameters"]["ApplicationId"];
+            };
+            cookie?: never;
+        };
+        /** @description Returns reconciled process-level thread totals and the latest current-name distribution. */
+        get: operations["getApplicationThreadActivitySummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{project_id}/applications/{application_id}/runtime-inventory/summary": {
         parameters: {
             query?: never;
@@ -3690,9 +3730,18 @@ export interface components {
             source: "kernel" | "kubernetes" | "derived" | "unknown";
             payload: components["schemas"]["RuntimeEventPayload"];
         };
-        RuntimeEventSemanticSummary: components["schemas"]["ProcessExecSemanticSummary"] | components["schemas"]["SyscallSemanticSummary"] | components["schemas"]["NetworkConnectSemanticSummary"] | components["schemas"]["InboundNetworkSemanticSummary"] | components["schemas"]["NetworkDnsQuerySemanticSummary"] | components["schemas"]["NetworkDnsResponseSemanticSummary"] | components["schemas"]["FileActivitySemanticSummary"] | components["schemas"]["ProcessExitSemanticSummary"] | components["schemas"]["ContainerTerminationSemanticSummary"] | components["schemas"]["ContainerRestartSemanticSummary"] | components["schemas"]["RestartLoopSemanticSummary"];
+        RuntimeEventSemanticSummary: components["schemas"]["ProcessStartSemanticSummary"] | components["schemas"]["ProcessExecSemanticSummary"] | components["schemas"]["SyscallSemanticSummary"] | components["schemas"]["NetworkConnectSemanticSummary"] | components["schemas"]["InboundNetworkSemanticSummary"] | components["schemas"]["NetworkDnsQuerySemanticSummary"] | components["schemas"]["NetworkDnsResponseSemanticSummary"] | components["schemas"]["FileActivitySemanticSummary"] | components["schemas"]["ProcessExitSemanticSummary"] | components["schemas"]["ContainerTerminationSemanticSummary"] | components["schemas"]["ContainerRestartSemanticSummary"] | components["schemas"]["RestartLoopSemanticSummary"];
         ProcessExecSemanticSummary: {
             executable: string;
+        };
+        ProcessStartSemanticSummary: {
+            /** @constant */
+            event_kind: "process.start";
+            process_command: string;
+            /** @constant */
+            source: "kernel";
+            /** @constant */
+            start_observed: true;
         };
         SyscallSemanticSummary: {
             process_command: string;
@@ -3755,7 +3804,78 @@ export interface components {
         /** @enum {string} */
         FileActivityOperation: "create" | "modify" | "delete" | "rename";
         /** @enum {string} */
-        RuntimeEventKind: "process.exec" | "syscall" | "network.connect" | "network.listen" | "network.accept" | "network.dns_query" | "network.dns_response" | "file.create" | "file.modify" | "file.delete" | "file.rename" | "process.exit" | "container.terminated" | "container.restart" | "container.restart_loop";
+        RuntimeEventKind: "process.start" | "process.exec" | "syscall" | "network.connect" | "network.listen" | "network.accept" | "network.dns_query" | "network.dns_response" | "file.create" | "file.modify" | "file.delete" | "file.rename" | "process.exit" | "container.terminated" | "container.restart" | "container.restart_loop";
+        /** @enum {string} */
+        BaselineProvenance: "observed" | "snapshot" | "unavailable";
+        /** @enum {string} */
+        ThreadGapReason: "kernel_loss" | "decode_failure" | "attribution_failure" | "state_capacity" | "snapshot_race" | "snapshot_permission" | "snapshot_truncated" | "delivery_gap";
+        ThreadNameAggregate: {
+            name: string;
+            /** Format: int64 */
+            created: number;
+            /** Format: int64 */
+            exited: number;
+            /** Format: int64 */
+            active: number;
+        };
+        ThreadActivityWindow: {
+            id: components["schemas"]["Uuid"];
+            /** Format: int64 */
+            process_cgroup_id: number;
+            /** Format: int64 */
+            process_pid: number;
+            /** Format: int64 */
+            process_tgid: number;
+            process_command: string;
+            /** Format: int64 */
+            process_generation: number;
+            observation_epoch: components["schemas"]["Uuid"];
+            start_observed: boolean;
+            window_started_at: components["schemas"]["Timestamp"];
+            window_ended_at: components["schemas"]["Timestamp"];
+            /** Format: int64 */
+            created_count: number;
+            /** Format: int64 */
+            exited_count: number;
+            /** Format: int64 */
+            active_at_start: number;
+            /** Format: int64 */
+            active_at_end: number;
+            /** Format: int64 */
+            peak_active: number;
+            baseline_provenance: components["schemas"]["BaselineProvenance"];
+            baseline_complete: boolean;
+            /** Format: int64 */
+            name_overflow: number;
+            names: components["schemas"]["ThreadNameAggregate"][];
+            gaps: components["schemas"]["ThreadGapReason"][];
+        };
+        ThreadActivityWindowPage: {
+            items: components["schemas"]["ThreadActivityWindow"][];
+            next_cursor: components["schemas"]["NullableUuid"];
+        };
+        ThreadActivitySummary: {
+            from: components["schemas"]["Timestamp"];
+            to: components["schemas"]["Timestamp"];
+            /** Format: int64 */
+            window_count: number;
+            /** @description True when the bounded summary omitted windows and totals are lower bounds. */
+            truncated: boolean;
+            /** Format: int64 */
+            created: number;
+            /** Format: int64 */
+            exited: number;
+            /** Format: int64 */
+            active: number | null;
+            /** Format: int64 */
+            peak_active: number | null;
+            baseline_complete: boolean;
+            baseline_provenance: components["schemas"]["BaselineProvenance"] | null;
+            /** Format: int64 */
+            name_overflow: number;
+            names: components["schemas"]["ThreadNameAggregate"][];
+            gaps: components["schemas"]["ThreadGapReason"][];
+        };
         /** @enum {string} */
         EvidenceSource: "kernel" | "kubernetes" | "derived";
         EventCorrelation: {
@@ -3804,9 +3924,11 @@ export interface components {
         };
         ProcessExitSemanticSummary: {
             /** @constant */
-            event_kind?: "process.exit";
+            event_kind: "process.exit";
             /** @constant */
             evidence_source: "kernel";
+            /** @enum {string} */
+            classification: "leader" | "legacy_unclassified";
             identity: string;
             termination: components["schemas"]["ProcessTermination"];
         } & {
@@ -3814,7 +3936,7 @@ export interface components {
         };
         ContainerTerminationSemanticSummary: {
             /** @constant */
-            event_kind?: "container.terminated";
+            event_kind: "container.terminated";
             /** @constant */
             evidence_source: "kubernetes";
             container_name: string;
@@ -3825,7 +3947,7 @@ export interface components {
         };
         ContainerRestartSemanticSummary: {
             /** @constant */
-            event_kind?: "container.restart";
+            event_kind: "container.restart";
             /** @constant */
             evidence_source: "kubernetes";
             container_name: string;
@@ -3834,7 +3956,7 @@ export interface components {
         };
         RestartLoopSemanticSummary: {
             /** @constant */
-            event_kind?: "container.restart_loop";
+            event_kind: "container.restart_loop";
             /** @constant */
             evidence_source: "derived";
             projection_version: number;
@@ -3858,10 +3980,13 @@ export interface components {
             data: {
                 /** @constant */
                 source: "kernel";
+                /** @enum {string} */
+                classification: "leader" | "legacy_unclassified";
                 /** Format: int32 */
                 raw_wait_status: number;
                 termination: components["schemas"]["ProcessTermination"];
                 correlation: components["schemas"]["GenerationCorrelation"];
+                generation?: components["schemas"]["ProcessGenerationIdentity"] | null;
             };
         };
         ContainerTerminationPayload: {
@@ -3889,7 +4014,14 @@ export interface components {
             data: {
                 executable: string;
                 parent_command: string | null;
+                generation?: components["schemas"]["ProcessGenerationIdentity"] | null;
             };
+        };
+        ProcessGenerationIdentity: {
+            /** Format: uint64 */
+            generation: number;
+            observation_epoch: components["schemas"]["Uuid"];
+            start_observed: boolean;
         };
         SyscallPayload: {
             /** @constant */
@@ -4454,7 +4586,7 @@ export interface components {
         InventoryReleasePresence: "observed" | "not_observed" | "unknown";
         InventorySemanticSummary: components["schemas"]["InventoryProcessIdentity"] | components["schemas"]["InventoryDestinationIdentity"] | components["schemas"]["InventoryDomainIdentity"] | components["schemas"]["InventorySyscallIdentity"] | components["schemas"]["InventoryInboundEndpointIdentity"] | components["schemas"]["InventoryFileActivityIdentity"] | components["schemas"]["InventoryLifecycleSemanticSummary"];
         /** @description User-visible lifecycle identity and termination context; identity_token remains an opaque filtering mechanism. */
-        InventoryLifecycleSemanticSummary: (components["schemas"]["ProcessExitSemanticSummary"] & Record<string, never>) | (components["schemas"]["ContainerTerminationSemanticSummary"] & Record<string, never>) | (components["schemas"]["ContainerRestartSemanticSummary"] & Record<string, never>) | (components["schemas"]["RestartLoopSemanticSummary"] & Record<string, never>);
+        InventoryLifecycleSemanticSummary: components["schemas"]["ProcessStartSemanticSummary"] | components["schemas"]["ProcessExitSemanticSummary"] | components["schemas"]["ContainerTerminationSemanticSummary"] | components["schemas"]["ContainerRestartSemanticSummary"] | components["schemas"]["RestartLoopSemanticSummary"];
         InventoryProcessIdentity: {
             /** @example /app/payments */
             executable: string;
@@ -4559,6 +4691,11 @@ export interface components {
          *       "occurrence_count": 4,
          *       "first_seen_at": "2026-08-18T09:00:00Z",
          *       "last_seen_at": "2026-08-18T10:00:00Z",
+         *       "process_lifecycle": {
+         *         "created": 0,
+         *         "executed": 4,
+         *         "terminated": 0
+         *       },
          *       "kinds": [
          *         {
          *           "kind": "process",
@@ -4579,6 +4716,15 @@ export interface components {
             first_seen_at: components["schemas"]["NullableTimestamp"];
             last_seen_at: components["schemas"]["NullableTimestamp"];
             kinds: components["schemas"]["InventoryKindCount"][];
+            process_lifecycle: components["schemas"]["ProcessLifecycleCounts"];
+        };
+        ProcessLifecycleCounts: {
+            /** Format: int64 */
+            created: number;
+            /** Format: int64 */
+            executed: number;
+            /** Format: int64 */
+            terminated: number;
         };
         InventoryDistributionEntry: {
             identity_token: string;
@@ -6914,6 +7060,74 @@ export interface operations {
             400: components["responses"]["Error"];
             401: components["responses"]["Error"];
             404: components["responses"]["Error"];
+        };
+    };
+    listApplicationThreadActivityWindows: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+                process_generation?: number;
+                observation_epoch?: string;
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+                application_id: components["parameters"]["ApplicationId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thread activity windows, newest first. */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThreadActivityWindowPage"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            500: components["responses"]["Error"];
+        };
+    };
+    getApplicationThreadActivitySummary: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+                process_generation?: number;
+                observation_epoch?: string;
+            };
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectId"];
+                application_id: components["parameters"]["ApplicationId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Reconciled thread activity summary. */
+            200: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThreadActivitySummary"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            500: components["responses"]["Error"];
         };
     };
     getApplicationRuntimeInventorySummary: {

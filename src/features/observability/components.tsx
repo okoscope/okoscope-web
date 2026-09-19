@@ -303,36 +303,39 @@ const normalizeTerminationSummary = (
     isRestartLoopSummary(value)
   )
     return value
-  const source = 'source' in value ? value.source : undefined
+  const record = value as Record<string, unknown>
+  const source = record.source
   if (
     source === 'kernel' &&
-    'identity' in value &&
-    typeof value.identity === 'string' &&
-    'termination' in value &&
-    isProcessTermination(value.termination)
-  )
-    return { evidence_source: 'kernel', identity: value.identity, termination: value.termination }
-  if (
-    source === 'kubernetes' &&
-    'container_name' in value &&
-    typeof value.container_name === 'string' &&
-    'reason' in value &&
-    typeof value.reason === 'string' &&
-    'exit_code' in value &&
-    typeof value.exit_code === 'number'
+    typeof record.identity === 'string' &&
+    isProcessTermination(record.termination)
   )
     return {
-      evidence_source: 'kubernetes',
-      container_name: value.container_name,
-      reason: value.reason,
-      exit_code: value.exit_code,
+      event_kind: 'process.exit',
+      evidence_source: 'kernel',
+      classification: 'legacy_unclassified',
+      identity: record.identity,
+      termination: record.termination,
     }
   if (
     source === 'kubernetes' &&
-    'container_name' in value &&
-    typeof value.container_name === 'string'
+    typeof record.container_name === 'string' &&
+    typeof record.reason === 'string' &&
+    typeof record.exit_code === 'number'
   )
-    return { evidence_source: 'kubernetes', container_name: value.container_name }
+    return {
+      event_kind: 'container.terminated',
+      evidence_source: 'kubernetes',
+      container_name: record.container_name,
+      reason: record.reason,
+      exit_code: record.exit_code,
+    }
+  if (source === 'kubernetes' && typeof record.container_name === 'string')
+    return {
+      event_kind: 'container.restart',
+      evidence_source: 'kubernetes',
+      container_name: record.container_name,
+    }
   return undefined
 }
 

@@ -209,7 +209,7 @@ describe('runtime inventory safe presentation', () => {
         onKind={onKind}
       />,
     )
-    expect(screen.getByRole('button', { name: /Process launches/ })).toHaveTextContent('1')
+    expect(screen.getByRole('button', { name: /Executable executions/ })).toHaveTextContent('1')
     expect(screen.getByRole('button', { name: /Domains/ })).toHaveTextContent('0')
     fireEvent.click(screen.getByRole('button', { name: /System calls/ }))
     expect(onKind).toHaveBeenCalledWith('syscall')
@@ -235,7 +235,7 @@ describe('runtime inventory safe presentation', () => {
             container_name: 'api',
             reason: 'OOMKilled',
             exit_code: 137,
-          } as unknown as typeof contractFixture.inventoryItemDetail.semantic_summary,
+          },
         }}
       />,
     )
@@ -257,9 +257,10 @@ describe('runtime inventory safe presentation', () => {
           semantic_summary: {
             event_kind: 'process.exit',
             evidence_source: 'kernel',
+            classification: 'leader',
             identity: '/usr/local/bin/r-api',
             termination: { type: 'exited', status: 0 },
-          } as unknown as typeof contractFixture.inventoryItemDetail.semantic_summary,
+          },
         }}
       />,
     )
@@ -273,6 +274,48 @@ describe('runtime inventory safe presentation', () => {
     expect(screen.queryByText('Kernel evidence')).not.toBeInTheDocument()
   })
 
+  it('labels historical mixed exits without asserting process-leader classification', () => {
+    render(
+      <InventoryIdentity
+        item={{
+          ...contractFixture.inventoryItemDetail,
+          inventory_kind: 'lifecycle',
+          semantic_summary: {
+            event_kind: 'process.exit',
+            evidence_source: 'kernel',
+            classification: 'legacy_unclassified',
+            identity: 'tokio-rt-worker',
+            termination: { type: 'exited', status: 0 },
+          } as unknown as typeof contractFixture.inventoryItemDetail.semantic_summary,
+        }}
+      />,
+    )
+
+    expect(screen.getByText('Task terminated (legacy classification)')).toBeVisible()
+    expect(screen.queryByText('Process terminated')).not.toBeInTheDocument()
+  })
+
+  it('presents process creation independently from executable execution', () => {
+    render(
+      <InventoryIdentity
+        item={{
+          ...contractFixture.inventoryItemDetail,
+          inventory_kind: 'lifecycle',
+          semantic_summary: {
+            event_kind: 'process.start',
+            process_command: '/app/api',
+            source: 'kernel',
+            start_observed: true,
+          } as unknown as typeof contractFixture.inventoryItemDetail.semantic_summary,
+        }}
+      />,
+    )
+
+    expect(screen.getByText('Process created')).toBeVisible()
+    expect(screen.getByText('· /app/api')).toBeVisible()
+    expect(screen.queryByText('Executable executed')).not.toBeInTheDocument()
+  })
+
   it('keeps a hostile terminated process identity inert', () => {
     const identity = '<img src=x onerror=alert(1)>/very/long/process/identity'
     const { container } = render(
@@ -283,6 +326,7 @@ describe('runtime inventory safe presentation', () => {
           semantic_summary: {
             event_kind: 'process.exit',
             evidence_source: 'kernel',
+            classification: 'leader',
             identity,
             termination: { type: 'exited', status: 0 },
           } as unknown as typeof contractFixture.inventoryItemDetail.semantic_summary,
@@ -304,6 +348,7 @@ describe('runtime inventory safe presentation', () => {
             semantic_summary: {
               event_kind: 'process.exit',
               evidence_source: 'kernel',
+              classification: 'leader',
               identity: '/usr/local/bin/r-api',
               termination: { type: 'exited', status: 0 },
             } as unknown as typeof contractFixture.inventoryItemDetail.semantic_summary,

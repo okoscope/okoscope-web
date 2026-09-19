@@ -126,6 +126,7 @@ export const populatedOrganizationAttentionFixture = {
         runtime_group_id: '40000000-0000-4000-8000-000000000009',
         event_kind: 'container.restart_loop',
         semantic_summary: {
+          event_kind: 'container.restart_loop',
           evidence_source: 'derived',
           projection_version: 1,
           threshold: 3,

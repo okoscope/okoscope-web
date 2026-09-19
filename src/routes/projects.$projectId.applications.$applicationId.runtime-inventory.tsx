@@ -34,6 +34,7 @@ import { Card } from '../shared/ui/card'
 import { Loading } from '../shared/ui/loading'
 import { LayoutGrid, List } from 'lucide-react'
 import { PolicyFilters } from '../features/policies/components'
+import { ThreadActivityPanel } from '../features/runtime-inventory/thread-activity'
 
 export const Route = createFileRoute(
   '/projects/$projectId/applications/$applicationId/runtime-inventory',
@@ -205,9 +206,9 @@ function RuntimeInventoryPage() {
         <p className="eyebrow">Application</p>
         <h1 className="mt-2 text-4xl font-semibold">Application Activity</h1>
         <p className="mt-2 text-slate-400">
-          See process launches, lifecycle events, network activity, domains, and file operations
-          observed for this application. Observations describe recorded activity, not configured
-          intent, cause, or risk.
+          See process creation, executable execution, process termination, thread activity, network
+          activity, domains, and file operations observed for this application. Observations
+          describe recorded activity, not configured intent, cause, or risk.
         </p>
       </header>
       <Card>
@@ -281,6 +282,13 @@ function RuntimeInventoryPage() {
           </div>
         )}
       </div>
+      <ThreadActivityPanel
+        key={`${search.observed_from ?? ''}:${search.observed_to ?? ''}`}
+        projectId={projectId}
+        applicationId={applicationId}
+        from={search.observed_from}
+        to={search.observed_to}
+      />
       <Card>
         <label className="text-sm">
           <span className="mb-1 block text-slate-300">Search application activity</span>

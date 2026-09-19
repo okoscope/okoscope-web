@@ -38,6 +38,17 @@ A/AAAA questions and confidently corroborated Kubernetes search expansions. The 
 exact resolver question available as a DNS resolution variant linked to its existing evidence
 history; this presentation layer does not change raw observations or policy identity.
 
+Application Activity distinguishes process creation (`process.start`), executable execution
+(`process.exec`), and leader termination (`process.exit`). Historical exits recorded before task
+classification are shown as legacy unclassified task terminations rather than asserted to be
+process exits. Thread lifecycle is intentionally presented as bounded aggregates instead of one
+inventory identity per thread: the panel reports created, exited, active, and peak-active counts
+and one current-name row per bounded name bucket. It marks snapshot or unavailable baselines,
+observation gaps, name overflow, and truncated summaries, and uses “at least” wording whenever a
+value is only a lower bound. The generated client consumes the no-store
+`/api/v1/projects/{project_id}/applications/{application_id}/thread-activity` and
+`/thread-activity/summary` routes from the authoritative backend OpenAPI contract.
+
 The product interface is a React single-page app. Public documentation is a statically generated
 Astro and Starlight site at `/docs/en/` and `/docs/ru/`. The application validates backend compatibility at startup and
 uses the backend's opaque `HttpOnly` session cookie for authentication. Browser requests include

@@ -16,6 +16,8 @@ import type {
   InventorySummary,
   PutRuntimeBehaviorUserLabel,
   RuntimeBehaviorUserLabel,
+  ThreadActivitySummary,
+  ThreadActivityWindowPage,
 } from '../../shared/api/types'
 import type { InventoryEvidence, InventorySearch } from './url-state'
 import { summarySearch } from './url-state'
@@ -56,6 +58,8 @@ const base = (projectId: string, applicationId: string) =>
   `/api/v1/projects/${encodeURIComponent(projectId)}/applications/${encodeURIComponent(applicationId)}/runtime-inventory`
 const dnsBase = (projectId: string, applicationId: string) =>
   `${base(projectId, applicationId)}/dns-groups`
+const threadActivityBase = (projectId: string, applicationId: string) =>
+  `/api/v1/projects/${encodeURIComponent(projectId)}/applications/${encodeURIComponent(applicationId)}/thread-activity`
 
 const userLabelPath = (projectId: string, applicationId: string, itemId: string) =>
   `${base(projectId, applicationId)}/${encodeURIComponent(itemId)}/user-label`
@@ -85,6 +89,23 @@ export const deleteInventoryUserLabel = (
   )
 
 export const inventoryKeys = {
+  threadActivitySummary: (projectId: string, applicationId: string, from?: string, to?: string) =>
+    ['thread-activity-summary', projectId, applicationId, from ?? null, to ?? null] as const,
+  threadActivityWindows: (
+    projectId: string,
+    applicationId: string,
+    from?: string,
+    to?: string,
+    cursor?: string,
+  ) =>
+    [
+      'thread-activity-windows',
+      projectId,
+      applicationId,
+      from ?? null,
+      to ?? null,
+      cursor ?? null,
+    ] as const,
   dnsDistribution: (projectId: string, applicationId: string, search: InventorySearch) =>
     [
       'runtime-inventory-dns-distribution',
@@ -167,6 +188,39 @@ export const inventoryKeys = {
       cursor ?? null,
     ] as const,
 }
+
+export const threadActivitySummaryOptions = (
+  api: ApiClient,
+  projectId: string,
+  applicationId: string,
+  from?: string,
+  to?: string,
+) =>
+  queryOptions({
+    queryKey: inventoryKeys.threadActivitySummary(projectId, applicationId, from, to),
+    queryFn: ({ signal }) =>
+      api.get<ThreadActivitySummary>(
+        `${threadActivityBase(projectId, applicationId)}/summary${query({ from, to })}`,
+        { protected: true, signal },
+      ),
+  })
+
+export const threadActivityWindowsOptions = (
+  api: ApiClient,
+  projectId: string,
+  applicationId: string,
+  from?: string,
+  to?: string,
+  cursor?: string,
+) =>
+  queryOptions({
+    queryKey: inventoryKeys.threadActivityWindows(projectId, applicationId, from, to, cursor),
+    queryFn: ({ signal }) =>
+      api.get<ThreadActivityWindowPage>(
+        `${threadActivityBase(projectId, applicationId)}${query({ from, to, cursor, limit: INVENTORY_PAGE_SIZE })}`,
+        { protected: true, signal },
+      ),
+  })
 
 export const dnsGroupDistributionOptions = (
   api: ApiClient,

@@ -453,8 +453,8 @@ describe('observability presentation', () => {
     expect(screen.getByText('Observed activity')).toBeVisible()
   })
   it('maps API kinds to user-facing activity vocabulary with safe fallbacks', () => {
-    expect(getActivityPresentation('process').countLabel).toBe('launches')
-    expect(getActivityPresentation('process').behaviorLabel).toBe('Process launch')
+    expect(getActivityPresentation('process').countLabel).toBe('executions')
+    expect(getActivityPresentation('process').behaviorLabel).toBe('Executable execution')
     expect(getActivityPresentation('destination').itemLabel).toBe('Outbound connections')
     expect(getActivityPresentation('destination').behaviorLabel).toBe('Outbound connection')
     expect(getActivityPresentation('domain').behaviorLabel).toBe('DNS request')

@@ -7,13 +7,10 @@ import type {
 import { Card } from '../../shared/ui/card'
 import { HorizontalBars, type HorizontalBarItem } from '../../shared/ui/horizontal-bars'
 import { formatCount } from '../tenant/format'
-import {
-  formatEndpoint,
-  getActivityPresentation,
-  getEventKindLabel,
-} from '../observability/presentation'
+import { formatEndpoint, getActivityPresentation } from '../observability/presentation'
 import {
   inventoryKinds,
+  inventoryLifecycleEventLabel,
   inventoryLifecycleIdentityText,
   LifecycleSourceIcon,
   isInventoryDestination,
@@ -49,7 +46,7 @@ export function inventoryIdentityText(
       ? `rename · ${value.path} → ${value.new_path}`
       : `${value.operation} · ${value.path}`
   if (kind === 'lifecycle' && isInventoryLifecycle(value))
-    return `${inventoryLifecycleIdentityText(value)} · ${value.evidence_source}`
+    return `${inventoryLifecycleIdentityText(value)} · ${value.event_kind === 'process.start' ? value.source : value.evidence_source}`
   return 'Unsupported identity'
 }
 
@@ -76,6 +73,18 @@ export function InventoryKindDistribution({
           not represent duration, traffic volume, configured intent, or risk.
         </p>
       </div>
+      <dl className="mb-4 grid grid-cols-3 gap-2" aria-label="Process lifecycle summary">
+        {[
+          ['Processes created', summary.process_lifecycle.created],
+          ['Programs executed', summary.process_lifecycle.executed],
+          ['Processes terminated', summary.process_lifecycle.terminated],
+        ].map(([label, value]) => (
+          <div key={String(label)} className="rounded-lg border border-slate-700 p-2">
+            <dt className="text-xs text-slate-400">{label}</dt>
+            <dd className="mt-1 font-semibold tabular-nums">{formatCount(Number(value))}</dd>
+          </div>
+        ))}
+      </dl>
       <HorizontalBars
         ariaLabel="Application activity by kind"
         total={summary.occurrence_count}
@@ -168,6 +177,11 @@ export function TopBehaviorDistribution({
       distribution.kind === 'lifecycle' && isInventoryLifecycle(entry.semantic_summary)
         ? entry.semantic_summary
         : undefined
+    const lifecycleSource = lifecycle
+      ? lifecycle.event_kind === 'process.start'
+        ? lifecycle.source
+        : lifecycle.evidence_source
+      : undefined
     return {
       id: entry.identity_token,
       label: displayLabel ? (
@@ -175,14 +189,19 @@ export function TopBehaviorDistribution({
           <span>{displayLabel}</span>
           <span className="break-all font-mono text-xs font-normal text-slate-400">{label}</span>
         </span>
-      ) : lifecycle &&
-        (lifecycle.evidence_source === 'kernel' || lifecycle.evidence_source === 'kubernetes') ? (
+      ) : lifecycle && (lifecycleSource === 'kernel' || lifecycleSource === 'kubernetes') ? (
         <span className="inline-flex min-w-0 items-center gap-2 font-mono">
-          <span>{getEventKindLabel(lifecycle.event_kind ?? 'lifecycle')}</span>
-          {lifecycle.event_kind === 'process.exit' && (
-            <span className="break-all">· {lifecycle.identity}</span>
+          <span>{inventoryLifecycleEventLabel(lifecycle)}</span>
+          {(lifecycle.event_kind === 'process.exit' ||
+            lifecycle.event_kind === 'process.start') && (
+            <span className="break-all">
+              ·{' '}
+              {lifecycle.event_kind === 'process.start'
+                ? lifecycle.process_command
+                : lifecycle.identity}
+            </span>
           )}
-          <LifecycleSourceIcon source={lifecycle.evidence_source} />
+          <LifecycleSourceIcon source={lifecycleSource} />
         </span>
       ) : (
         <span className="font-mono">{label}</span>
@@ -190,9 +209,13 @@ export function TopBehaviorDistribution({
       accessibleLabel: displayLabel
         ? `${displayLabel}. ${label}`
         : lifecycle
-          ? `${localized(getEventKindLabel(lifecycle.event_kind ?? 'lifecycle'))}${
-              lifecycle.event_kind === 'process.exit' ? ` · ${lifecycle.identity}` : ''
-            } · ${lifecycle.evidence_source}`
+          ? `${localized(inventoryLifecycleEventLabel(lifecycle))}${
+              lifecycle.event_kind === 'process.exit'
+                ? ` · ${lifecycle.identity}`
+                : lifecycle.event_kind === 'process.start'
+                  ? ` · ${lifecycle.process_command}`
+                  : ''
+            } · ${lifecycleSource}`
           : label,
       value: entry.occurrence_count,
       selected: entry.identity_token === selectedToken,

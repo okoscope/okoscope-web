@@ -265,6 +265,7 @@ const resourceAttentionRecommendation = {
 const inventoryItemId = '10000000-0000-4000-8000-000000000001'
 const unsafeInventoryText = "<img src=x onerror=alert('inventory')>"
 const inventoryBase = `/api/v1/projects/${project.id}/applications/${application.id}/runtime-inventory`
+const threadActivityBase = `/api/v1/projects/${project.id}/applications/${application.id}/thread-activity`
 const dnsGroupToken = 'dns-group-s3'
 const dnsVariantItemId = '10000000-0000-4000-8000-000000000002'
 const dnsGroup = {
@@ -841,6 +842,7 @@ export async function mockApi(page: Page, role: 'owner' | 'member' = 'owner') {
         occurrence_count: 144,
         first_seen_at: inventoryItem.first_seen_at,
         last_seen_at: inventoryItem.last_seen_at,
+        process_lifecycle: { created: 3, executed: 12, terminated: 2 },
         kinds: [
           { kind: 'process', item_count: 1, occurrence_count: 12 },
           { kind: 'destination', item_count: 1, occurrence_count: 24 },
@@ -849,6 +851,23 @@ export async function mockApi(page: Page, role: 'owner' | 'member' = 'owner') {
           { kind: 'inbound_endpoint', item_count: 1, occurrence_count: 18 },
         ],
       })
+    if (path === `${threadActivityBase}/summary`)
+      return json(route, {
+        from: '2026-08-17T10:00:00Z',
+        to: '2026-08-18T10:00:00Z',
+        window_count: 1,
+        truncated: false,
+        created: 8,
+        exited: 3,
+        active: 5,
+        peak_active: 7,
+        baseline_complete: true,
+        baseline_provenance: 'observed',
+        name_overflow: 0,
+        names: [{ name: 'tokio-rt-worker', created: 8, exited: 3, active: 5 }],
+        gaps: [],
+      })
+    if (path === threadActivityBase) return json(route, { items: [], next_cursor: null })
     if (path === `${inventoryBase}/dns-groups/distribution`)
       return json(route, {
         total_group_count: 1,

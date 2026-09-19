@@ -170,7 +170,7 @@ test('renders tenant, runtime, and notification surfaces fully in Russian', asyn
 
   await openRussian(`/projects/${project.id}/applications/${application.id}/runtime-inventory`)
   await expect(page.getByRole('heading', { name: 'Активность приложения' })).toBeVisible()
-  await expect(page.getByRole('button', { name: /Запуски процессов/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /Выполнения программ/ })).toBeVisible()
   await expect(page.getByRole('button', { name: /Исходящие соединения/ })).toBeVisible()
   await expect(page.getByRole('button', { name: /Входящие соединения/ })).toBeVisible()
   await expect(page.getByRole('button', { name: /Домены/ })).toBeVisible()

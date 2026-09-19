@@ -49,7 +49,10 @@ test('explores Application Activity scope, views, cursors, and observation histo
   const activityButtons = activitySwitcher.getByRole('button')
   await expect(activityButtons).toHaveCount(7)
   await expect(page.getByRole('tab')).toHaveCount(0)
-  await expect(page.getByRole('button', { name: /Process launches/ })).toContainText('1')
+  await expect(page.getByRole('button', { name: /Executable executions/ })).toContainText('1')
+  await expect(page.getByRole('region', { name: 'Thread activity', exact: true })).toContainText(
+    'tokio-rt-worker',
+  )
   await expect(page.getByText(/Share of 144 matching recorded observations/)).toBeVisible()
   await expect(page.getByRole('button', { name: 'Tile view' })).toHaveAttribute(
     'aria-pressed',
@@ -90,7 +93,7 @@ test('explores Application Activity scope, views, cursors, and observation histo
     .getByRole('link', { name: 'Application Activity' })
     .click()
   await page.getByText('Advanced filters').click()
-  await page.getByRole('button', { name: /Process launches/ }).click()
+  await page.getByRole('button', { name: /Executable executions/ }).click()
   await expect(page.getByRole('button', { name: /<img src=x onerror=alert/ })).toBeVisible()
   await expect(page.locator('img')).toHaveCount(0)
   await page.getByRole('button', { name: /Inbound connections/ }).click()
@@ -109,7 +112,7 @@ test('explores Application Activity scope, views, cursors, and observation histo
   await expect(page.getByLabel(/New syscall path: \/tmp\/new\.txt/)).toBeVisible()
   await expect(page.getByText('Unknown', { exact: true })).toBeVisible()
   await expect(page.locator('script', { hasText: '/tmp/old-' })).toHaveCount(0)
-  await page.getByRole('button', { name: /Process launches/ }).click()
+  await page.getByRole('button', { name: /Executable executions/ }).click()
 
   await page.getByRole('link', { name: 'Observation history' }).click()
   await expect(page.getByRole('tab', { name: 'Releases' })).toHaveAttribute('aria-selected', 'true')

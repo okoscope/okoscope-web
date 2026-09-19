@@ -191,6 +191,12 @@ export type ReleaseResourceComparisonQuery = NonNullable<
   operations['getReleaseResourceComparison']['parameters']['query']
 >
 export type InventoryKind = components['schemas']['InventoryKind']
+export type BaselineProvenance = components['schemas']['BaselineProvenance']
+export type ThreadGapReason = components['schemas']['ThreadGapReason']
+export type ThreadNameAggregate = components['schemas']['ThreadNameAggregate']
+export type ThreadActivityWindow = components['schemas']['ThreadActivityWindow']
+export type ThreadActivityWindowPage = components['schemas']['ThreadActivityWindowPage']
+export type ThreadActivitySummary = components['schemas']['ThreadActivitySummary']
 export type DnsLogicalGroup = components['schemas']['DnsLogicalGroup']
 export type DnsGroupPage = components['schemas']['DnsGroupPage']
 export type DnsGroupVariant = components['schemas']['DnsGroupVariant']
@@ -284,6 +290,7 @@ export const terminationContractFixtures = {
     type: 'ProcessExit',
     data: {
       source: 'kernel',
+      classification: 'leader',
       raw_wait_status: 512,
       termination: { type: 'exited', status: 2 },
       correlation: {
@@ -298,6 +305,7 @@ export const terminationContractFixtures = {
     type: 'ProcessExit',
     data: {
       source: 'kernel',
+      classification: 'leader',
       raw_wait_status: 139,
       termination: {
         type: 'signaled',
@@ -333,6 +341,7 @@ export const terminationContractFixtures = {
   restartLoop: {
     type: 'ContainerRestartLoop',
     data: {
+      event_kind: 'container.restart_loop',
       evidence_source: 'derived',
       projection_version: 1,
       threshold: 3,
@@ -562,6 +571,7 @@ export const contractFixture = {
     first_seen_at: '2026-08-17T00:00:00Z',
     last_seen_at: '2026-08-18T00:00:00Z',
     kinds: [{ kind: 'process', item_count: 1, occurrence_count: 12 }],
+    process_lifecycle: { created: 0, executed: 12, terminated: 0 },
   } satisfies InventorySummary,
   inventoryFacetPage: {
     coverage: { closed_before: null, history_expired_before: null, detail_scope: 'raw' },

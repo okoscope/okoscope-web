@@ -150,19 +150,29 @@ export const isInventoryLifecycle = (
   value: InventorySummaryValue,
 ): value is InventoryLifecycleSemanticSummary =>
   'event_kind' in value &&
-  ['process.exit', 'container.terminated', 'container.restart', 'container.restart_loop'].includes(
-    String(value.event_kind),
-  ) &&
-  'evidence_source' in value &&
-  ['kernel', 'kubernetes', 'derived'].includes(String(value.evidence_source))
+  [
+    'process.start',
+    'process.exit',
+    'container.terminated',
+    'container.restart',
+    'container.restart_loop',
+  ].includes(String(value.event_kind))
+
+export const inventoryLifecycleEventLabel = (value: InventoryLifecycleSemanticSummary) => {
+  if (value.event_kind === 'process.start') return 'Process created'
+  if (value.event_kind === 'process.exit' && value.classification === 'legacy_unclassified')
+    return 'Task terminated (legacy classification)'
+  return getEventKindLabel(value.event_kind ?? 'lifecycle')
+}
 
 export const inventoryLifecycleIdentityText = (value: InventoryLifecycleSemanticSummary) => {
-  const eventLabel = getEventKindLabel(value.event_kind ?? 'lifecycle')
+  const eventLabel = inventoryLifecycleEventLabel(value)
+  if (value.event_kind === 'process.start') return `${eventLabel} · ${value.process_command}`
   return value.event_kind === 'process.exit' ? `${eventLabel} · ${value.identity}` : eventLabel
 }
 
 export const inventoryKinds: { kind: InventoryKind; label: string }[] = [
-  { kind: 'process', label: 'Process launches' },
+  { kind: 'process', label: 'Executable executions' },
   { kind: 'destination', label: 'Outbound connections' },
   { kind: 'inbound_endpoint', label: 'Inbound connections' },
   { kind: 'domain', label: 'Domains' },
@@ -249,20 +259,24 @@ export function InventoryIdentity({ item }: { item: InventoryItem }) {
     )
   if (item.inventory_kind === 'file_activity' && isInventoryFileActivity(value))
     return <FileActivitySummary value={value} />
-  if (item.inventory_kind === 'lifecycle' && isInventoryLifecycle(value))
+  if (item.inventory_kind === 'lifecycle' && isInventoryLifecycle(value)) {
+    const source = value.event_kind === 'process.start' ? value.source : value.evidence_source
     return (
       <span className="inline-flex flex-wrap items-center gap-2">
-        <span>{getEventKindLabel(value.event_kind ?? 'lifecycle')}</span>
-        {value.event_kind === 'process.exit' && (
-          <span className="break-all font-mono">· {value.identity}</span>
+        <span>{inventoryLifecycleEventLabel(value)}</span>
+        {(value.event_kind === 'process.exit' || value.event_kind === 'process.start') && (
+          <span className="break-all font-mono">
+            · {value.event_kind === 'process.start' ? value.process_command : value.identity}
+          </span>
         )}
-        {value.evidence_source === 'kernel' || value.evidence_source === 'kubernetes' ? (
-          <LifecycleSourceIcon source={value.evidence_source} focusable />
+        {source === 'kernel' || source === 'kubernetes' ? (
+          <LifecycleSourceIcon source={source} focusable />
         ) : (
-          <EvidenceSourceBadge source={value.evidence_source} />
+          <EvidenceSourceBadge source={source} />
         )}
       </span>
     )
+  }
   return <span className="text-rose-200">Unsupported identity</span>
 }
 

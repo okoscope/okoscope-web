@@ -19,6 +19,7 @@ import {
 } from './visualization'
 
 const summary: InventorySummary = {
+  process_lifecycle: { created: 3, executed: 12, terminated: 2 },
   coverage: { closed_before: null, history_expired_before: null, detail_scope: 'raw' },
   identity_version: 2,
   item_count: 4,
@@ -181,6 +182,7 @@ describe('data visualization presentation', () => {
           ? ({
               event_kind: 'process.exit',
               evidence_source: source,
+              classification: 'leader',
               identity: '/app/api',
               termination: { type: 'exited', status: 0 },
             } as unknown as InventoryLifecycleSemanticSummary)
@@ -289,7 +291,7 @@ describe('data visualization presentation', () => {
       expect.stringContaining('Domains30'),
       expect.stringContaining('Outbound connections24'),
       expect.stringContaining('Inbound connections18'),
-      expect.stringContaining('Process launches12'),
+      expect.stringContaining('Executable executions12'),
       expect.stringContaining('File Activity0'),
       expect.stringContaining('Lifecycle0'),
     ])
@@ -331,7 +333,7 @@ describe('data visualization presentation', () => {
     expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual([
       expect.stringContaining('high20'),
       expect.stringContaining('low5'),
-      expect.stringContaining('Other observed process launch5'),
+      expect.stringContaining('Other observed executable execution5'),
     ])
   })
 
@@ -361,7 +363,7 @@ describe('data visualization presentation', () => {
 
     expect(screen.getByText('<img src=x onerror=alert(1)>')).toBeInTheDocument()
     expect(container.querySelector('img')).toBeNull()
-    expect(screen.getByText(/Other observed process launch/i)).toBeInTheDocument()
+    expect(screen.getByText(/Other observed executable execution/i)).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /<img src=x onerror=alert\(1\)>/ }))
     expect(onIdentity).toHaveBeenCalledWith('opaque')
   })

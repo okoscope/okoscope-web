@@ -42,6 +42,7 @@ describe('termination evidence presentation', () => {
     render(
       <SemanticSummary
         value={{
+          event_kind: 'container.terminated',
           evidence_source: 'kubernetes',
           container_name: 'api',
           reason: 'OOMKilled',
@@ -59,7 +60,9 @@ describe('termination evidence presentation', () => {
       <LocalizationProvider initialLocale="ru">
         <SemanticSummary
           value={{
+            event_kind: 'process.exit',
             evidence_source: 'kernel',
+            classification: 'leader',
             identity: '/app/payment-worker',
             termination: {
               type: 'signaled',
@@ -153,6 +156,7 @@ describe('termination evidence presentation', () => {
 
   it('renders a derived restart-loop summary with bounded window facts', () => {
     const value: RuntimeGroup['semantic_summary'] = {
+      event_kind: 'container.restart_loop',
       evidence_source: 'derived',
       projection_version: 1,
       threshold: 3,

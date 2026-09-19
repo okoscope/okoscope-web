@@ -59,9 +59,15 @@ Application diagnostics are positive changes during the selected range, not life
 <a id="processes"></a>
 ## Processes, system calls and termination
 
-Process execution tells you which executables ran inside the workloads you selected. Turn on processExit if you also want to see processes ending, and list the system calls you care about explicitly, ptrace and setns for example. This is a profile you configure, not a recording of every system call the kernel handled.
+Application Activity keeps three process facts separate: **process created** means the kernel observed creation of a new process, **program executed** means an existing process loaded an executable image, and **process terminated** means the observed task was classified as the process leader when it exited. An `exec` is therefore not presented as process creation. Historical exit evidence that predates task classification remains visible as **task terminated (legacy classification)** and does not claim that a process leader stopped.
 
-Application inventory groups the same system call across Linux process threads. Open a retained raw occurrence when you need the originating process command. Runtime Groups remain process-aware, and process execution and termination identities are unchanged.
+Process execution tells you which executables ran inside the workloads you selected. Turn on processExit if you also want to see process leaders ending, and list the system calls you care about explicitly, ptrace and setns for example. This is a profile you configure, not a recording of every system call the kernel handled.
+
+The **Thread activity** panel summarizes thread churn without retaining every thread as an inventory identity. For the selected time range it reports threads created, exited, active at the end and peak active, then groups current activity by the latest observed Linux thread name. A bounded **Other thread names** row and an overflow notice prevent unbounded name cardinality. The panel also states whether its initial active count came from observing process creation, a `/proc` snapshot, or was unavailable. Snapshot races, collection or delivery gaps, an incomplete baseline, and a truncated bounded result make affected totals lower bounds; the interface says **At least** instead of silently treating them as exact.
+
+The web client reads these bounded, non-cacheable views from `GET /api/v1/projects/{project_id}/applications/{application_id}/thread-activity` and `GET /api/v1/projects/{project_id}/applications/{application_id}/thread-activity/summary`. Both accept an explicit `from`/`to` time scope; the window route uses opaque cursor pagination. Thread names and counters do not become Runtime Groups, policies, suppressions, notifications, or executable inventory identities.
+
+Application inventory groups the same system call across Linux process threads. Open a retained raw occurrence when you need the originating process command. Runtime Groups remain process-aware; process creation, executable execution, and classified process termination remain distinct lifecycle evidence.
 
 The termination and restart views put kernel evidence and Kubernetes evidence side by side: the process, the container it belonged to, the exit code or signal, the reported reason and any related observations. Read them together. A SIGKILL on its own does not mean the process was killed for memory — that conclusion needs evidence that says so. And a container restarting is a different event from a child process exiting.
 

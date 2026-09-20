@@ -296,6 +296,8 @@ export const legacyRussian: Record<string, string> = {
     'Нет записанных DNS-наблюдений, соответствующих выбранным фильтрам.',
   'matching recorded DNS observations across the complete filtered result, not only this list page.':
     'соответствующих записанных DNS-наблюдений во всём отфильтрованном результате, а не только на этой странице.',
+  'matching recorded DNS observations across the complete filtered result, not only this list page. Related resolver questions are grouped in this non-interactive overview; the exact question names and record types remain separate in the inventory below.':
+    'соответствующих записанных DNS-наблюдений во всём отфильтрованном результате, а не только на этой странице. Связанные запросы резолвера сгруппированы в этом некликабельном обзоре; точные имена запросов и типы записей остаются отдельными в инвентаризации ниже.',
   'System call': 'Системный вызов',
   'Observed activity': 'Наблюдаемое действие',
   'Opened port': 'Открыт порт',

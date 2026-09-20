@@ -9,6 +9,7 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Kept the complete DNS overview explanation localized when the interface is displayed in Russian.
 - Application Activity once again presents exact DNS inventory identities in its main list while
   its non-interactive overview groups related resolver questions so repeated Kubernetes search
   variants do not hide other frequently observed destinations.

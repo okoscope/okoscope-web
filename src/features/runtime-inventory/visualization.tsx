@@ -54,12 +54,10 @@ export function InventoryKindDistribution({
   summary,
   activeKind,
   onKind,
-  domainGroupCount,
 }: {
   summary: InventorySummary
   activeKind: InventoryKind
   onKind: (kind: InventoryKind) => void
-  domainGroupCount?: number | undefined
 }) {
   const { locale } = useLocalization()
   const localized = (value: string) => (locale === 'ru' ? (legacyRussian[value] ?? value) : value)
@@ -97,12 +95,7 @@ export function InventoryKindDistribution({
               accessibleLabel: localized(label),
               value: value?.occurrence_count ?? 0,
               selected: kind === activeKind,
-              meta:
-                kind === 'domain'
-                  ? domainGroupCount === undefined
-                    ? 'Logical DNS destination count unavailable'
-                    : `${formatCount(domainGroupCount)} logical DNS destinations`
-                  : `${formatCount(value?.item_count ?? 0)} unique behaviors`,
+              meta: `${formatCount(value?.item_count ?? 0)} unique behaviors`,
               onSelect: () => onKind(kind),
             }
           }),

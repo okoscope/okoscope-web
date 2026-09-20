@@ -7,6 +7,11 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- Application Activity once again presents exact DNS inventory identities in its main list and
+  distribution instead of replacing them with grouped logical destinations.
+
 ### Added
 
 - Application Activity now distinguishes process creation, executable execution, and leader

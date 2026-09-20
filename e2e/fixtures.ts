@@ -950,6 +950,33 @@ export async function mockApi(page: Page, role: 'owner' | 'member' = 'owner') {
     }
     if (path === `${inventoryBase}/distribution`) {
       const kind = url.searchParams.get('kind') ?? 'process'
+      if (kind === 'domain')
+        return json(route, {
+          identity_version: 2,
+          kind,
+          total_item_count: 2,
+          total_occurrence_count: 30,
+          entries: [
+            {
+              identity_token: 'domain-a-identity',
+              semantic_summary: { name: 's3.twcstorage.ru', query_type: 'A' },
+              user_label: null,
+              item_count: 1,
+              occurrence_count: 18,
+            },
+            {
+              identity_token: 'domain-aaaa-identity',
+              semantic_summary: {
+                name: 's3.twcstorage.ru.production.svc.cluster.local',
+                query_type: 'AAAA',
+              },
+              user_label: null,
+              item_count: 1,
+              occurrence_count: 12,
+            },
+          ],
+          other: null,
+        })
       const identity =
         kind === 'file_activity'
           ? {
@@ -973,11 +1000,9 @@ export async function mockApi(page: Page, role: 'owner' | 'member' = 'owner') {
                   destination_address: '203.0.113.7',
                   destination_port: 443,
                 }
-              : kind === 'domain'
-                ? { name: 'api.example.com', query_type: 'A' }
-                : kind === 'syscall'
-                  ? { syscall: 'epoll_wait' }
-                  : inventoryItem.semantic_summary
+              : kind === 'syscall'
+                ? { syscall: 'epoll_wait' }
+                : inventoryItem.semantic_summary
       return json(route, {
         identity_version: 2,
         kind,
@@ -1014,6 +1039,38 @@ export async function mockApi(page: Page, role: 'owner' | 'member' = 'owner') {
       if (url.searchParams.get('cursor') === 'terminal')
         return json(route, { items: [], next_cursor: null })
       const kind = url.searchParams.get('kind') ?? 'process'
+      if (kind === 'domain') {
+        const domainItems = [
+          {
+            ...inventoryItem,
+            id: dnsVariantItemId,
+            inventory_kind: 'domain',
+            semantic_summary: { name: 's3.twcstorage.ru', query_type: 'A' },
+            user_label: null,
+            occurrence_count: 18,
+          },
+          {
+            ...inventoryItem,
+            id: '10000000-0000-4000-8000-000000000003',
+            inventory_kind: 'domain',
+            semantic_summary: {
+              name: 's3.twcstorage.ru.production.svc.cluster.local',
+              query_type: 'AAAA',
+            },
+            user_label: null,
+          },
+        ]
+        const selectedToken = url.searchParams.get('identity_token')
+        return json(route, {
+          items:
+            selectedToken === 'domain-a-identity'
+              ? domainItems.slice(0, 1)
+              : selectedToken === 'domain-aaaa-identity'
+                ? domainItems.slice(1)
+                : domainItems,
+          next_cursor: 'terminal',
+        })
+      }
       const identity =
         kind === 'file_activity'
           ? {
@@ -1037,11 +1094,9 @@ export async function mockApi(page: Page, role: 'owner' | 'member' = 'owner') {
                   destination_address: '203.0.113.7',
                   destination_port: 443,
                 }
-              : kind === 'domain'
-                ? { name: 'api.example.com', query_type: 'A' }
-                : kind === 'syscall'
-                  ? { syscall: 'epoll_wait' }
-                  : inventoryItem.semantic_summary
+              : kind === 'syscall'
+                ? { syscall: 'epoll_wait' }
+                : inventoryItem.semantic_summary
       return json(route, {
         items: [
           {

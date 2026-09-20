@@ -33,10 +33,9 @@ thread-specific identity require an Application-scoped reset of runtime evidence
 policies, suppressions, and derived attention or notification state; they do not migrate that
 state.
 
-For the domain view, the server additionally presents logical DNS destinations that consolidate
-A/AAAA questions and confidently corroborated Kubernetes search expansions. The UI keeps every
-exact resolver question available as a DNS resolution variant linked to its existing evidence
-history; this presentation layer does not change raw observations or policy identity.
+For the domain view, Application Activity presents every exact DNS inventory identity directly,
+including its query name and A or AAAA type. Each identity keeps its own evidence history, policy
+state, filters, and pagination instead of being folded into a logical destination presentation.
 
 Application Activity distinguishes process creation (`process.start`), executable execution
 (`process.exec`), and leader termination (`process.exit`). Historical exits recorded before task

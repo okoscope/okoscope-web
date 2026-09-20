@@ -21,6 +21,8 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Moved application-wide thread activity into its own **Threads** category so it is no longer
+  visually nested between an inventory category summary and that category's detailed results.
 - Historical mixed process-exit evidence is labeled legacy/unclassified instead of asserting
   leader termination, and non-leader thread exits no longer appear as stopped processes when the
   backend reports classified lifecycle evidence.

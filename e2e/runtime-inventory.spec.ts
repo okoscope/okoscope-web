@@ -47,12 +47,10 @@ test('explores Application Activity scope, views, cursors, and observation histo
   await expect(page.getByRole('heading', { name: 'Application Activity' })).toBeVisible()
   const activitySwitcher = page.getByRole('region', { name: 'Application activity summary' })
   const activityButtons = activitySwitcher.getByRole('button')
-  await expect(activityButtons).toHaveCount(7)
+  await expect(activityButtons).toHaveCount(8)
   await expect(page.getByRole('tab')).toHaveCount(0)
   await expect(page.getByRole('button', { name: /Executable executions/ })).toContainText('1')
-  await expect(page.getByRole('region', { name: 'Thread activity', exact: true })).toContainText(
-    'tokio-rt-worker',
-  )
+  await expect(page.getByRole('region', { name: 'Thread activity', exact: true })).toHaveCount(0)
   await expect(page.getByText(/Share of 144 matching recorded observations/)).toBeVisible()
   await expect(page.getByRole('button', { name: 'Tile view' })).toHaveAttribute(
     'aria-pressed',
@@ -152,6 +150,61 @@ test('explores Application Activity scope, views, cursors, and observation histo
   await expect(page).toHaveURL(/cursor=terminal/)
   await page.getByRole('button', { name: 'Return to first page' }).first().click()
   await expect(page).not.toHaveURL(/cursor=/)
+})
+
+test('opens threads as an isolated localized view and returns to compatible inventory URLs', async ({
+  page,
+}) => {
+  const { project, application } = await mockApi(page)
+  const requests: URL[] = []
+  page.on('request', (request) => {
+    const url = new URL(request.url())
+    if (
+      url.pathname.startsWith('/api/v1/') &&
+      (url.pathname.includes('/runtime-inventory') || url.pathname.includes('/thread-activity'))
+    )
+      requests.push(url)
+  })
+  await page.goto(
+    `/projects/${project.id}/applications/${application.id}/runtime-inventory?kind=domain&view=threads&search=ignored&namespace=production`,
+  )
+  await authenticate(page)
+  await page.evaluate(() => localStorage.setItem('okoscope.locale', 'ru'))
+  requests.length = 0
+  await page.reload()
+
+  const threads = page.getByRole('button', { name: /Потоки/ })
+  await expect(threads).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByRole('region', { name: 'Активность потоков', exact: true })).toContainText(
+    'tokio-rt-worker',
+  )
+  await expect(page.getByRole('heading', { name: 'Время наблюдения' })).toBeVisible()
+  await expect(page.getByLabel('Поиск по активности приложения')).toHaveCount(0)
+  await expect(page.getByText('Расширенные фильтры')).toHaveCount(0)
+  await expect(page.getByLabel('Вердикт политики')).toHaveCount(0)
+  await expect(page.getByRole('group', { name: 'Режим отображения активности' })).toHaveCount(0)
+
+  await expect
+    .poll(() => requests.filter((url) => url.pathname.includes('/thread-activity')).length)
+    .toBeGreaterThanOrEqual(2)
+  const threadRequests = requests.filter((url) => url.pathname.includes('/thread-activity'))
+  expect(threadRequests.some((url) => url.pathname.endsWith('/thread-activity/summary'))).toBe(true)
+  expect(threadRequests.some((url) => url.pathname.endsWith('/thread-activity'))).toBe(true)
+  expect(threadRequests.every((url) => !url.searchParams.has('kind'))).toBe(true)
+  expect(
+    requests.filter(
+      (url) =>
+        url.pathname.includes('/runtime-inventory') &&
+        !url.pathname.endsWith('/runtime-inventory/summary'),
+    ),
+  ).toEqual([])
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+
+  await page.getByRole('button', { name: /Домены/ }).click()
+  await expect(page).toHaveURL(/kind=domain/)
+  await expect(page).not.toHaveURL(/view=threads/)
+  await expect(page.getByLabel('Поиск по активности приложения')).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Активность потоков', exact: true })).toHaveCount(0)
 })
 
 test('presents an inert grouped DNS overview and exact identities accessibly in Russian at a narrow viewport', async ({

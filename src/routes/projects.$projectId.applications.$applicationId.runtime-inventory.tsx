@@ -48,21 +48,28 @@ function RuntimeInventoryPage() {
   const [facetCursors, setFacetCursors] = useState<Partial<Record<InventoryFacet, string>>>({})
   const [facetSearches, setFacetSearches] = useState<Partial<Record<InventoryFacet, string>>>({})
   const [activityView, setActivityView] = useState<'grid' | 'list'>('grid')
+  const threadsActive = search.view === 'threads'
   const project = useQuery(projectOptions(api, projectId))
   const application = useQuery(applicationOptions(api, projectId, applicationId))
   const summary = useQuery(inventorySummaryOptions(api, projectId, applicationId, search))
   const distribution = useQuery({
     ...inventoryDistributionOptions(api, projectId, applicationId, search),
-    enabled: search.kind !== 'domain',
+    enabled: !threadsActive && search.kind !== 'domain',
   })
   const dnsDistribution = useQuery({
     ...dnsGroupDistributionOptions(api, projectId, applicationId, search),
-    enabled: search.kind === 'domain',
+    enabled: !threadsActive && search.kind === 'domain',
   })
-  const list = useQuery(inventoryListOptions(api, projectId, applicationId, search))
-  const releases = useQuery(releasesOptions(api, projectId, applicationId, {}))
-  const cluster = useQuery(
-    inventoryFacetOptions(
+  const list = useQuery({
+    ...inventoryListOptions(api, projectId, applicationId, search),
+    enabled: !threadsActive,
+  })
+  const releases = useQuery({
+    ...releasesOptions(api, projectId, applicationId, {}),
+    enabled: !threadsActive,
+  })
+  const cluster = useQuery({
+    ...inventoryFacetOptions(
       api,
       projectId,
       applicationId,
@@ -71,9 +78,10 @@ function RuntimeInventoryPage() {
       facetSearches.cluster,
       facetCursors.cluster,
     ),
-  )
-  const namespace = useQuery(
-    inventoryFacetOptions(
+    enabled: !threadsActive,
+  })
+  const namespace = useQuery({
+    ...inventoryFacetOptions(
       api,
       projectId,
       applicationId,
@@ -82,9 +90,10 @@ function RuntimeInventoryPage() {
       facetSearches.namespace,
       facetCursors.namespace,
     ),
-  )
-  const workloadKind = useQuery(
-    inventoryFacetOptions(
+    enabled: !threadsActive,
+  })
+  const workloadKind = useQuery({
+    ...inventoryFacetOptions(
       api,
       projectId,
       applicationId,
@@ -93,9 +102,10 @@ function RuntimeInventoryPage() {
       facetSearches.workload_kind,
       facetCursors.workload_kind,
     ),
-  )
-  const workloadName = useQuery(
-    inventoryFacetOptions(
+    enabled: !threadsActive,
+  })
+  const workloadName = useQuery({
+    ...inventoryFacetOptions(
       api,
       projectId,
       applicationId,
@@ -104,9 +114,10 @@ function RuntimeInventoryPage() {
       facetSearches.workload_name,
       facetCursors.workload_name,
     ),
-  )
-  const container = useQuery(
-    inventoryFacetOptions(
+    enabled: !threadsActive,
+  })
+  const container = useQuery({
+    ...inventoryFacetOptions(
       api,
       projectId,
       applicationId,
@@ -115,7 +126,8 @@ function RuntimeInventoryPage() {
       facetSearches.container_name,
       facetCursors.container_name,
     ),
-  )
+    enabled: !threadsActive,
+  })
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -190,17 +202,19 @@ function RuntimeInventoryPage() {
           describe recorded activity, not configured intent, cause, or risk.
         </p>
       </header>
-      <Card>
-        <h2 className="text-lg font-semibold">Policy state</h2>
-        <div className="mt-3">
-          <PolicyFilters
-            verdict={search.verdict}
-            suppressed={search.suppressed}
-            evaluationPending={search.evaluation_pending}
-            onChange={setScope}
-          />
-        </div>
-      </Card>
+      {!threadsActive && (
+        <Card>
+          <h2 className="text-lg font-semibold">Policy state</h2>
+          <div className="mt-3">
+            <PolicyFilters
+              verdict={search.verdict}
+              suppressed={search.suppressed}
+              evaluationPending={search.evaluation_pending}
+              onChange={setScope}
+            />
+          </div>
+        </Card>
+      )}
       <div className="grid gap-6 lg:grid-cols-2">
         {summary.isPending ? (
           <Loading label="Loading inventory summary…" />
@@ -214,10 +228,20 @@ function RuntimeInventoryPage() {
           <InventoryKindDistribution
             summary={summary.data}
             activeKind={search.kind}
-            onKind={(kind) => setScope({ kind })}
+            threadsActive={threadsActive}
+            onKind={(kind) => setScope({ kind, view: undefined })}
+            onThreads={() => setScope({ view: 'threads' })}
           />
         )}
-        {search.kind === 'domain' ? (
+        {threadsActive ? (
+          <Card className="h-full">
+            <h2 className="text-xl font-semibold">Thread activity</h2>
+            <p className="mt-1 text-sm text-slate-400">
+              Thread activity is a separate application-wide view. Inventory kinds, policy state,
+              identity search, and behavior filters do not apply to these bounded aggregates.
+            </p>
+          </Card>
+        ) : search.kind === 'domain' ? (
           dnsDistribution.isPending ? (
             <Loading label="Loading DNS destination distribution…" />
           ) : dnsDistribution.isError && !dnsDistribution.data ? (
@@ -277,116 +301,156 @@ function RuntimeInventoryPage() {
           </div>
         )}
       </div>
-      <ThreadActivityPanel
-        key={`${search.observed_from ?? ''}:${search.observed_to ?? ''}`}
-        projectId={projectId}
-        applicationId={applicationId}
-        from={search.observed_from}
-        to={search.observed_to}
-      />
-      <Card>
-        <label className="text-sm">
-          <span className="mb-1 block text-slate-300">Search application activity</span>
-          <input
-            className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2"
-            value={searchText}
-            maxLength={200}
-            onChange={(event) => setSearchText(event.target.value)}
-            placeholder="Program, command, operation, path, address, domain, or system call"
-          />
-        </label>
-      </Card>
-      {summary.data && <RetentionCoverage coverage={summary.data.coverage} inventory />}
-      <InventoryFilterFields
-        search={search}
-        releases={releases.data?.items ?? []}
-        facets={facets}
-        onField={(field, value) => setScope({ [field]: value })}
-        onFacetNext={(facet, cursor) =>
-          setFacetCursors((current) => ({ ...current, [facet]: cursor }))
-        }
-        onFacetSearch={(facet, value) =>
-          setFacetSearches((current) => ({ ...current, [facet]: value }))
-        }
-      />
-      <div className="flex flex-wrap items-center justify-end gap-3">
-        <div
-          role="group"
-          aria-label="Activity layout"
-          className="inline-flex rounded-lg border border-slate-700 bg-slate-900 p-1"
-        >
-          <Button
-            className="h-8 w-8 p-0"
-            variant={activityView === 'grid' ? 'default' : 'ghost'}
-            aria-label="Tile view"
-            aria-pressed={activityView === 'grid'}
-            title="Tile view"
-            onClick={() => setActivityView('grid')}
-          >
-            <LayoutGrid size={17} aria-hidden="true" />
-          </Button>
-          <Button
-            className="h-8 w-8 p-0"
-            variant={activityView === 'list' ? 'default' : 'ghost'}
-            aria-label="List view"
-            aria-pressed={activityView === 'list'}
-            title="List view"
-            onClick={() => setActivityView('list')}
-          >
-            <List size={17} aria-hidden="true" />
-          </Button>
-        </div>
-        <Button variant="ghost" onClick={() => void navigate({ search: { kind: search.kind } })}>
-          Clear filters
-        </Button>
-      </div>
-      {list.isPending ? (
-        <Loading label={`Loading ${getActivityPresentation(search.kind).itemLabel}…`} />
-      ) : list.isError ? (
-        cursorError ? (
-          <Card role="alert" className="border-amber-700">
-            <h2 className="text-xl font-semibold">This cursor is no longer valid</h2>
-            <p className="mt-2 text-slate-400">
-              The collection scope is preserved. Return to its first page to continue.
+      {threadsActive ? (
+        <>
+          <Card>
+            <h2 className="text-lg font-semibold">Observation time</h2>
+            <p className="mt-1 text-sm text-slate-400">
+              Limit the application-wide thread aggregates to an explicit time range.
             </p>
-            <Button className="mt-4" onClick={clearCursor}>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              {(
+                [
+                  ['observed_from', 'Observed from'],
+                  ['observed_to', 'Observed to'],
+                ] as const
+              ).map(([field, label]) => (
+                <label key={field} className="text-sm">
+                  <span className="mb-1 block text-slate-300">{label}</span>
+                  <input
+                    type="datetime-local"
+                    className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2"
+                    value={search[field]?.slice(0, 16) ?? ''}
+                    onChange={(event) =>
+                      setScope({
+                        [field]: event.target.value
+                          ? new Date(event.target.value).toISOString()
+                          : undefined,
+                      })
+                    }
+                  />
+                </label>
+              ))}
+            </div>
+          </Card>
+          <ThreadActivityPanel
+            key={`${search.observed_from ?? ''}:${search.observed_to ?? ''}`}
+            projectId={projectId}
+            applicationId={applicationId}
+            from={search.observed_from}
+            to={search.observed_to}
+          />
+        </>
+      ) : (
+        <>
+          <Card>
+            <label className="text-sm">
+              <span className="mb-1 block text-slate-300">Search application activity</span>
+              <input
+                className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2"
+                value={searchText}
+                maxLength={200}
+                onChange={(event) => setSearchText(event.target.value)}
+                placeholder="Program, command, operation, path, address, domain, or system call"
+              />
+            </label>
+          </Card>
+          {summary.data && <RetentionCoverage coverage={summary.data.coverage} inventory />}
+          <InventoryFilterFields
+            search={search}
+            releases={releases.data?.items ?? []}
+            facets={facets}
+            onField={(field, value) => setScope({ [field]: value })}
+            onFacetNext={(facet, cursor) =>
+              setFacetCursors((current) => ({ ...current, [facet]: cursor }))
+            }
+            onFacetSearch={(facet, value) =>
+              setFacetSearches((current) => ({ ...current, [facet]: value }))
+            }
+          />
+          <div className="flex flex-wrap items-center justify-end gap-3">
+            <div
+              role="group"
+              aria-label="Activity layout"
+              className="inline-flex rounded-lg border border-slate-700 bg-slate-900 p-1"
+            >
+              <Button
+                className="h-8 w-8 p-0"
+                variant={activityView === 'grid' ? 'default' : 'ghost'}
+                aria-label="Tile view"
+                aria-pressed={activityView === 'grid'}
+                title="Tile view"
+                onClick={() => setActivityView('grid')}
+              >
+                <LayoutGrid size={17} aria-hidden="true" />
+              </Button>
+              <Button
+                className="h-8 w-8 p-0"
+                variant={activityView === 'list' ? 'default' : 'ghost'}
+                aria-label="List view"
+                aria-pressed={activityView === 'list'}
+                title="List view"
+                onClick={() => setActivityView('list')}
+              >
+                <List size={17} aria-hidden="true" />
+              </Button>
+            </div>
+            <Button
+              variant="ghost"
+              onClick={() => void navigate({ search: { kind: search.kind } })}
+            >
+              Clear filters
+            </Button>
+          </div>
+          {list.isPending ? (
+            <Loading label={`Loading ${getActivityPresentation(search.kind).itemLabel}…`} />
+          ) : list.isError ? (
+            cursorError ? (
+              <Card role="alert" className="border-amber-700">
+                <h2 className="text-xl font-semibold">This cursor is no longer valid</h2>
+                <p className="mt-2 text-slate-400">
+                  The collection scope is preserved. Return to its first page to continue.
+                </p>
+                <Button className="mt-4" onClick={clearCursor}>
+                  Return to first page
+                </Button>
+              </Card>
+            ) : (
+              <ApiErrorPanel
+                title="Could not load Application Activity"
+                error={list.error}
+                onRetry={() => void list.refetch()}
+              />
+            )
+          ) : list.data.items.length === 0 ? (
+            <EmptyState
+              title={search.cursor ? 'End of activity results' : 'No activity observed'}
+              description={
+                search.cursor
+                  ? 'This terminal cursor page is empty. Use browser Back or return to the first page.'
+                  : 'No items match the active application scope and filters.'
+              }
+            />
+          ) : (
+            <InventoryList
+              items={list.data.items}
+              projectId={projectId}
+              applicationId={applicationId}
+              view={activityView}
+            />
+          )}
+          {list.data && (
+            <PaginationControls
+              nextCursor={list.data.next_cursor}
+              onNext={(cursor) => void navigate({ search: { ...search, cursor } })}
+            />
+          )}
+          {search.cursor && list.data?.items.length === 0 && (
+            <Button variant="outline" onClick={clearCursor}>
               Return to first page
             </Button>
-          </Card>
-        ) : (
-          <ApiErrorPanel
-            title="Could not load Application Activity"
-            error={list.error}
-            onRetry={() => void list.refetch()}
-          />
-        )
-      ) : list.data.items.length === 0 ? (
-        <EmptyState
-          title={search.cursor ? 'End of activity results' : 'No activity observed'}
-          description={
-            search.cursor
-              ? 'This terminal cursor page is empty. Use browser Back or return to the first page.'
-              : 'No items match the active application scope and filters.'
-          }
-        />
-      ) : (
-        <InventoryList
-          items={list.data.items}
-          projectId={projectId}
-          applicationId={applicationId}
-          view={activityView}
-        />
-      )}
-      {list.data && (
-        <PaginationControls
-          nextCursor={list.data.next_cursor}
-          onNext={(cursor) => void navigate({ search: { ...search, cursor } })}
-        />
-      )}
-      {search.cursor && list.data?.items.length === 0 && (
-        <Button variant="outline" onClick={clearCursor}>
-          Return to first page
-        </Button>
+          )}
+        </>
       )}
     </div>
   )

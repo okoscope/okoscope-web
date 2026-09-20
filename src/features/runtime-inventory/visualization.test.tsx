@@ -7,6 +7,7 @@ import type {
   InventoryLifecycleSemanticSummary,
   InventorySummary,
 } from '../../shared/api/types'
+import { LocalizationProvider } from '../../shared/i18n'
 import {
   formatPercentage,
   formatSignedCount,
@@ -296,6 +297,29 @@ describe('data visualization presentation', () => {
     expect(domains).toHaveFocus()
     await user.keyboard('{Enter}')
     expect(onKind).toHaveBeenCalledWith('domain')
+  })
+
+  it('offers threads as a separate pressed view without adding an inventory kind', async () => {
+    const onKind = vi.fn()
+    const onThreads = vi.fn()
+    const user = userEvent.setup()
+    render(
+      <LocalizationProvider initialLocale="ru">
+        <InventoryKindDistribution
+          summary={summary}
+          activeKind="process"
+          threadsActive
+          onKind={onKind}
+          onThreads={onThreads}
+        />
+      </LocalizationProvider>,
+    )
+
+    const threads = screen.getByRole('button', { name: /Потоки/ })
+    expect(threads).toHaveAttribute('aria-pressed', 'true')
+    await user.click(threads)
+    expect(onThreads).toHaveBeenCalledOnce()
+    expect(onKind).not.toHaveBeenCalled()
   })
 
   it('sorts top behaviors and other by occurrence count descending', () => {

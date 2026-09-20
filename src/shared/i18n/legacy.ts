@@ -215,6 +215,14 @@ export const legacyRussian: Record<string, string> = {
   'Task terminated (legacy classification)': 'Задача завершена (устаревшая классификация)',
   'Executable executed': 'Программа выполнена',
   'Thread activity': 'Активность потоков',
+  'Observation time': 'Время наблюдения',
+  'Limit the application-wide thread aggregates to an explicit time range.':
+    'Ограничьте агрегаты потоков всего приложения явным временным интервалом.',
+  Threads: 'Потоки',
+  'Bounded lifecycle aggregates by current thread name':
+    'Ограниченные агрегаты жизненного цикла по текущему имени потока',
+  'Thread activity is a separate application-wide view. Inventory kinds, policy state, identity search, and behavior filters do not apply to these bounded aggregates.':
+    'Активность потоков — отдельное представление для всего приложения. Виды инвентаря, состояние политики, поиск по идентичности и фильтры поведения к этим ограниченным агрегатам не применяются.',
   'Loading thread activity…': 'Загрузка активности потоков…',
   'Could not load thread activity': 'Не удалось загрузить активность потоков',
   'Could not load thread activity windows': 'Не удалось загрузить окна активности потоков',

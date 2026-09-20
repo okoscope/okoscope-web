@@ -2,6 +2,7 @@ import type { FileActivityOperation, InventoryKind } from '../../shared/api/type
 
 export type InventorySearch = {
   kind: InventoryKind
+  view?: 'threads' | undefined
   operation?: FileActivityOperation | undefined
   release_id?: string | undefined
   cluster_id?: string | undefined
@@ -44,6 +45,7 @@ export function parseInventorySearch(input: Record<string, unknown>): InventoryS
     : 'process'
   return compact({
     kind,
+    view: input.view === 'threads' ? 'threads' : undefined,
     operation: ['create', 'modify', 'delete', 'rename'].includes(String(input.operation))
       ? (input.operation as FileActivityOperation)
       : undefined,
@@ -94,6 +96,7 @@ export function changeInventoryScope(
   const next = { ...current, ...updates }
   delete next.cursor
   if (updates.kind !== undefined && updates.kind !== current.kind) {
+    delete next.view
     delete next.identity_token
     if (updates.kind !== 'file_activity') delete next.operation
   }

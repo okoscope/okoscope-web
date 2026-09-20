@@ -53,11 +53,15 @@ export function inventoryIdentityText(
 export function InventoryKindDistribution({
   summary,
   activeKind,
+  threadsActive = false,
   onKind,
+  onThreads,
 }: {
   summary: InventorySummary
   activeKind: InventoryKind
+  threadsActive?: boolean
   onKind: (kind: InventoryKind) => void
+  onThreads?: (() => void) | undefined
 }) {
   const { locale } = useLocalization()
   const localized = (value: string) => (locale === 'ru' ? (legacyRussian[value] ?? value) : value)
@@ -101,6 +105,19 @@ export function InventoryKindDistribution({
           }),
         )}
       />
+      {onThreads && (
+        <button
+          type="button"
+          aria-pressed={threadsActive}
+          onClick={onThreads}
+          className={`mt-3 w-full rounded-lg border px-3 py-2 text-left transition-colors ${threadsActive ? 'border-cyan-300 bg-cyan-950/50' : 'border-slate-700 bg-slate-950/40 hover:border-slate-500'}`}
+        >
+          <span className="font-semibold">Threads</span>
+          <span className="mt-1 block text-xs text-slate-400">
+            Bounded lifecycle aggregates by current thread name
+          </span>
+        </button>
+      )}
     </Card>
   )
 }

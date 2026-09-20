@@ -43,9 +43,11 @@ of the top-five summary. Overview entries do not change the list's search or ide
 Application Activity distinguishes process creation (`process.start`), executable execution
 (`process.exec`), and leader termination (`process.exit`). Historical exits recorded before task
 classification are shown as legacy unclassified task terminations rather than asserted to be
-process exits. Thread lifecycle is intentionally presented as bounded aggregates instead of one
-inventory identity per thread: the panel reports created, exited, active, and peak-active counts
-and one current-name row per bounded name bucket. It marks snapshot or unavailable baselines,
+process exits. Thread lifecycle is intentionally presented as a separate **Threads** category
+instead of one inventory identity per thread: the panel reports created, exited, active, and
+peak-active counts and one current-name row per bounded name bucket. Inventory policy,
+identity-search, and behavior filters do not apply to this application-wide category. It marks
+snapshot or unavailable baselines,
 observation gaps, name overflow, and truncated summaries, and uses “at least” wording whenever a
 value is only a lower bound. The generated client consumes the no-store
 `/api/v1/projects/{project_id}/applications/{application_id}/thread-activity` and

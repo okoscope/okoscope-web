@@ -64,6 +64,22 @@ describe('runtime inventory URL state', () => {
     })
   })
 
+  it('keeps threads as a local view and clears it when an inventory kind is selected', () => {
+    expect(parseInventorySearch({ kind: 'domain', view: 'threads' })).toEqual({
+      kind: 'domain',
+      view: 'threads',
+    })
+    expect(parseInventorySearch({ kind: 'domain', view: 'unsupported' })).toEqual({
+      kind: 'domain',
+    })
+    expect(
+      changeInventoryScope(
+        { kind: 'domain', view: 'threads', observed_from: '2026-09-19T10:00:00Z' },
+        { kind: 'process', view: undefined },
+      ),
+    ).toEqual({ kind: 'process', observed_from: '2026-09-19T10:00:00Z' })
+  })
+
   it('removes kind and cursor from summary scope', () => {
     expect(
       summarySearch({ kind: 'syscall', namespace: 'prod', search: 'wait', cursor: 'next' }),

@@ -275,6 +275,13 @@ export const legacyRussian: Record<string, string> = {
     'Поисковое расширение DNS в Kubernetes создало варианты запросов резолвера для этого назначения. Точные запросы доступны ниже.',
   'Most observed DNS destinations': 'Наиболее наблюдаемые DNS-назначения',
   'Other observed DNS destinations': 'Прочие наблюдаемые DNS-назначения',
+  'Loading DNS destination distribution…': 'Загрузка распределения DNS-назначений…',
+  'Could not load DNS destination distribution':
+    'Не удалось загрузить распределение DNS-назначений',
+  'DNS destination distribution may be stale': 'Распределение DNS-назначений могло устареть',
+  'No DNS activity to visualize': 'Нет DNS-активности для визуализации',
+  'Related resolver questions are grouped in this non-interactive overview; the exact question names and record types remain separate in the inventory below.':
+    'Связанные запросы резолвера сгруппированы в этом некликабельном обзоре; точные имена запросов и типы записей остаются отдельными в инвентаризации ниже.',
   'Logical DNS destination count unavailable': 'Число логических DNS-назначений недоступно',
   'No DNS destinations to visualize': 'Нет DNS-назначений для визуализации',
   'No recorded DNS observations match the selected filters.':

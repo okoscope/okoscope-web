@@ -78,7 +78,7 @@ Outbound connect observations give you the destination address and port, the add
 
 DNS is off by default. Switch it on and you get bounded observations of plaintext UDP and TCP traffic on port 53: names, A and AAAA addresses, CNAME relationships, the response code and the TTL. A recent matching answer can annotate a connection with a name, which is convenient, but one shared IP can belong to several names, and correlation is not causation. Encrypted DNS stays encrypted, and Okoscope never fills a gap with a reverse lookup.
 
-Application inventory presents one outbound endpoint or exact DNS identity even when several Linux process threads produced it. DNS entries keep the observed question name and A or AAAA type visible in the main list and distribution, with their own evidence history, policy state, filters, and pagination. Kubernetes search-expanded questions therefore remain separate recorded identities instead of being folded into one inferred destination.
+Application inventory presents one outbound endpoint or exact DNS identity even when several Linux process threads produced it. DNS entries keep the observed question name and A or AAAA type visible in the main list, with their own evidence history, policy state, filters, and pagination. The non-interactive top-five overview groups related resolver questions into logical destinations so Kubernetes search-expansion variants do not crowd out other frequently observed destinations. Those overview groups never change the list's search or identity filters; the exact questions remain separate recorded identities below.
 
 <a id="files"></a>
 ## Experimental file activity

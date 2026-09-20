@@ -36,6 +36,9 @@ state.
 For the domain view, Application Activity presents every exact DNS inventory identity directly,
 including its query name and A or AAAA type. Each identity keeps its own evidence history, policy
 state, filters, and pagination instead of being folded into a logical destination presentation.
+The upper, non-interactive overview alone groups related resolver questions into logical DNS
+destinations, preventing Kubernetes search-expansion variants from crowding other destinations out
+of the top-five summary. Overview entries do not change the list's search or identity filters.
 
 Application Activity distinguishes process creation (`process.start`), executable execution
 (`process.exec`), and leader termination (`process.exit`). Historical exits recorded before task

@@ -107,21 +107,17 @@ export function InventoryKindDistribution({
 
 export function DnsGroupDistributionView({
   distribution,
-  selectedName,
-  onGroup,
 }: {
   distribution: DnsGroupDistribution
   selectedName?: string | undefined
-  onGroup: (name?: string) => void
+  onGroup?: ((name?: string) => void) | undefined
 }) {
   const entries: HorizontalBarItem[] = distribution.entries.map(({ group }) => ({
     id: group.group_token,
     label: <span className="break-all font-mono">{group.display_name}</span>,
     accessibleLabel: group.display_name,
     value: group.observation_count,
-    selected: group.display_name === selectedName,
     meta: `${formatCount(group.variant_count)} DNS resolution variants`,
-    onSelect: () => onGroup(group.display_name === selectedName ? undefined : group.display_name),
   }))
   if (distribution.other)
     entries.push({
@@ -138,7 +134,9 @@ export function DnsGroupDistributionView({
       <h2 className="text-xl font-semibold">Most observed DNS destinations</h2>
       <p className="mt-1 text-sm text-slate-400">
         Share of {formatCount(distribution.total_observation_count)} matching recorded DNS
-        observations across the complete filtered result, not only this list page.
+        observations across the complete filtered result, not only this list page. Related resolver
+        questions are grouped in this non-interactive overview; the exact question names and record
+        types remain separate in the inventory below.
       </p>
       <div className="mt-4">
         <HorizontalBars

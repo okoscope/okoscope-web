@@ -36,7 +36,7 @@ const summary: InventorySummary = {
 }
 
 describe('data visualization presentation', () => {
-  it('selects a logical DNS destination, clears it on repeat, and keeps other inert', async () => {
+  it('renders every logical DNS destination and other as inert overview content', async () => {
     const onGroup = vi.fn()
     const user = userEvent.setup()
     const distribution: DnsGroupDistribution = {
@@ -87,35 +87,31 @@ describe('data visualization presentation', () => {
       ],
       other: { group_count: 2, observation_count: 2 },
     }
-    const { container, rerender } = render(
-      <DnsGroupDistributionView distribution={distribution} onGroup={onGroup} />,
-    )
-
-    const destination = screen.getByRole('button', {
-      name: /<html-to-pdf\.rstat\.svc>: 10 observations/,
-    })
-    expect(destination).toHaveAttribute('aria-pressed', 'false')
-    expect(container.querySelector('html-to-pdf.rstat.svc')).toBeNull()
-    await user.click(destination)
-    expect(onGroup).toHaveBeenLastCalledWith('<html-to-pdf.rstat.svc>')
-
-    rerender(
+    const { container } = render(
       <DnsGroupDistributionView
         distribution={distribution}
         selectedName="<html-to-pdf.rstat.svc>"
         onGroup={onGroup}
       />,
     )
-    const selected = screen.getByRole('button', {
-      name: /<html-to-pdf\.rstat\.svc>: 10 observations/,
-    })
-    expect(selected).toHaveAttribute('aria-pressed', 'true')
+
+    const destination = screen.getByLabelText(/<html-to-pdf\.rstat\.svc>: 10 observations/)
+    const s3 = screen.getByLabelText(/s3\.twcstorage\.ru: 5 observations/)
+    const other = screen.getByLabelText(/Other observed DNS destinations: 2 observations/)
+    expect(destination).not.toHaveAttribute('aria-pressed')
+    expect(destination.closest('button')).toBeNull()
+    expect(s3.closest('button')).toBeNull()
+    expect(other.closest('button')).toBeNull()
     expect(
-      screen.getByRole('button', { name: /s3\.twcstorage\.ru: 5 observations/ }),
-    ).toHaveAttribute('aria-pressed', 'false')
-    await user.click(selected)
-    expect(onGroup).toHaveBeenLastCalledWith(undefined)
-    expect(screen.getByText('Other observed DNS destinations').closest('button')).toBeNull()
+      screen.queryByRole('button', {
+        name: /<html-to-pdf\.rstat\.svc>: 10 observations/,
+      }),
+    ).not.toBeInTheDocument()
+    expect(container.querySelector('html-to-pdf.rstat.svc')).toBeNull()
+    await user.click(destination)
+    await user.click(s3)
+    await user.click(other)
+    expect(onGroup).not.toHaveBeenCalled()
   })
 
   it('calculates safe percentages and signed counts', () => {

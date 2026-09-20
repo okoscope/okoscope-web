@@ -286,6 +286,23 @@ const dnsGroup = {
   pod_count: 2,
   container_count: 1,
 }
+const dnsDistributionGroups = [
+  dnsGroup,
+  {
+    ...dnsGroup,
+    group_token: 'dns-group-nats',
+    display_name: 'nats.nats.svc.cluster.local',
+    observation_count: 18,
+    variant_count: 8,
+  },
+  {
+    ...dnsGroup,
+    group_token: 'dns-group-html-to-pdf',
+    display_name: 'html-to-pdf.rstat.svc',
+    observation_count: 8,
+    variant_count: 6,
+  },
+]
 const inventoryItem = {
   id: inventoryItemId,
   project_id: project.id,
@@ -870,10 +887,10 @@ export async function mockApi(page: Page, role: 'owner' | 'member' = 'owner') {
     if (path === threadActivityBase) return json(route, { items: [], next_cursor: null })
     if (path === `${inventoryBase}/dns-groups/distribution`)
       return json(route, {
-        total_group_count: 1,
-        total_observation_count: 30,
-        entries: [{ group: dnsGroup }],
-        other: null,
+        total_group_count: 5,
+        total_observation_count: 60,
+        entries: dnsDistributionGroups.map((group) => ({ group })),
+        other: { group_count: 2, observation_count: 4 },
       })
     if (path === `${inventoryBase}/dns-groups`)
       return json(route, {

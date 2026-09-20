@@ -9,8 +9,9 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
-- Application Activity once again presents exact DNS inventory identities in its main list and
-  distribution instead of replacing them with grouped logical destinations.
+- Application Activity once again presents exact DNS inventory identities in its main list while
+  its non-interactive overview groups related resolver questions so repeated Kubernetes search
+  variants do not hide other frequently observed destinations.
 
 ### Added
 

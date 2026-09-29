@@ -562,7 +562,7 @@ test('shows correlated session errors without protected content', async ({ page 
           service_version: '0.1.0',
           git_commit: 'abc',
           api_version: 'v1',
-          required_database_migration: 26,
+          required_database_migration: 32,
         }),
       })
     if (route.request().url().endsWith('/setup/status'))

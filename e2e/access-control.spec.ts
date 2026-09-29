@@ -114,7 +114,7 @@ test('keeps zero-tenant super-administrator identity explicit in platform naviga
         service_version: '1',
         git_commit: 'test',
         api_version: 'v1',
-        required_database_migration: 26,
+        required_database_migration: 32,
       })
     if (path === '/api/v1/setup/status') return json(route, { state: 'ready' })
     if (path === '/api/v1/auth/policy')
@@ -201,7 +201,7 @@ test('keeps platform organization submit buttons compact on desktop and full wid
         service_version: '1',
         git_commit: 'test',
         api_version: 'v1',
-        required_database_migration: 26,
+        required_database_migration: 32,
       })
     if (path === '/api/v1/setup/status') return json(route, { state: 'ready' })
     if (path === '/api/v1/auth/me') return json(route, context)
@@ -289,7 +289,7 @@ test('keeps Organization invitation submit button compact on desktop and full wi
         service_version: '1',
         git_commit: 'test',
         api_version: 'v1',
-        required_database_migration: 26,
+        required_database_migration: 32,
       })
     if (path === '/api/v1/setup/status') return json(route, { state: 'ready' })
     if (path === '/api/v1/auth/me') return json(route, context)
@@ -370,7 +370,7 @@ test('adds an eligible Organization member through server-derived Project grants
         service_version: '1',
         git_commit: 'test',
         api_version: 'v1',
-        required_database_migration: 26,
+        required_database_migration: 32,
       })
     if (path === '/api/v1/setup/status') return json(route, { state: 'ready' })
     if (path === '/api/v1/auth/me') return json(route, context)

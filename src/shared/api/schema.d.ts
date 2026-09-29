@@ -3476,7 +3476,7 @@ export interface components {
             api_version: "v1";
             /**
              * Format: int64
-             * @example 31
+             * @example 32
              */
             required_database_migration: number;
         };

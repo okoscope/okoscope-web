@@ -30,6 +30,9 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Document that thread activity requires backend database migration 32; installations
+  with migration 31 retain their existing windows when upgrading.
+
 - Verify the frontend OpenAPI copy against the selected backend revision in CI and check
   generated API types without modifying the working tree.
 - Document that thread-activity windows follow effective Project raw runtime retention;

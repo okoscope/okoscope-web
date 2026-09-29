@@ -478,7 +478,7 @@ export async function mockApi(page: Page, role: 'owner' | 'member' = 'owner') {
         service_version: '0.1.0',
         git_commit: 'abcdef',
         api_version: 'v1',
-        required_database_migration: 26,
+        required_database_migration: 32,
       })
     if (path === '/api/v1/setup/status') return json(route, { state: 'ready' })
     if (path === '/api/v1/auth/policy')

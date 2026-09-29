@@ -373,7 +373,7 @@ export const contractFixture = {
     service_version: '0.1.0',
     git_commit: 'unknown',
     api_version: 'v1',
-    required_database_migration: 26,
+    required_database_migration: 32,
   } satisfies BuildInfo,
   applicationWorkerPage: {
     coverage: { closed_before: null, history_expired_before: null, detail_scope: 'raw' },

@@ -56,7 +56,7 @@ const build = {
   service_version: '1',
   git_commit: 'test',
   api_version: 'v1',
-  required_database_migration: 26,
+  required_database_migration: 32,
 }
 const auth = {
   user: {

@@ -4,7 +4,6 @@ import type {
   BaselineProvenance,
   ThreadActivitySummary,
   ThreadGapReason,
-  ThreadNameAggregate,
 } from '../../shared/api/types'
 import { useApi } from '../../shared/api/context'
 import { useLocalization } from '../../shared/i18n'
@@ -62,23 +61,25 @@ function Metric({ label, value }: { label: string; value: string }) {
 function ThreadNames({
   names,
   incomplete,
+  churnIncomplete,
   locale,
 }: {
-  names: ThreadNameAggregate[]
+  names: ThreadActivitySummary['names']
   incomplete: boolean
+  churnIncomplete: boolean
   locale: Locale
 }) {
   if (names.length === 0)
-    return <p className="text-sm text-slate-400">No current thread names were reported.</p>
+    return <p className="text-sm text-slate-400">No thread names were reported.</p>
   return (
     <div
       className="overflow-x-auto"
       role="region"
-      aria-label="Current thread activity grouped by name"
+      aria-label="Thread activity grouped by name"
       tabIndex={0}
     >
       <table className="w-full min-w-[34rem] text-left text-sm">
-        <caption className="sr-only">Current thread activity grouped by name</caption>
+        <caption className="sr-only">Thread activity grouped by name</caption>
         <thead className="text-xs text-slate-400">
           <tr className="border-b border-slate-700">
             <th scope="col" className="pb-2 font-medium">
@@ -101,10 +102,14 @@ function ThreadNames({
               <th scope="row" className="max-w-64 break-all py-2 font-mono font-medium">
                 {displayName(name.name)}
               </th>
-              <td className="py-2 text-right tabular-nums">{formatCount(name.created)}</td>
-              <td className="py-2 text-right tabular-nums">{formatCount(name.exited)}</td>
               <td className="py-2 text-right tabular-nums">
-                {lowerBound(name.active, incomplete, locale)}
+                {lowerBound(name.created, churnIncomplete, locale)}
+              </td>
+              <td className="py-2 text-right tabular-nums">
+                {lowerBound(name.exited, churnIncomplete, locale)}
+              </td>
+              <td className="py-2 text-right tabular-nums">
+                {name.active === null ? 'Unavailable' : lowerBound(name.active, incomplete, locale)}
               </td>
             </tr>
           ))}
@@ -122,17 +127,25 @@ function QualityNotice({ summary, locale }: { summary: ThreadActivitySummary; lo
       role="status"
       className="rounded-xl border border-amber-700/70 bg-amber-950/30 p-3 text-sm"
     >
-      <p className="font-medium text-amber-100">Thread totals are lower bounds</p>
-      <p className="mt-1 text-amber-100/80">
-        {summary.truncated
-          ? 'The bounded result omitted older windows. Counts prefixed with “At least” are incomplete.'
-          : 'Observation did not cover the complete process lifetime. Active counts may be incomplete.'}
+      <p className="font-medium text-amber-100">
+        {incomplete
+          ? 'Thread totals are lower bounds'
+          : locale === 'ru'
+            ? 'Достигнут лимит имён потоков'
+            : 'Thread name capacity reached'}
       </p>
+      {incomplete && (
+        <p className="mt-1 text-amber-100/80">
+          {summary.truncated
+            ? 'The bounded result omitted older windows. Counts prefixed with “At least” are incomplete.'
+            : 'Observation did not cover the complete process lifetime. Active counts may be incomplete.'}
+        </p>
+      )}
       {summary.name_overflow > 0 && (
         <p className="mt-1 text-amber-100/80">
           {locale === 'ru'
-            ? `${formatCount(summary.name_overflow)} наблюдений имён потоков превысили ограничение и включены в «Другие имена потоков».`
-            : `${formatCount(summary.name_overflow)} thread-name observations exceeded the bounded name capacity and are included in Other thread names.`}
+            ? `Переполнение имён: ${formatCount(summary.name_overflow)}. Дополнительные имена объединены в «Другие имена потоков».`
+            : `Name overflow: ${formatCount(summary.name_overflow)}. Additional names are grouped under Other thread names.`}
         </p>
       )}
       {summary.gaps.length > 0 && (
@@ -163,6 +176,7 @@ export function ThreadActivityPanel({
   const { locale } = useLocalization()
   const [cursor, setCursor] = useState<string>()
   const [cursorHistory, setCursorHistory] = useState<string[]>([])
+  const [windowsExpanded, setWindowsExpanded] = useState(false)
   const summary = useQuery(threadActivitySummaryOptions(api, projectId, applicationId, from, to))
   const windows = useQuery(
     threadActivityWindowsOptions(api, projectId, applicationId, from, to, cursor),
@@ -195,6 +209,7 @@ export function ThreadActivityPanel({
 
   const data = summary.data
   const incomplete = !data.baseline_complete || data.truncated || data.gaps.length > 0
+  const churnIncomplete = data.truncated || data.gaps.length > 0
   const formatter = new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' })
   const range = `${formatter.format(new Date(data.from))} – ${formatter.format(new Date(data.to))}`
   const active = data.active === null ? 'Unavailable' : lowerBound(data.active, incomplete, locale)
@@ -209,15 +224,22 @@ export function ThreadActivityPanel({
             Thread activity
           </h2>
           <p className="mt-1 text-sm text-slate-400">
-            Bounded aggregates by current thread name. Individual thread events are not retained.
+            Bounded aggregates by observed thread name. Individual thread events are not retained.
           </p>
         </div>
         <p className="text-sm text-slate-400">{range}</p>
       </div>
+      {data.active === null && data.window_count > 0 && (
+        <p className="text-sm text-slate-400">
+          {locale === 'ru'
+            ? 'В выбранных окнах присутствуют разные процессы или эпохи наблюдения. Текущее число активных потоков и общий пик недоступны; созданные и завершённые потоки суммируются по выбранным окнам.'
+            : 'The selected windows span different processes or observation epochs. Current active counts and a combined peak are unavailable; created and exited counts cover the selected windows.'}
+        </p>
+      )}
       <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Metric label="Active at end" value={active} />
-        <Metric label="Created" value={lowerBound(data.created, data.truncated, locale)} />
-        <Metric label="Exited" value={lowerBound(data.exited, data.truncated, locale)} />
+        <Metric label="Created" value={lowerBound(data.created, churnIncomplete, locale)} />
+        <Metric label="Exited" value={lowerBound(data.exited, churnIncomplete, locale)} />
         <Metric label="Peak active" value={peak} />
       </dl>
       <div className="flex flex-wrap gap-2 text-xs text-slate-300">
@@ -233,29 +255,42 @@ export function ThreadActivityPanel({
         </span>
       </div>
       <QualityNotice summary={data} locale={locale} />
-      <ThreadNames names={data.names} incomplete={incomplete} locale={locale} />
-      <details className="rounded-xl border border-slate-700 p-3">
+      <ThreadNames
+        names={data.names}
+        incomplete={incomplete}
+        churnIncomplete={churnIncomplete}
+        locale={locale}
+      />
+      <details
+        open={windowsExpanded}
+        onToggle={(event) => setWindowsExpanded(event.currentTarget.open)}
+        className="rounded-xl border border-slate-700 p-3"
+      >
         <summary className="cursor-pointer font-medium">Observation windows</summary>
         <ul className="mt-3 space-y-2">
-          {windows.data.items.map((window) => (
-            <li key={window.id} className="rounded-lg bg-slate-950/50 p-3 text-sm">
-              <div className="flex flex-wrap justify-between gap-2">
-                <span className="break-all font-mono">{window.process_command}</span>
-                <span className="text-slate-400">
-                  {formatter.format(new Date(window.window_started_at))} –{' '}
-                  {formatter.format(new Date(window.window_ended_at))}
-                </span>
-              </div>
-              <p className="mt-1 text-slate-400">
-                {locale === 'ru'
-                  ? `Создано ${formatCount(window.created_count)} · завершено ${formatCount(window.exited_count)} · активно ${formatCount(window.active_at_end)} · пик ${formatCount(window.peak_active)}`
-                  : `Created ${formatCount(window.created_count)} · exited ${formatCount(window.exited_count)} · active ${formatCount(window.active_at_end)} · peak ${formatCount(window.peak_active)}`}
-              </p>
-              {!window.start_observed && (
-                <p className="mt-1 text-amber-200">Process start was not observed.</p>
-              )}
-            </li>
-          ))}
+          {windows.data.items.map((window) => {
+            const windowIncomplete = !window.baseline_complete || window.gaps.length > 0
+            const windowChurnIncomplete = window.gaps.length > 0
+            return (
+              <li key={window.id} className="rounded-lg bg-slate-950/50 p-3 text-sm">
+                <div className="flex flex-wrap justify-between gap-2">
+                  <span className="break-all font-mono">{window.process_command}</span>
+                  <span className="text-slate-400">
+                    {formatter.format(new Date(window.window_started_at))} –{' '}
+                    {formatter.format(new Date(window.window_ended_at))}
+                  </span>
+                </div>
+                <p className="mt-1 text-slate-400">
+                  {locale === 'ru'
+                    ? `Создано ${lowerBound(window.created_count, windowChurnIncomplete, locale)} · завершено ${lowerBound(window.exited_count, windowChurnIncomplete, locale)} · активно ${lowerBound(window.active_at_end, windowIncomplete, locale)} · пик ${lowerBound(window.peak_active, windowIncomplete, locale)}`
+                    : `Created ${lowerBound(window.created_count, windowChurnIncomplete, locale)} · exited ${lowerBound(window.exited_count, windowChurnIncomplete, locale)} · active ${lowerBound(window.active_at_end, windowIncomplete, locale)} · peak ${lowerBound(window.peak_active, windowIncomplete, locale)}`}
+                </p>
+                {!window.start_observed && (
+                  <p className="mt-1 text-amber-200">Process start was not observed.</p>
+                )}
+              </li>
+            )
+          })}
         </ul>
         <div className="mt-3 flex justify-end gap-2">
           <Button

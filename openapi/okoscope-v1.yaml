@@ -626,7 +626,7 @@ paths:
     get:
       operationId: listProjects
       parameters:
-        [{ $ref: '#/components/parameters/Cursor' }, { $ref: '#/components/parameters/Limit' }]
+        [{ $ref: '#/components/parameters/Cursor' }, { $ref: '#/components/parameters/LargeLimit' }]
       responses:
         {
           '200': { $ref: '#/components/responses/ProjectPage' },
@@ -646,7 +646,7 @@ paths:
     get:
       operationId: listApplications
       parameters:
-        [{ $ref: '#/components/parameters/Cursor' }, { $ref: '#/components/parameters/Limit' }]
+        [{ $ref: '#/components/parameters/Cursor' }, { $ref: '#/components/parameters/LargeLimit' }]
       responses:
         {
           '200': { $ref: '#/components/responses/ApplicationPage' },
@@ -696,7 +696,7 @@ paths:
       parameters:
         [
           { $ref: '#/components/parameters/OpaqueCursor' },
-          { $ref: '#/components/parameters/Limit' },
+          { $ref: '#/components/parameters/LargeLimit' },
         ]
       responses:
         {
@@ -822,7 +822,7 @@ paths:
         - { name: suppressed, in: query, schema: { type: boolean } }
         - { name: evaluation_pending, in: query, schema: { type: boolean } }
         - { $ref: '#/components/parameters/Cursor' }
-        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/LargeLimit' }
       responses:
         {
           '200': { $ref: '#/components/responses/InventoryItemPage' },
@@ -836,7 +836,7 @@ paths:
       - { $ref: '#/components/parameters/ApplicationId' }
     get:
       operationId: listApplicationThreadActivityWindows
-      description: Returns bounded named-thread aggregate windows. Responses are never cached.
+      description: Returns complete aggregate windows contained in the requested time range, newest first. Defaults to the preceding hour; maximum range is 31 days. Generation and epoch filters must be supplied together. Cursor must belong to the same requested scope. Invalid limits and query parameters return invalid_request. Thread windows follow effective project raw retention and are not reconstructed from history snapshots. Responses are never cached.
       parameters:
         - { name: from, in: query, schema: { type: string, format: date-time } }
         - { name: to, in: query, schema: { type: string, format: date-time } }
@@ -859,7 +859,7 @@ paths:
       - { $ref: '#/components/parameters/ApplicationId' }
     get:
       operationId: getApplicationThreadActivitySummary
-      description: Returns reconciled process-level thread totals and the latest current-name distribution.
+      description: Returns process-level observed transition totals across at most 10000 newest complete windows. Defaults to the preceding hour; maximum range is 31 days. Generation and epoch filters must be supplied together. Transitions are lower bounds when gaps or truncation exist. Active and peak counts are available only for a single qualified process generation and observation epoch; unrelated generations and epochs are never joined by PID. Names report transitions across the range and current activity only when a single qualified process is represented.
       parameters:
         - { name: from, in: query, schema: { type: string, format: date-time } }
         - { name: to, in: query, schema: { type: string, format: date-time } }
@@ -932,7 +932,7 @@ paths:
         - { $ref: '#/components/parameters/DnsGroupSuppressed' }
         - { $ref: '#/components/parameters/DnsGroupEvaluationPending' }
         - { name: cursor, in: query, schema: { type: string, maxLength: 4096 } }
-        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/LargeLimit' }
       responses:
         '200': { $ref: '#/components/responses/DnsGroupPage' }
         '400': { $ref: '#/components/responses/Error' }
@@ -989,7 +989,7 @@ paths:
         - { $ref: '#/components/parameters/DnsGroupSuppressed' }
         - { $ref: '#/components/parameters/DnsGroupEvaluationPending' }
         - { name: cursor, in: query, schema: { type: string, maxLength: 4096 } }
-        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/LargeLimit' }
       responses:
         '200': { $ref: '#/components/responses/DnsGroupVariantPage' }
         '400': { $ref: '#/components/responses/Error' }
@@ -1074,7 +1074,7 @@ paths:
         - { name: search, in: query, schema: { type: string, minLength: 1, maxLength: 200 } }
         - { name: facet_search, in: query, schema: { type: string, minLength: 1, maxLength: 200 } }
         - { $ref: '#/components/parameters/OpaqueCursor' }
-        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/LargeLimit' }
       responses:
         {
           '200': { $ref: '#/components/responses/InventoryFacetPage' },
@@ -1148,7 +1148,7 @@ paths:
     get:
       operationId: listApplicationRuntimeInventoryItemReleases
       parameters:
-        [{ $ref: '#/components/parameters/Cursor' }, { $ref: '#/components/parameters/Limit' }]
+        [{ $ref: '#/components/parameters/Cursor' }, { $ref: '#/components/parameters/LargeLimit' }]
       responses:
         {
           '200': { $ref: '#/components/responses/InventoryReleasePresencePage' },
@@ -1168,7 +1168,7 @@ paths:
       parameters:
         [
           { $ref: '#/components/parameters/OpaqueCursor' },
-          { $ref: '#/components/parameters/Limit' },
+          { $ref: '#/components/parameters/LargeLimit' },
         ]
       responses:
         {
@@ -1187,7 +1187,7 @@ paths:
     get:
       operationId: listApplicationRuntimeInventoryItemGroups
       parameters:
-        [{ $ref: '#/components/parameters/Cursor' }, { $ref: '#/components/parameters/Limit' }]
+        [{ $ref: '#/components/parameters/Cursor' }, { $ref: '#/components/parameters/LargeLimit' }]
       responses:
         {
           '200': { $ref: '#/components/responses/InventoryGroupPage' },
@@ -1205,7 +1205,7 @@ paths:
     get:
       operationId: listApplicationRuntimeInventoryItemOccurrences
       parameters:
-        [{ $ref: '#/components/parameters/Cursor' }, { $ref: '#/components/parameters/Limit' }]
+        [{ $ref: '#/components/parameters/Cursor' }, { $ref: '#/components/parameters/LargeLimit' }]
       responses:
         {
           '200': { $ref: '#/components/responses/InventoryOccurrencePage' },
@@ -1242,7 +1242,7 @@ paths:
         - { name: suppressed, in: query, schema: { type: boolean } }
         - { name: evaluation_pending, in: query, schema: { type: boolean } }
         - { $ref: '#/components/parameters/Cursor' }
-        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/LargeLimit' }
       responses: { '200': { $ref: '#/components/responses/RuntimeGroupPage' } }
   /api/v1/projects/{project_id}/applications/{application_id}/policies:
     parameters:
@@ -1253,7 +1253,7 @@ paths:
     get:
       operationId: listRuntimePolicies
       parameters:
-        [{ $ref: '#/components/parameters/Cursor' }, { $ref: '#/components/parameters/Limit' }]
+        [{ $ref: '#/components/parameters/Cursor' }, { $ref: '#/components/parameters/LargeLimit' }]
       responses:
         {
           '200':
@@ -1354,7 +1354,7 @@ paths:
     get:
       operationId: listRuntimePolicyRevisions
       parameters:
-        [{ $ref: '#/components/parameters/Cursor' }, { $ref: '#/components/parameters/Limit' }]
+        [{ $ref: '#/components/parameters/Cursor' }, { $ref: '#/components/parameters/LargeLimit' }]
       responses:
         {
           '200':
@@ -1521,7 +1521,7 @@ paths:
         parameters:
           [
             { $ref: '#/components/parameters/Cursor' },
-            { $ref: '#/components/parameters/Limit' },
+            { $ref: '#/components/parameters/LargeLimit' },
             { name: active, in: query, schema: { type: boolean } },
           ],
         responses:
@@ -1640,7 +1640,7 @@ paths:
     get:
       operationId: listRuntimeGroupOccurrences
       parameters:
-        [{ $ref: '#/components/parameters/Cursor' }, { $ref: '#/components/parameters/Limit' }]
+        [{ $ref: '#/components/parameters/Cursor' }, { $ref: '#/components/parameters/LargeLimit' }]
       responses:
         {
           '200': { $ref: '#/components/responses/OccurrencePage' },
@@ -1685,7 +1685,7 @@ paths:
     get:
       operationId: listReleases
       parameters:
-        [{ $ref: '#/components/parameters/Cursor' }, { $ref: '#/components/parameters/Limit' }]
+        [{ $ref: '#/components/parameters/Cursor' }, { $ref: '#/components/parameters/LargeLimit' }]
       responses: { '200': { $ref: '#/components/responses/ReleasePage' } }
     post:
       operationId: createRelease
@@ -1712,7 +1712,7 @@ paths:
       operationId: listDeploymentEpisodes
       description: Lists observed Kubernetes deployment episodes. Ready Pod share is not measured traffic share or declared rollout intent.
       parameters:
-        [{ $ref: '#/components/parameters/Cursor' }, { $ref: '#/components/parameters/Limit' }]
+        [{ $ref: '#/components/parameters/Cursor' }, { $ref: '#/components/parameters/LargeLimit' }]
       responses: { '200': { $ref: '#/components/responses/DeploymentEpisodePage' } }
   /api/v1/projects/{project_id}/applications/{application_id}/resources:
     parameters:
@@ -1767,7 +1767,7 @@ paths:
       parameters:
         - { name: baseline_id, in: query, schema: { type: string, format: uuid } }
         - { $ref: '#/components/parameters/Cursor' }
-        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/LargeLimit' }
       responses: { '200': { $ref: '#/components/responses/RuntimeDiff' } }
   /api/v1/projects/{project_id}/applications/{application_id}/releases/{target_id}/runtime-diff/summary:
     parameters:
@@ -1797,7 +1797,9 @@ paths:
     post:
       operationId: createWebhookDestination
       requestBody: { $ref: '#/components/requestBodies/CreateWebhookDestination' }
-      responses: { '201': { $ref: '#/components/responses/DestinationWithSecret' } }
+      responses:
+        '201': { $ref: '#/components/responses/DestinationWithSecret' }
+        '409': { $ref: '#/components/responses/Error' }
   /api/v1/projects/{project_id}/webhook-destinations/{destination_id}:
     parameters:
       [
@@ -1810,7 +1812,9 @@ paths:
     patch:
       operationId: updateWebhookDestination
       requestBody: { $ref: '#/components/requestBodies/UpdateWebhookDestination' }
-      responses: { '200': { $ref: '#/components/responses/WebhookDestination' } }
+      responses:
+        '200': { $ref: '#/components/responses/WebhookDestination' }
+        '409': { $ref: '#/components/responses/Error' }
   /api/v1/projects/{project_id}/webhook-destinations/{destination_id}/disable:
     parameters:
       [
@@ -1843,7 +1847,7 @@ paths:
     get:
       operationId: listNotificationDeliveries
       parameters:
-        [{ $ref: '#/components/parameters/Cursor' }, { $ref: '#/components/parameters/Limit' }]
+        [{ $ref: '#/components/parameters/Cursor' }, { $ref: '#/components/parameters/LargeLimit' }]
       responses: { '200': { $ref: '#/components/responses/DeliveryPage' } }
   /api/v1/projects/{project_id}/notification-deliveries/bulk-retry:
     parameters: [{ $ref: '#/components/parameters/ProjectId' }]
@@ -1916,7 +1920,7 @@ paths:
             schema: { $ref: '#/components/schemas/RecoveryCommandType' },
           }
         - { $ref: '#/components/parameters/Cursor' }
-        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/LargeLimit' }
       responses: { '200': { $ref: '#/components/responses/RecoveryOperationPage' } }
   /api/v1/projects/{project_id}/notification-recovery-operations/{operation_id}:
     parameters:
@@ -2475,6 +2479,8 @@ components:
       }
     Limit:
       { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 50 } }
+    LargeLimit:
+      { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
     ProjectId:
       { name: project_id, in: path, required: true, schema: { type: string, format: uuid } }
     OrganizationId:
@@ -4183,7 +4189,7 @@ components:
       properties:
         error:
           type: string
-          enum: [validation_failed, unauthorized, invalid_credentials, email_verification_required, registration_disabled, registration_conflict, untrusted_origin, forbidden, not_found, organization_not_found, project_not_found, application_not_found, user_not_found, user_not_eligible, setup_already_completed, invalid_setup_token, setup_rate_limited, privilege_confirmation_required, current_password_invalid, self_promotion_forbidden, last_super_admin_required, last_organization_owner_required, organization_limit_reached, invitation_unusable, invitation_account_mismatch, invitation_exists, rate_limited, mail_unavailable, idempotency_key_reused, operation_already_completed, internal_error]
+          enum: [validation_failed, unauthorized, invalid_credentials, email_verification_required, registration_disabled, registration_conflict, untrusted_origin, forbidden, not_found, organization_not_found, project_not_found, application_not_found, user_not_found, user_not_eligible, setup_already_completed, invalid_setup_token, setup_rate_limited, privilege_confirmation_required, current_password_invalid, self_promotion_forbidden, last_super_admin_required, last_organization_owner_required, organization_limit_reached, invitation_unusable, invitation_account_mismatch, invitation_exists, rate_limited, mail_unavailable, idempotency_key_reused, operation_already_completed, internal_error, invalid_request, label_conflict, revision_conflict, release_exists, action_token_invalid, application_slug_conflict, conflict, credential_conflict, credential_name_conflict, credential_not_found, installation_metadata_unavailable, invitation_identity_conflict, invitation_not_found, invitation_not_pending, invitation_requires_sign_in, invitation_scope_not_found, membership_exists, organization_not_deletable, organization_slug_conflict, project_slug_conflict, bulk_limit_exceeded, delivery_active_lease, delivery_invalid_state, destination_disabled, destination_name_conflict, invalid_identity_token, expired_identity_token, identity_token_scope_mismatch]
         message: { type: string, example: resource not found }
         request_id: { type: string, example: 0ec02ed2-8483-4981-893e-bffc535897d7 }
         fields:
@@ -4198,7 +4204,7 @@ components:
         service_version: { type: string, example: 0.1.0 }
         git_commit: { type: string, example: ac23c0b4d042e8d430ea6880f6b66ed1a9d4580a }
         api_version: { type: string, const: v1 }
-        required_database_migration: { type: integer, format: int64, example: 30 }
+        required_database_migration: { type: integer, format: int64, example: 31 }
     Organization:
       type: object
       additionalProperties: false
@@ -4805,6 +4811,15 @@ components:
       properties:
         items: { type: array, maxItems: 200, items: { $ref: '#/components/schemas/ThreadActivityWindow' } }
         next_cursor: { $ref: '#/components/schemas/NullableUuid' }
+    SummaryThreadNameAggregate:
+      type: object
+      additionalProperties: false
+      required: [name, created, exited, active]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 15 }
+        created: { type: integer, format: int64, minimum: 0 }
+        exited: { type: integer, format: int64, minimum: 0 }
+        active: { type: [integer, 'null'], format: int64, minimum: 0, description: Latest current-name population for one qualified process; unavailable across multiple process generations or observation epochs. }
     ThreadActivitySummary:
       type: object
       additionalProperties: false
@@ -4816,12 +4831,12 @@ components:
         truncated: { type: boolean, description: True when the bounded summary omitted windows and totals are lower bounds. }
         created: { type: integer, format: int64, minimum: 0 }
         exited: { type: integer, format: int64, minimum: 0 }
-        active: { type: [integer, 'null'], format: int64, minimum: 0 }
-        peak_active: { type: [integer, 'null'], format: int64, minimum: 0 }
+        active: { type: [integer, 'null'], format: int64, minimum: 0, description: Latest boundary count for one qualified process; null for empty or multiple process scopes. }
+        peak_active: { type: [integer, 'null'], format: int64, minimum: 0, description: Maximum observed window peak for one qualified process; null when a simultaneous application peak cannot be established. }
         baseline_complete: { type: boolean }
         baseline_provenance: { oneOf: [{ $ref: '#/components/schemas/BaselineProvenance' }, { type: 'null' }] }
-        name_overflow: { type: integer, format: int64, minimum: 0 }
-        names: { type: array, maxItems: 66, items: { $ref: '#/components/schemas/ThreadNameAggregate' } }
+        name_overflow: { type: integer, format: int64, minimum: 0, description: Observed window name-overflow counters plus summary names folded into the other bucket. }
+        names: { type: array, maxItems: 66, items: { $ref: '#/components/schemas/SummaryThreadNameAggregate' } }
         gaps: { type: array, uniqueItems: true, items: { $ref: '#/components/schemas/ThreadGapReason' } }
     EvidenceSource: { type: string, enum: [kernel, kubernetes, derived] }
     EventCorrelation:

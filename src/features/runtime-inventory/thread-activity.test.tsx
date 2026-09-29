@@ -45,7 +45,7 @@ const windows: ThreadActivityWindowPage = {
       baseline_provenance: 'observed',
       baseline_complete: true,
       name_overflow: 0,
-      names: summary.names,
+      names: [{ name: 'tokio-rt-worker', created: 8, exited: 3, active: 5 }],
       gaps: [],
     },
   ],
@@ -86,9 +86,7 @@ describe('thread activity panel', () => {
     expect(region).toHaveTextContent('Exited3')
     expect(region).toHaveTextContent('Peak active7')
     expect(screen.getAllByRole('row', { name: /tokio-rt-worker/ })).toHaveLength(1)
-    expect(
-      screen.getByRole('table', { name: 'Current thread activity grouped by name' }),
-    ).toBeVisible()
+    expect(screen.getByRole('table', { name: 'Thread activity grouped by name' })).toBeVisible()
     expect(container.querySelector('.overflow-x-auto')).not.toBeNull()
     expect(screen.getByRole('button', { name: 'Previous windows' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Next windows' })).toBeDisabled()
@@ -120,11 +118,68 @@ describe('thread activity panel', () => {
 
     expect(await screen.findByRole('status')).toHaveTextContent('Thread totals are lower bounds')
     expect(screen.getByText('Initialized from a process snapshot')).toBeVisible()
-    expect(screen.getByText(/4 thread-name observations exceeded/)).toBeVisible()
+    expect(screen.getByText(/Name overflow: 4/)).toBeVisible()
     expect(screen.getByText(/Snapshot task limit reached/)).toBeVisible()
     expect(screen.getByRole('row', { name: /Other thread names/ })).toHaveTextContent('At least 1')
     await userEvent.click(screen.getByText('Observation windows'))
     expect(screen.getByText('Process start was not observed.')).toBeVisible()
+  })
+
+  it('preserves unavailable multi-population counts without converting them to zero', async () => {
+    setup(
+      successfulGet({
+        active: null,
+        peak_active: null,
+        names: [{ name: 'worker', created: 8, exited: 3, active: null }],
+      }),
+    )
+    const region = await screen.findByRole('region', { name: 'Thread activity' })
+    expect(region).toHaveTextContent('Active at endUnavailable')
+    expect(region).toHaveTextContent('Peak activeUnavailable')
+    expect(screen.getByRole('row', { name: /worker/ })).toHaveTextContent('worker83Unavailable')
+    expect(screen.queryByText('Thread totals are lower bounds')).not.toBeInTheDocument()
+  })
+
+  it('qualifies churn counts for delivery gaps but preserves complete counts for name overflow alone', async () => {
+    const gapView = setup(successfulGet({ gaps: ['delivery_gap'] }))
+    const region = await screen.findByRole('region', { name: 'Thread activity' })
+    expect(region).toHaveTextContent('CreatedAt least 8')
+    expect(region).toHaveTextContent('ExitedAt least 3')
+    expect(screen.getByRole('row', { name: /tokio-rt-worker/ })).toHaveTextContent('At least 8')
+    gapView.unmount()
+    setup(successfulGet({ name_overflow: 2 }))
+    expect(await screen.findByRole('status')).toHaveTextContent('Thread name capacity reached')
+    expect(screen.queryByText('Thread totals are lower bounds')).not.toBeInTheDocument()
+    expect(screen.getByRole('row', { name: /tokio-rt-worker/ })).toHaveTextContent(
+      'tokio-rt-worker835',
+    )
+  })
+
+  it('keeps baseline-only transition counts exact and qualifies truncated transitions', async () => {
+    const baselineView = setup(successfulGet({ baseline_complete: false }))
+    let region = await screen.findByRole('region', { name: 'Thread activity' })
+    expect(region).toHaveTextContent('Created8')
+    expect(region).toHaveTextContent('Exited3')
+    expect(region).toHaveTextContent('Active at endAt least 5')
+    baselineView.unmount()
+    setup(successfulGet({ truncated: true }))
+    region = await screen.findByRole('region', { name: 'Thread activity' })
+    expect(region).toHaveTextContent('CreatedAt least 8')
+    expect(region).toHaveTextContent('ExitedAt least 3')
+  })
+
+  it('localizes unavailable summary populations in Russian', async () => {
+    setup(
+      successfulGet({
+        active: null,
+        peak_active: null,
+        names: [{ name: 'worker', created: 8, exited: 3, active: null }],
+      }),
+      'ru',
+    )
+    const region = await screen.findByRole('region', { name: 'Активность потоков' })
+    expect(region).toHaveTextContent('Недоступно')
+    expect(screen.queryByText('Unavailable')).not.toBeInTheDocument()
   })
 
   it('supports bounded cursor pagination and preserves the selected time scope', async () => {
@@ -147,6 +202,30 @@ describe('thread activity panel', () => {
     )
     await userEvent.click(screen.getByRole('button', { name: 'Previous windows' }))
     await waitFor(() => expect(get).toHaveBeenCalledTimes(4))
+  })
+
+  it('keeps observation windows expanded after an asynchronous page transition', async () => {
+    let resolveNext: (page: ThreadActivityWindowPage) => void = () => {
+      throw new Error('Next page was not requested')
+    }
+    const nextPage = new Promise<ThreadActivityWindowPage>((resolve) => {
+      resolveNext = resolve
+    })
+    const get = vi.fn((path: string) => {
+      if (path.includes('/summary')) return Promise.resolve(summary)
+      if (path.includes('cursor=next')) return nextPage
+      return Promise.resolve({ ...windows, next_cursor: 'next' })
+    })
+    setup(get)
+    await userEvent.click(await screen.findByText('Observation windows'))
+    expect(screen.getByText('Observation windows').closest('details')).toHaveAttribute('open')
+    await userEvent.click(screen.getByRole('button', { name: 'Next windows' }))
+    expect(await screen.findByText('Loading thread activity…')).toBeVisible()
+    resolveNext({ ...windows, next_cursor: null })
+    const previous = await screen.findByRole('button', { name: 'Previous windows' })
+    expect(screen.getByText('Observation windows').closest('details')).toHaveAttribute('open')
+    expect(previous).toBeVisible()
+    expect(previous).toBeEnabled()
   })
 
   it('renders loading, empty, summary-error, and windows-error states', async () => {

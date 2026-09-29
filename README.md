@@ -45,13 +45,23 @@ Application Activity distinguishes process creation (`process.start`), executabl
 classification are shown as legacy unclassified task terminations rather than asserted to be
 process exits. Thread lifecycle is intentionally presented as a separate **Threads** category
 instead of one inventory identity per thread: the panel reports created, exited, active, and
-peak-active counts and one current-name row per bounded name bucket. Inventory policy,
+peak-active counts and bounded name buckets. Created and exited counts cover the selected
+windows. Active counts and the observed peak are available only when the windows belong to one
+qualified process and observation epoch; summaries spanning different processes show them as
+unavailable instead of combining incompatible observations. Inventory policy,
 identity-search, and behavior filters do not apply to this application-wide category. It marks
 snapshot or unavailable baselines,
 observation gaps, name overflow, and truncated summaries, and uses “at least” wording whenever a
 value is only a lower bound. The generated client consumes the no-store
 `/api/v1/projects/{project_id}/applications/{application_id}/thread-activity` and
-`/thread-activity/summary` routes from the authoritative backend OpenAPI contract.
+`/thread-activity/summary` routes from the authoritative backend OpenAPI contract. These views
+require backend database migration 31 and a compatible runtime agent advertising
+`task.lifecycle/v1`; older agents do not reconstruct historical thread activity. Enable
+`observation.processExit` for task creation, rename, and exit evidence; capability advertisement
+requires all mandatory kernel hooks to load and attach successfully. `processExec` is independent. The default
+window is one hour, and an explicit range may span at most 31 days. Thread-activity windows
+follow the Project’s effective raw runtime retention; expired windows are removed without
+a separate historical snapshot to reconstruct their counts.
 
 The product interface is a React single-page app. Public documentation is a statically generated
 Astro and Starlight site at `/docs/en/` and `/docs/ru/`. The application validates backend compatibility at startup and
@@ -121,6 +131,38 @@ Before running Playwright locally for the first time, install Chromium:
 npx playwright install chromium
 ```
 
+## Thread activity against a real backend
+
+The default `npm run test:e2e` suite uses mocked API responses. The separate thread-activity
+suite exercises the real server and PostgreSQL, including authenticated lifecycle ingestion,
+window pagination, invalid requests, access isolation, and localized unavailable counts.
+It does not load or verify Linux kernel probes.
+
+Install dependencies and Chromium as above, then build the compatible backend checkout:
+
+```sh
+cd /path/to/backend
+cargo build -p server
+```
+
+Run the suite from this frontend checkout with a local PostgreSQL 17 server and a role allowed
+to create databases. The administration URL must select the local `postgres` database through
+the `/tmp` socket; remote database URLs are rejected.
+
+```sh
+OKOSCOPE_BACKEND_CHECKOUT=/path/to/backend \
+OKOSCOPE_TEST_ADMIN_DATABASE_URL='postgres://<local-user>@localhost/postgres?host=/tmp' \
+PSQL_BIN=/path/to/psql \
+npx playwright test --config=playwright.threads.config.ts
+```
+
+`PSQL_BIN` defaults to `psql`. The harness creates and migrates a randomly named database,
+starts the server on HTTP `18090` and gRPC `14320`, and starts the frontend on `4180`.
+Keep those ports available. It seeds test data through the backend fixture and authenticated
+ingestion, then stops its server and drops only the database it created. It does not use
+production data. Backend startup diagnostics are written to
+`/tmp/okoscope-thread-browser-server.log`.
+
 ## OpenAPI contract
 
 The source contract is committed at `openapi/okoscope-v1.yaml`; generated TypeScript is committed
@@ -139,7 +181,18 @@ OKOSCOPE_OPENAPI_SOURCE=/path/to/okoscope-v1.yaml npm run api:generate
 OKOSCOPE_OPENAPI_SOURCE=/path/to/okoscope-v1.yaml npm run api:check
 ```
 
-`api:check` fails when the generated definitions differ from the selected contract.
+`api:check` generates definitions in a temporary directory and fails if they differ from the
+checked-in types. When `OKOSCOPE_OPENAPI_SOURCE` is set, it also requires the frontend contract
+copy to match the authoritative backend source byte for byte; it never modifies either file.
+To synchronize an API change, copy the backend contract to `openapi/okoscope-v1.yaml`, then run
+`npm run api:generate` and verify with `OKOSCOPE_OPENAPI_SOURCE` pointing to that same source.
+
+CI checks out `okoscope/okoscope` and requires both contract equality and generated-type
+freshness. It uses backend `main` by default. For a coordinated backend branch or release,
+set the repository variable `OKOSCOPE_BACKEND_REF` to its branch, tag, or commit; a manual
+workflow run can override it with `backend_ref`. Prefer an immutable commit or release tag
+for release verification. A frontend API change cannot pass this gate until the compatible
+backend revision is available in that repository.
 
 ## Production image
 

@@ -9,6 +9,11 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Mark thread creation and exit counters as lower bounds when observation gaps are reported,
+  show unavailable active counts for summaries spanning different processes, and reset thread
+  pagination when the application scope changes.
+- Keep observation windows expanded while thread-activity pagination loads another page.
+
 - Kept the complete DNS overview explanation localized when the interface is displayed in Russian.
 - Application Activity once again presents exact DNS inventory identities in its main list while
   its non-interactive overview groups related resolver questions so repeated Kubernetes search
@@ -16,11 +21,19 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Added a separate thread-activity browser suite against the real backend and an isolated local
+  PostgreSQL database, covering ingestion, pagination, access boundaries, and localized counts.
+
 - Application Activity now distinguishes process creation, executable execution, and leader
   termination, and presents bounded named-thread lifecycle aggregates with explicit baseline,
   overflow, truncation, and observation-gap evidence.
 
 ### Changed
+
+- Verify the frontend OpenAPI copy against the selected backend revision in CI and check
+  generated API types without modifying the working tree.
+- Document that thread-activity windows follow effective Project raw runtime retention;
+  expired window counts are not reconstructed from separate historical snapshots.
 
 - Moved application-wide thread activity into its own **Threads** category so it is no longer
   visually nested between an inventory category summary and that category's detailed results.

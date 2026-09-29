@@ -8,3 +8,5 @@ public-docs/dist
 src/routeTree.gen.ts
 src/shared/api/schema.d.ts
 openapi/okoscope-v1.yaml
+
+.backend-contract

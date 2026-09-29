@@ -738,7 +738,7 @@ export interface paths {
             };
             cookie?: never;
         };
-        /** @description Returns bounded named-thread aggregate windows. Responses are never cached. */
+        /** @description Returns complete aggregate windows contained in the requested time range, newest first. Defaults to the preceding hour; maximum range is 31 days. Generation and epoch filters must be supplied together. Cursor must belong to the same requested scope. Invalid limits and query parameters return invalid_request. Thread windows follow effective project raw retention and are not reconstructed from history snapshots. Responses are never cached. */
         get: operations["listApplicationThreadActivityWindows"];
         put?: never;
         post?: never;
@@ -758,7 +758,7 @@ export interface paths {
             };
             cookie?: never;
         };
-        /** @description Returns reconciled process-level thread totals and the latest current-name distribution. */
+        /** @description Returns process-level observed transition totals across at most 10000 newest complete windows. Defaults to the preceding hour; maximum range is 31 days. Generation and epoch filters must be supplied together. Transitions are lower bounds when gaps or truncation exist. Active and peak counts are available only for a single qualified process generation and observation epoch; unrelated generations and epochs are never joined by PID. Names report transitions across the range and current activity only when a single qualified process is represented. */
         get: operations["getApplicationThreadActivitySummary"];
         put?: never;
         post?: never;
@@ -3457,7 +3457,7 @@ export interface components {
         };
         Error: {
             /** @enum {string} */
-            error: "validation_failed" | "unauthorized" | "invalid_credentials" | "email_verification_required" | "registration_disabled" | "registration_conflict" | "untrusted_origin" | "forbidden" | "not_found" | "organization_not_found" | "project_not_found" | "application_not_found" | "user_not_found" | "user_not_eligible" | "setup_already_completed" | "invalid_setup_token" | "setup_rate_limited" | "privilege_confirmation_required" | "current_password_invalid" | "self_promotion_forbidden" | "last_super_admin_required" | "last_organization_owner_required" | "organization_limit_reached" | "invitation_unusable" | "invitation_account_mismatch" | "invitation_exists" | "rate_limited" | "mail_unavailable" | "idempotency_key_reused" | "operation_already_completed" | "internal_error";
+            error: "validation_failed" | "unauthorized" | "invalid_credentials" | "email_verification_required" | "registration_disabled" | "registration_conflict" | "untrusted_origin" | "forbidden" | "not_found" | "organization_not_found" | "project_not_found" | "application_not_found" | "user_not_found" | "user_not_eligible" | "setup_already_completed" | "invalid_setup_token" | "setup_rate_limited" | "privilege_confirmation_required" | "current_password_invalid" | "self_promotion_forbidden" | "last_super_admin_required" | "last_organization_owner_required" | "organization_limit_reached" | "invitation_unusable" | "invitation_account_mismatch" | "invitation_exists" | "rate_limited" | "mail_unavailable" | "idempotency_key_reused" | "operation_already_completed" | "internal_error" | "invalid_request" | "label_conflict" | "revision_conflict" | "release_exists" | "action_token_invalid" | "application_slug_conflict" | "conflict" | "credential_conflict" | "credential_name_conflict" | "credential_not_found" | "installation_metadata_unavailable" | "invitation_identity_conflict" | "invitation_not_found" | "invitation_not_pending" | "invitation_requires_sign_in" | "invitation_scope_not_found" | "membership_exists" | "organization_not_deletable" | "organization_slug_conflict" | "project_slug_conflict" | "bulk_limit_exceeded" | "delivery_active_lease" | "delivery_invalid_state" | "destination_disabled" | "destination_name_conflict" | "invalid_identity_token" | "expired_identity_token" | "identity_token_scope_mismatch";
             /** @example resource not found */
             message: string;
             /** @example 0ec02ed2-8483-4981-893e-bffc535897d7 */
@@ -3476,7 +3476,7 @@ export interface components {
             api_version: "v1";
             /**
              * Format: int64
-             * @example 30
+             * @example 31
              */
             required_database_migration: number;
         };
@@ -3854,6 +3854,18 @@ export interface components {
             items: components["schemas"]["ThreadActivityWindow"][];
             next_cursor: components["schemas"]["NullableUuid"];
         };
+        SummaryThreadNameAggregate: {
+            name: string;
+            /** Format: int64 */
+            created: number;
+            /** Format: int64 */
+            exited: number;
+            /**
+             * Format: int64
+             * @description Latest current-name population for one qualified process; unavailable across multiple process generations or observation epochs.
+             */
+            active: number | null;
+        };
         ThreadActivitySummary: {
             from: components["schemas"]["Timestamp"];
             to: components["schemas"]["Timestamp"];
@@ -3865,15 +3877,24 @@ export interface components {
             created: number;
             /** Format: int64 */
             exited: number;
-            /** Format: int64 */
+            /**
+             * Format: int64
+             * @description Latest boundary count for one qualified process; null for empty or multiple process scopes.
+             */
             active: number | null;
-            /** Format: int64 */
+            /**
+             * Format: int64
+             * @description Maximum observed window peak for one qualified process; null when a simultaneous application peak cannot be established.
+             */
             peak_active: number | null;
             baseline_complete: boolean;
             baseline_provenance: components["schemas"]["BaselineProvenance"] | null;
-            /** Format: int64 */
+            /**
+             * Format: int64
+             * @description Observed window name-overflow counters plus summary names folded into the other bucket.
+             */
             name_overflow: number;
-            names: components["schemas"]["ThreadNameAggregate"][];
+            names: components["schemas"]["SummaryThreadNameAggregate"][];
             gaps: components["schemas"]["ThreadGapReason"][];
         };
         /** @enum {string} */
@@ -5719,6 +5740,7 @@ export interface components {
         /** @description Opaque cursor scoped to the authenticated collection; clients must not parse it. */
         OpaqueCursor: string;
         Limit: number;
+        LargeLimit: number;
         ProjectId: string;
         OrganizationId: string;
         ApplicationId: string;
@@ -6797,7 +6819,7 @@ export interface operations {
             query?: {
                 /** @description Opaque cursor scoped to the authenticated collection. */
                 cursor?: components["parameters"]["Cursor"];
-                limit?: components["parameters"]["Limit"];
+                limit?: components["parameters"]["LargeLimit"];
             };
             header?: never;
             path?: never;
@@ -6829,7 +6851,7 @@ export interface operations {
             query?: {
                 /** @description Opaque cursor scoped to the authenticated collection. */
                 cursor?: components["parameters"]["Cursor"];
-                limit?: components["parameters"]["Limit"];
+                limit?: components["parameters"]["LargeLimit"];
             };
             header?: never;
             path: {
@@ -6898,7 +6920,7 @@ export interface operations {
             query?: {
                 /** @description Opaque cursor scoped to the authenticated collection; clients must not parse it. */
                 cursor?: components["parameters"]["OpaqueCursor"];
-                limit?: components["parameters"]["Limit"];
+                limit?: components["parameters"]["LargeLimit"];
             };
             header?: never;
             path: {
@@ -7045,7 +7067,7 @@ export interface operations {
                 evaluation_pending?: boolean;
                 /** @description Opaque cursor scoped to the authenticated collection. */
                 cursor?: components["parameters"]["Cursor"];
-                limit?: components["parameters"]["Limit"];
+                limit?: components["parameters"]["LargeLimit"];
             };
             header?: never;
             path: {
@@ -7175,7 +7197,7 @@ export interface operations {
                 suppressed?: components["parameters"]["DnsGroupSuppressed"];
                 evaluation_pending?: components["parameters"]["DnsGroupEvaluationPending"];
                 cursor?: string;
-                limit?: components["parameters"]["Limit"];
+                limit?: components["parameters"]["LargeLimit"];
             };
             header?: never;
             path: {
@@ -7239,7 +7261,7 @@ export interface operations {
                 suppressed?: components["parameters"]["DnsGroupSuppressed"];
                 evaluation_pending?: components["parameters"]["DnsGroupEvaluationPending"];
                 cursor?: string;
-                limit?: components["parameters"]["Limit"];
+                limit?: components["parameters"]["LargeLimit"];
             };
             header?: never;
             path: {
@@ -7305,7 +7327,7 @@ export interface operations {
                 facet_search?: string;
                 /** @description Opaque cursor scoped to the authenticated collection; clients must not parse it. */
                 cursor?: components["parameters"]["OpaqueCursor"];
-                limit?: components["parameters"]["Limit"];
+                limit?: components["parameters"]["LargeLimit"];
             };
             header?: never;
             path: {
@@ -7409,7 +7431,7 @@ export interface operations {
             query?: {
                 /** @description Opaque cursor scoped to the authenticated collection. */
                 cursor?: components["parameters"]["Cursor"];
-                limit?: components["parameters"]["Limit"];
+                limit?: components["parameters"]["LargeLimit"];
             };
             header?: never;
             path: {
@@ -7432,7 +7454,7 @@ export interface operations {
             query?: {
                 /** @description Opaque cursor scoped to the authenticated collection; clients must not parse it. */
                 cursor?: components["parameters"]["OpaqueCursor"];
-                limit?: components["parameters"]["Limit"];
+                limit?: components["parameters"]["LargeLimit"];
             };
             header?: never;
             path: {
@@ -7455,7 +7477,7 @@ export interface operations {
             query?: {
                 /** @description Opaque cursor scoped to the authenticated collection. */
                 cursor?: components["parameters"]["Cursor"];
-                limit?: components["parameters"]["Limit"];
+                limit?: components["parameters"]["LargeLimit"];
             };
             header?: never;
             path: {
@@ -7478,7 +7500,7 @@ export interface operations {
             query?: {
                 /** @description Opaque cursor scoped to the authenticated collection. */
                 cursor?: components["parameters"]["Cursor"];
-                limit?: components["parameters"]["Limit"];
+                limit?: components["parameters"]["LargeLimit"];
             };
             header?: never;
             path: {
@@ -7516,7 +7538,7 @@ export interface operations {
                 evaluation_pending?: boolean;
                 /** @description Opaque cursor scoped to the authenticated collection. */
                 cursor?: components["parameters"]["Cursor"];
-                limit?: components["parameters"]["Limit"];
+                limit?: components["parameters"]["LargeLimit"];
             };
             header?: never;
             path?: never;
@@ -7532,7 +7554,7 @@ export interface operations {
             query?: {
                 /** @description Opaque cursor scoped to the authenticated collection. */
                 cursor?: components["parameters"]["Cursor"];
-                limit?: components["parameters"]["Limit"];
+                limit?: components["parameters"]["LargeLimit"];
             };
             header?: never;
             path: {
@@ -7656,7 +7678,7 @@ export interface operations {
             query?: {
                 /** @description Opaque cursor scoped to the authenticated collection. */
                 cursor?: components["parameters"]["Cursor"];
-                limit?: components["parameters"]["Limit"];
+                limit?: components["parameters"]["LargeLimit"];
             };
             header?: never;
             path: {
@@ -7839,7 +7861,7 @@ export interface operations {
             query?: {
                 /** @description Opaque cursor scoped to the authenticated collection. */
                 cursor?: components["parameters"]["Cursor"];
-                limit?: components["parameters"]["Limit"];
+                limit?: components["parameters"]["LargeLimit"];
                 active?: boolean;
             };
             header?: never;
@@ -7977,7 +7999,7 @@ export interface operations {
             query?: {
                 /** @description Opaque cursor scoped to the authenticated collection. */
                 cursor?: components["parameters"]["Cursor"];
-                limit?: components["parameters"]["Limit"];
+                limit?: components["parameters"]["LargeLimit"];
             };
             header?: never;
             path: {
@@ -8044,7 +8066,7 @@ export interface operations {
             query?: {
                 /** @description Opaque cursor scoped to the authenticated collection. */
                 cursor?: components["parameters"]["Cursor"];
-                limit?: components["parameters"]["Limit"];
+                limit?: components["parameters"]["LargeLimit"];
             };
             header?: never;
             path: {
@@ -8094,7 +8116,7 @@ export interface operations {
             query?: {
                 /** @description Opaque cursor scoped to the authenticated collection. */
                 cursor?: components["parameters"]["Cursor"];
-                limit?: components["parameters"]["Limit"];
+                limit?: components["parameters"]["LargeLimit"];
             };
             header?: never;
             path: {
@@ -8164,7 +8186,7 @@ export interface operations {
                 baseline_id?: string;
                 /** @description Opaque cursor scoped to the authenticated collection. */
                 cursor?: components["parameters"]["Cursor"];
-                limit?: components["parameters"]["Limit"];
+                limit?: components["parameters"]["LargeLimit"];
             };
             header?: never;
             path: {
@@ -8227,6 +8249,7 @@ export interface operations {
         requestBody: components["requestBodies"]["CreateWebhookDestination"];
         responses: {
             201: components["responses"]["DestinationWithSecret"];
+            409: components["responses"]["Error"];
         };
     };
     getWebhookDestination: {
@@ -8257,6 +8280,7 @@ export interface operations {
         requestBody: components["requestBodies"]["UpdateWebhookDestination"];
         responses: {
             200: components["responses"]["WebhookDestination"];
+            409: components["responses"]["Error"];
         };
     };
     disableWebhookDestination: {
@@ -8309,7 +8333,7 @@ export interface operations {
             query?: {
                 /** @description Opaque cursor scoped to the authenticated collection. */
                 cursor?: components["parameters"]["Cursor"];
-                limit?: components["parameters"]["Limit"];
+                limit?: components["parameters"]["LargeLimit"];
             };
             header?: never;
             path: {
@@ -8422,7 +8446,7 @@ export interface operations {
                 command_type?: components["schemas"]["RecoveryCommandType"];
                 /** @description Opaque cursor scoped to the authenticated collection. */
                 cursor?: components["parameters"]["Cursor"];
-                limit?: components["parameters"]["Limit"];
+                limit?: components["parameters"]["LargeLimit"];
             };
             header?: never;
             path: {

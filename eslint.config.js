@@ -6,6 +6,7 @@ export default tseslint.config(
   {
     ignores: [
       'dist',
+      '.backend-contract',
       'coverage',
       'playwright-report',
       'test-results',

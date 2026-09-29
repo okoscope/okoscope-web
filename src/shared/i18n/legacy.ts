@@ -229,8 +229,8 @@ export const legacyRussian: Record<string, string> = {
   'No thread activity observed': 'Активность потоков не наблюдалась',
   'No bounded thread-activity windows match the selected time scope.':
     'Нет окон активности потоков, соответствующих выбранному периоду.',
-  'Bounded aggregates by current thread name. Individual thread events are not retained.':
-    'Ограниченные агрегаты по текущему имени потока. Отдельные события потоков не сохраняются.',
+  'Bounded aggregates by observed thread name. Individual thread events are not retained.':
+    'Ограниченные агрегаты по наблюдавшемуся имени потока. Отдельные события потоков не сохраняются.',
   'Active at end': 'Активно в конце',
   Exited: 'Завершено',
   'Peak active': 'Пиковое количество',
@@ -244,8 +244,8 @@ export const legacyRussian: Record<string, string> = {
   'Observation did not cover the complete process lifetime. Active counts may be incomplete.':
     'Наблюдение не охватывает весь жизненный цикл процесса. Число активных потоков может быть неполным.',
   'Thread name': 'Имя потока',
-  'Current thread activity grouped by name': 'Текущая активность потоков по именам',
-  'No current thread names were reported.': 'Текущие имена потоков не зарегистрированы.',
+  'Thread activity grouped by name': 'Активность потоков по именам',
+  'No thread names were reported.': 'Имена потоков не зарегистрированы.',
   'Other thread names': 'Другие имена потоков',
   'Observation windows': 'Окна наблюдения',
   'Process start was not observed.': 'Создание процесса не наблюдалось.',

@@ -14,6 +14,8 @@
     "vite.config.ts",
     "vitest.config.ts",
     "playwright.config.ts",
+    "playwright.threads.config.ts",
+    "e2e/thread-backend.setup.mjs",
     "playwright.real-backend.config.ts",
     "playwright.group-same-events-real-backend.config.ts",
     "e2e/real-backend.setup.mjs",

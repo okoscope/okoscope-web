@@ -334,7 +334,12 @@ function RuntimeInventoryPage() {
             </div>
           </Card>
           <ThreadActivityPanel
-            key={`${search.observed_from ?? ''}:${search.observed_to ?? ''}`}
+            key={JSON.stringify([
+              projectId,
+              applicationId,
+              search.observed_from,
+              search.observed_to,
+            ])}
             projectId={projectId}
             applicationId={applicationId}
             from={search.observed_from}

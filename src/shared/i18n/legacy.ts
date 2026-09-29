@@ -229,8 +229,8 @@ export const legacyRussian: Record<string, string> = {
   'No thread activity observed': 'Активность потоков не наблюдалась',
   'No bounded thread-activity windows match the selected time scope.':
     'Нет окон активности потоков, соответствующих выбранному периоду.',
-  'Bounded aggregates by current thread name. Individual thread events are not retained.':
-    'Ограниченные агрегаты по текущему имени потока. Отдельные события потоков не сохраняются.',
+  'Bounded aggregates by observed thread name. Individual thread events are not retained.':
+    'Ограниченные агрегаты по наблюдавшемуся имени потока. Отдельные события потоков не сохраняются.',
   'Active at end': 'Активно в конце',
   Exited: 'Завершено',
   'Peak active': 'Пиковое количество',
@@ -244,8 +244,8 @@ export const legacyRussian: Record<string, string> = {
   'Observation did not cover the complete process lifetime. Active counts may be incomplete.':
     'Наблюдение не охватывает весь жизненный цикл процесса. Число активных потоков может быть неполным.',
   'Thread name': 'Имя потока',
-  'Current thread activity grouped by name': 'Текущая активность потоков по именам',
-  'No current thread names were reported.': 'Текущие имена потоков не зарегистрированы.',
+  'Thread activity grouped by name': 'Активность потоков по именам',
+  'No thread names were reported.': 'Имена потоков не зарегистрированы.',
   'Other thread names': 'Другие имена потоков',
   'Observation windows': 'Окна наблюдения',
   'Process start was not observed.': 'Создание процесса не наблюдалось.',
@@ -296,6 +296,8 @@ export const legacyRussian: Record<string, string> = {
     'Нет записанных DNS-наблюдений, соответствующих выбранным фильтрам.',
   'matching recorded DNS observations across the complete filtered result, not only this list page.':
     'соответствующих записанных DNS-наблюдений во всём отфильтрованном результате, а не только на этой странице.',
+  'matching recorded DNS observations across the complete filtered result, not only this list page. Related resolver questions are grouped in this non-interactive overview; the exact question names and record types remain separate in the inventory below.':
+    'соответствующих записанных DNS-наблюдений во всём отфильтрованном результате, а не только на этой странице. Связанные запросы резолвера сгруппированы в этом некликабельном обзоре; точные имена запросов и типы записей остаются отдельными в инвентаризации ниже.',
   'System call': 'Системный вызов',
   'Observed activity': 'Наблюдаемое действие',
   'Opened port': 'Открыт порт',

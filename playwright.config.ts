@@ -6,6 +6,7 @@ export default defineConfig({
     'docs-screenshots.spec.ts',
     'group-same-events-real-backend.spec.ts',
     'runtime-label-real-backend.spec.ts',
+    'thread-activity-real-backend.spec.ts',
     'static-documentation.spec.ts',
   ],
   fullyParallel: true,

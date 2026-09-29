@@ -21,7 +21,7 @@
     "test:docs": "playwright test --config=playwright.docs.config.ts",
     "docs:screenshots": "playwright test --config=playwright.screenshots.config.ts",
     "api:generate": "openapi-typescript \"${OKOSCOPE_OPENAPI_SOURCE:-openapi/okoscope-v1.yaml}\" -o src/shared/api/schema.d.ts",
-    "api:check": "npm run api:generate && git diff --exit-code -- openapi/okoscope-v1.yaml src/shared/api/schema.d.ts",
+    "api:check": "node scripts/check-api.mjs",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm run api:check && npm test && npm run build",
     "container:smoke": "./scripts/container-smoke.sh okoscope-web:smoke"
   },

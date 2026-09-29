@@ -55,10 +55,12 @@ observation gaps, name overflow, and truncated summaries, and uses “at least�
 value is only a lower bound. The generated client consumes the no-store
 `/api/v1/projects/{project_id}/applications/{application_id}/thread-activity` and
 `/thread-activity/summary` routes from the authoritative backend OpenAPI contract. These views
-require backend database migration 31 and a compatible runtime agent advertising
+require backend database migration 32 and a compatible runtime agent advertising
 `task.lifecycle/v1`; older agents do not reconstruct historical thread activity. Enable
 `observation.processExit` for task creation, rename, and exit evidence; capability advertisement
-requires all mandatory kernel hooks to load and attach successfully. `processExec` is independent. The default
+requires all mandatory kernel hooks to load and attach successfully. `processExec` is independent.
+Migration 32 extends thread-window uniqueness to the Project and observing agent; an installation
+that already applied migration 31 can upgrade without rebuilding stored windows. The default
 window is one hour, and an explicit range may span at most 31 days. Thread-activity windows
 follow the Project’s effective raw runtime retention; expired windows are removed without
 a separate historical snapshot to reconstruct their counts.

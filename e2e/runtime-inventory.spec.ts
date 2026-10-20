@@ -174,7 +174,11 @@ test('opens threads as an isolated localized view and returns to compatible inve
   await page.reload()
 
   const threads = page.getByRole('button', { name: /Потоки/ })
+  const domains = page.getByRole('button', { name: /Домены:/ })
   await expect(threads).toHaveAttribute('aria-pressed', 'true')
+  await expect(threads).toHaveClass(/border-cyan-300/)
+  await expect(domains).toHaveAttribute('aria-pressed', 'false')
+  await expect(domains).not.toHaveClass(/border-cyan-300/)
   await expect(page.getByRole('region', { name: 'Активность потоков', exact: true })).toContainText(
     'tokio-rt-worker',
   )
@@ -200,9 +204,16 @@ test('opens threads as an isolated localized view and returns to compatible inve
   ).toEqual([])
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
 
-  await page.getByRole('button', { name: /Домены/ }).click()
+  await domains.click()
   await expect(page).toHaveURL(/kind=domain/)
   await expect(page).not.toHaveURL(/view=threads/)
+  await expect(domains).toHaveAttribute('aria-pressed', 'true')
+  await expect(threads).toHaveAttribute('aria-pressed', 'false')
+  await threads.click()
+  await expect(page).toHaveURL(/view=threads/)
+  await expect(domains).toHaveAttribute('aria-pressed', 'false')
+  await expect(threads).toHaveAttribute('aria-pressed', 'true')
+  await domains.click()
   await expect(page.getByLabel('Поиск по активности приложения')).toBeVisible()
   await expect(page.getByRole('region', { name: 'Активность потоков', exact: true })).toHaveCount(0)
 })

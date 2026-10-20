@@ -316,7 +316,11 @@ describe('data visualization presentation', () => {
     )
 
     const threads = screen.getByRole('button', { name: /Потоки/ })
+    const process = screen.getByRole('button', { name: /Выполнения программ:/ })
     expect(threads).toHaveAttribute('aria-pressed', 'true')
+    expect(process).toHaveAttribute('aria-pressed', 'false')
+    expect(process).not.toHaveClass('border-cyan-300')
+    expect(threads).toHaveClass('border-cyan-300')
     await user.click(threads)
     expect(onThreads).toHaveBeenCalledOnce()
     expect(onKind).not.toHaveBeenCalled()

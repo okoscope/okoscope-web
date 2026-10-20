@@ -98,7 +98,7 @@ export function InventoryKindDistribution({
               label,
               accessibleLabel: localized(label),
               value: value?.occurrence_count ?? 0,
-              selected: kind === activeKind,
+              selected: !threadsActive && kind === activeKind,
               meta: `${formatCount(value?.item_count ?? 0)} unique behaviors`,
               onSelect: () => onKind(kind),
             }

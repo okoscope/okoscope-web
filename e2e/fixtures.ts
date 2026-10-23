@@ -971,28 +971,22 @@ export async function mockApi(page: Page, role: 'owner' | 'member' = 'owner') {
         return json(route, {
           identity_version: 2,
           kind,
-          total_item_count: 2,
-          total_occurrence_count: 30,
+          total_item_count: 7,
+          total_occurrence_count: 100,
           entries: [
-            {
-              identity_token: 'domain-a-identity',
-              semantic_summary: { name: 's3.twcstorage.ru', query_type: 'A' },
-              user_label: null,
-              item_count: 1,
-              occurrence_count: 18,
-            },
-            {
-              identity_token: 'domain-aaaa-identity',
-              semantic_summary: {
-                name: 's3.twcstorage.ru.production.svc.cluster.local',
-                query_type: 'AAAA',
-              },
-              user_label: null,
-              item_count: 1,
-              occurrence_count: 12,
-            },
-          ],
-          other: null,
+            ['s3.twcstorage.ru', 'A', 30],
+            ['s3.twcstorage.ru', 'AAAA', 25],
+            ['s3.twcstorage.ru.production.svc.cluster.local', 'AAAA', 20],
+            ['nats.nats.svc.cluster.local', 'A', 10],
+            ['html-to-pdf.rstat.svc', 'A', 5],
+          ].map(([name, query_type, occurrence_count], index) => ({
+            identity_token: `domain-identity-${index}`,
+            semantic_summary: { name, query_type },
+            user_label: null,
+            item_count: 1,
+            occurrence_count,
+          })),
+          other: { item_count: 2, occurrence_count: 10 },
         })
       const identity =
         kind === 'file_activity'

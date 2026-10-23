@@ -16,9 +16,8 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Keep observation windows expanded while thread-activity pagination loads another page.
 
 - Kept the complete DNS overview explanation localized when the interface is displayed in Russian.
-- Application Activity once again presents exact DNS inventory identities in its main list while
-  its non-interactive overview groups related resolver questions so repeated Kubernetes search
-  variants do not hide other frequently observed destinations.
+- Application Activity presents exact DNS inventory identities in its main list and
+  non-interactive overview, keeping resolver questions and A/AAAA record types separate.
 
 ### Added
 
@@ -30,6 +29,10 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   overflow, truncation, and observation-gap evidence.
 
 ### Changed
+
+- Show exact DNS question names and record types in the Application Activity top-five overview,
+  with an Other bucket and recorded-history counts for matching identities, avoiding logical
+  resolver-group computation on page load.
 
 - Document that thread activity requires backend database migration 32; installations
   with migration 31 retain their existing windows when upgrading.

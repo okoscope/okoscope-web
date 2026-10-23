@@ -25,7 +25,9 @@ The “Requires attention” views show restart loops only when the server retur
 
 `GET /api/v1/projects/{project_id}/applications/{application_id}/runtime-inventory/distribution`
 
-The operation requires `kind`, accepts the same release, Kubernetes, observation-time, and search scope as the inventory summary, and accepts `limit` from 1 through 10 (default 5). The backend orders entries by `occurrence_count` descending and then opaque `identity_token` ascending. Returned top entries plus `other` account for the complete filtered totals; clients must not aggregate cursor pages.
+The operation requires `kind`, accepts release, Kubernetes, observation-time, and search scope, and accepts `limit` from 1 through 10 (default 5). Scope selects matching inventory identities; counts retain each identity's recorded history rather than counting individual observations inside the selected scope. The backend orders entries by `occurrence_count` descending and then opaque `identity_token` ascending. Returned top entries plus `other` account for the matching identities' complete totals; clients must not aggregate cursor pages.
+
+Application Activity's domain overview uses this endpoint with `kind=domain` and `limit=5`. It displays exact recorded question names and query types separately, including Kubernetes search suffixes and A/AAAA variants. The top five and Other bucket are non-interactive and independent of detailed-list pagination; the browser does not regroup them into logical destinations. Policy verdict, suppression, and evaluation filters apply only to the detailed list and are not sent to this distribution endpoint.
 
 Each entry contains a typed inert `semantic_summary` and a server-issued `identity_token`. Passing that token to the Runtime Inventory list selects the exact typed identity without parsing or reflecting identity fields into query syntax. Tokens are opaque and limited to the normalized scope understood by the backend.
 

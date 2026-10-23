@@ -15,6 +15,7 @@ import {
 } from '../../shared/ui/horizontal-bars'
 import {
   DnsGroupDistributionView,
+  DnsQueryDistributionView,
   InventoryKindDistribution,
   TopBehaviorDistribution,
 } from './visualization'
@@ -113,6 +114,41 @@ describe('data visualization presentation', () => {
     await user.click(s3)
     await user.click(other)
     expect(onGroup).not.toHaveBeenCalled()
+  })
+
+  it('renders exact DNS evidence safely and marks an incomplete identity without grouping it', async () => {
+    const distribution: InventoryDistribution = {
+      identity_version: 2,
+      kind: 'domain',
+      coverage: { closed_before: null, history_expired_before: null, detail_scope: 'raw' },
+      total_item_count: 2,
+      total_occurrence_count: 10,
+      entries: [
+        {
+          identity_token: 'literal',
+          semantic_summary: { name: '<img src=x>', query_type: 'A' },
+          user_label: null,
+          item_count: 1,
+          occurrence_count: 6,
+        },
+        {
+          identity_token: 'incomplete',
+          semantic_summary: { executable: '/unexpected-domain-summary' },
+          user_label: null,
+          item_count: 1,
+          occurrence_count: 4,
+        },
+      ],
+      other: null,
+    }
+    const { container } = render(<DnsQueryDistributionView distribution={distribution} />)
+    expect(screen.getByLabelText('<img src=x> (A): 6 observations, 60%')).toBeVisible()
+    expect(screen.getByLabelText('Unsupported identity: 4 observations, 40%')).toBeVisible()
+    expect(screen.queryByText('Other observed DNS queries')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button')).not.toBeInTheDocument()
+    expect(container.querySelector('img')).toBeNull()
+    await userEvent.setup().click(screen.getByText('<img src=x> (A)'))
+    expect(screen.queryByRole('button')).not.toBeInTheDocument()
   })
 
   it('calculates safe percentages and signed counts', () => {

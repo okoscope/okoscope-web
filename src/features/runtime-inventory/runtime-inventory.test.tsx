@@ -14,6 +14,8 @@ import {
   dnsGroupVariantsOptions,
   expectedEvidencePath,
   inventoryEvidenceOptions,
+  inventoryDistributionOptions,
+  inventoryListOptions,
   inventoryFacetPath,
   inventoryKeys,
   isInvalidCursorError,
@@ -88,6 +90,50 @@ describe('runtime inventory URL state', () => {
 })
 
 describe('runtime inventory query boundary', () => {
+  it('omits policy filters only from exact DNS distribution requests and cache keys', async () => {
+    const get = vi.fn().mockResolvedValue({})
+    const api = { get } as unknown as ApiClient
+    const base = {
+      kind: 'domain' as const,
+      namespace: 'production',
+      search: 's3',
+      observed_from: '2026-09-19T10:00:00Z',
+    }
+    const filtered = {
+      ...base,
+      verdict: 'expected' as const,
+      suppressed: true,
+      evaluation_pending: false,
+    }
+    await inventoryDistributionOptions(api, 'p', 'a', filtered).queryFn?.({
+      signal: AbortSignal.abort(),
+    } as never)
+    const path = new URL(get.mock.calls[0]?.[0], 'http://localhost')
+    expect(path.pathname).toBe('/api/v1/projects/p/applications/a/runtime-inventory/distribution')
+    expect(Object.fromEntries(path.searchParams)).toEqual({
+      kind: 'domain',
+      namespace: 'production',
+      search: 's3',
+      observed_from: base.observed_from,
+      limit: '5',
+    })
+    expect(inventoryKeys.distribution('p', 'a', filtered)).toEqual(
+      inventoryKeys.distribution('p', 'a', base),
+    )
+    expect(inventoryKeys.list('p', 'a', filtered)).not.toEqual(inventoryKeys.list('p', 'a', base))
+    await inventoryListOptions(api, 'p', 'a', filtered).queryFn?.({
+      signal: AbortSignal.abort(),
+    } as never)
+    const list = new URL(get.mock.calls[1]?.[0], 'http://localhost')
+    expect(list.searchParams.get('verdict')).toBe('expected')
+    expect(list.searchParams.get('suppressed')).toBe('true')
+    expect(list.searchParams.get('evaluation_pending')).toBe('false')
+    const process = { ...filtered, kind: 'process' as const }
+    expect(inventoryKeys.distribution('p', 'a', process)).not.toEqual(
+      inventoryKeys.distribution('p', 'a', { ...base, kind: 'process' }),
+    )
+  })
+
   it('uses additive DNS group routes with stable scoped filters', async () => {
     const get = vi.fn().mockResolvedValue({ items: [], next_cursor: null })
     const api = { get } as unknown as ApiClient

@@ -37,6 +37,15 @@ const query = (input: Record<string, string | number | boolean | undefined>) => 
   )
   return params.toString() ? `?${params}` : ''
 }
+const distributionSearch = (search: InventorySearch) => {
+  const scope = summarySearch(search)
+  if (search.kind !== 'domain') return scope
+  return Object.fromEntries(
+    Object.entries(scope).filter(
+      ([key]) => !['verdict', 'suppressed', 'evaluation_pending'].includes(key),
+    ),
+  )
+}
 const dnsGroupSearch = (search: InventorySearch) => {
   const scope = summarySearch(search)
   return {
@@ -148,7 +157,7 @@ export const inventoryKeys = {
       projectId,
       applicationId,
       search.kind,
-      normalized(summarySearch(search)),
+      normalized(distributionSearch(search)),
       INVENTORY_DISTRIBUTION_SIZE,
     ] as const,
   list: (projectId: string, applicationId: string, search: InventorySearch) =>
@@ -297,7 +306,7 @@ export const inventoryDistributionOptions = (
     queryKey: inventoryKeys.distribution(projectId, applicationId, search),
     queryFn: ({ signal }) =>
       api.get<InventoryDistribution>(
-        `${base(projectId, applicationId)}/distribution${query({ ...summarySearch(search), kind: search.kind, limit: INVENTORY_DISTRIBUTION_SIZE })}`,
+        `${base(projectId, applicationId)}/distribution${query({ ...distributionSearch(search), kind: search.kind, limit: INVENTORY_DISTRIBUTION_SIZE })}`,
         { protected: true, signal },
       ),
   })

@@ -218,7 +218,7 @@ test('opens threads as an isolated localized view and returns to compatible inve
   await expect(page.getByRole('region', { name: 'Активность потоков', exact: true })).toHaveCount(0)
 })
 
-test('presents an inert grouped DNS overview and exact identities accessibly in Russian at a narrow viewport', async ({
+test('presents an inert exact DNS overview and exact identities accessibly in Russian at a narrow viewport', async ({
   page,
 }) => {
   const { project, application } = await mockApi(page)
@@ -236,14 +236,23 @@ test('presents an inert grouped DNS overview and exact identities accessibly in 
       name: 's3.twcstorage.ru.production.svc.cluster.local (AAAA)',
     }),
   ).toBeVisible()
+  await expect(page.getByRole('list', { name: 'Наиболее наблюдаемые DNS-запросы' })).toBeVisible()
+  const overview = page.getByRole('list', { name: 'Наиболее наблюдаемые DNS-запросы' })
+  await expect(overview.getByText('s3.twcstorage.ru (A)', { exact: true })).toBeVisible()
+  await expect(overview.getByText('nats.nats.svc.cluster.local (A)', { exact: true })).toBeVisible()
+  await expect(overview.getByText('html-to-pdf.rstat.svc (A)', { exact: true })).toBeVisible()
+  await expect(overview.getByText('Прочие наблюдаемые DNS-запросы')).toBeVisible()
   await expect(
-    page.getByRole('list', { name: 'Наиболее наблюдаемые DNS-назначения' }),
+    page.getByText(
+      'Фильтры вердикта политики, подавления и вычисления применяются только к подробному списку.',
+    ),
   ).toBeVisible()
-  const overview = page.getByRole('list', { name: 'Наиболее наблюдаемые DNS-назначения' })
-  await expect(overview.getByText('s3.twcstorage.ru')).toBeVisible()
-  await expect(overview.getByText('nats.nats.svc.cluster.local')).toBeVisible()
-  await expect(overview.getByText('html-to-pdf.rstat.svc')).toBeVisible()
-  await expect(overview.getByText('Прочие наблюдаемые DNS-назначения')).toBeVisible()
+  await expect(
+    page.getByText(/Счётчики охватывают записанную историю каждой идентичности/),
+  ).toBeVisible()
+  await expect(
+    page.getByText(/записанных DNS-наблюдений для соответствующих идентичностей инвентаризации/),
+  ).toBeVisible()
   await expect(overview.getByRole('button')).toHaveCount(0)
   await expect(page.getByText('Кластеры')).toHaveCount(2)
   await expect(page.getByText('Пространства имён')).toHaveCount(2)
@@ -254,7 +263,7 @@ test('presents an inert grouped DNS overview and exact identities accessibly in 
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
 })
 
-test('keeps the grouped DNS overview inert while exact identities paginate and open history', async ({
+test('keeps the exact DNS overview inert while exact identities paginate and open history', async ({
   page,
 }) => {
   const { project, application } = await mockApi(page)
@@ -263,22 +272,22 @@ test('keeps the grouped DNS overview inert while exact identities paginate and o
   )
   await authenticate(page)
 
-  const overview = page.getByRole('list', { name: 'Most observed DNS destinations' })
+  const overview = page.getByRole('list', { name: 'Most observed DNS queries' })
   const search = page.getByLabel('Search application activity')
   const expandedIdentity = page.getByRole('heading', {
     name: 's3.twcstorage.ru.production.svc.cluster.local (AAAA)',
   })
   const originalUrl = page.url()
 
-  await expect(overview.getByText('s3.twcstorage.ru')).toBeVisible()
-  await expect(overview.getByText('nats.nats.svc.cluster.local')).toBeVisible()
-  await expect(overview.getByText('html-to-pdf.rstat.svc')).toBeVisible()
-  await expect(overview.getByText('Other observed DNS destinations')).toBeVisible()
+  await expect(overview.getByText('s3.twcstorage.ru (A)', { exact: true })).toBeVisible()
+  await expect(overview.getByText('nats.nats.svc.cluster.local (A)', { exact: true })).toBeVisible()
+  await expect(overview.getByText('html-to-pdf.rstat.svc (A)', { exact: true })).toBeVisible()
+  await expect(overview.getByText('Other observed DNS queries')).toBeVisible()
   await expect(overview.getByRole('button')).toHaveCount(0)
   await expect(expandedIdentity).toBeVisible()
 
-  await overview.getByText('s3.twcstorage.ru').click()
-  await overview.getByText('Other observed DNS destinations').click()
+  await overview.getByText('s3.twcstorage.ru (A)', { exact: true }).click()
+  await overview.getByText('Other observed DNS queries').click()
   await expect(search).toHaveValue('')
   await expect(page).toHaveURL(originalUrl)
   await expect(page).not.toHaveURL(/identity_token=/)
@@ -299,7 +308,65 @@ test('keeps the grouped DNS overview inert while exact identities paginate and o
   await expect(page.getByText('s3.twcstorage.ru (A)')).toBeVisible()
 })
 
-test('shows grouped DNS loading and preserves stale overview data after a refresh error', async ({
+test('keeps exact DNS totals independent of policy filters and never requests logical groups', async ({
+  page,
+}) => {
+  const { project, application } = await mockApi(page)
+  const requests: URL[] = []
+  page.on('request', (request) => {
+    const url = new URL(request.url())
+    if (url.pathname.includes('/runtime-inventory')) requests.push(url)
+  })
+  await page.goto(
+    `/projects/${project.id}/applications/${application.id}/runtime-inventory?kind=domain&namespace=production&verdict=expected&suppressed=true&evaluation_pending=false`,
+  )
+  await authenticate(page)
+  const overview = page.getByRole('list', { name: 'Most observed DNS queries' })
+  await expect(overview.getByRole('listitem')).toHaveCount(6)
+  await expect(overview.getByText('s3.twcstorage.ru (A)', { exact: true })).toBeVisible()
+  await expect(overview.getByText('s3.twcstorage.ru (AAAA)', { exact: true })).toBeVisible()
+  await expect(
+    overview.getByText('s3.twcstorage.ru.production.svc.cluster.local (AAAA)', { exact: true }),
+  ).toBeVisible()
+  await expect(overview.getByLabel(/s3.twcstorage.ru \(A\): 30 observations, 30%/)).toBeVisible()
+  await expect(
+    overview.getByLabel(/Other observed DNS queries: 10 observations, 10%/),
+  ).toBeVisible()
+  await expect(
+    page.getByText(
+      'Policy verdict, suppression, and evaluation filters apply to the detailed list only.',
+    ),
+  ).toBeVisible()
+  const distributions = () =>
+    requests.filter((url) => url.pathname.endsWith('/runtime-inventory/distribution'))
+  const initialDistributionCount = distributions().length
+  expect(initialDistributionCount).toBeGreaterThan(0)
+  expect(distributions()[0]?.searchParams.get('namespace')).toBe('production')
+  for (const param of ['verdict', 'suppressed', 'evaluation_pending']) {
+    expect(distributions()[0]?.searchParams.has(param)).toBe(false)
+    expect(
+      requests.some(
+        (url) => url.pathname.endsWith('/runtime-inventory') && url.searchParams.has(param),
+      ),
+    ).toBe(true)
+  }
+  await page.getByLabel('Policy verdict').selectOption('requires_review')
+  await expect(page).toHaveURL(/verdict=requires_review/)
+  await expect
+    .poll(
+      () =>
+        requests.filter(
+          (url) =>
+            url.pathname.endsWith('/runtime-inventory') &&
+            url.searchParams.get('verdict') === 'requires_review',
+        ).length,
+    )
+    .toBeGreaterThan(0)
+  expect(distributions().every((url) => url.search === distributions()[0]?.search)).toBe(true)
+  expect(requests.filter((url) => url.pathname.includes('/dns-groups'))).toEqual([])
+})
+
+test('shows exact DNS loading and preserves stale overview data after a refresh error', async ({
   page,
 }) => {
   const { project, application } = await mockApi(page)
@@ -308,9 +375,9 @@ test('shows grouped DNS loading and preserves stale overview data after a refres
     releaseDistribution = resolve
   })
   let failUnfilteredRefresh = false
-  await page.route('**/runtime-inventory/dns-groups/distribution**', async (route) => {
+  await page.route('**/runtime-inventory/distribution**', async (route) => {
     const url = new URL(route.request().url())
-    if (!url.searchParams.has('verdict')) {
+    if (!url.searchParams.has('namespace')) {
       if (failUnfilteredRefresh)
         return route.fulfill({
           status: 400,
@@ -325,28 +392,17 @@ test('shows grouped DNS loading and preserves stale overview data after a refres
     return route.fulfill({
       contentType: 'application/json',
       body: JSON.stringify({
-        total_group_count: 1,
-        total_observation_count: 30,
+        identity_version: 2,
+        kind: 'domain',
+        total_item_count: 1,
+        total_occurrence_count: 30,
         entries: [
           {
-            group: {
-              group_token: 'dns-group-s3',
-              display_name: 's3.twcstorage.ru',
-              process_command: '/usr/local/bin/r-api',
-              grouping_reason: 'kubernetes_search_expansion',
-              confidence: 'high',
-              first_seen_at: '2026-08-17T10:00:00Z',
-              last_seen_at: '2026-08-18T10:00:00Z',
-              observation_count: 30,
-              variant_count: 2,
-              query_types: ['A', 'AAAA'],
-              release_count: 2,
-              cluster_count: 1,
-              namespace_count: 1,
-              workload_count: 1,
-              pod_count: 2,
-              container_count: 1,
-            },
+            identity_token: 's3-a',
+            semantic_summary: { name: 's3.twcstorage.ru', query_type: 'A' },
+            user_label: null,
+            item_count: 1,
+            occurrence_count: 30,
           },
         ],
         other: null,
@@ -358,32 +414,36 @@ test('shows grouped DNS loading and preserves stale overview data after a refres
   )
   await authenticate(page)
 
-  await expect(page.getByText('Loading DNS destination distribution…')).toBeVisible()
+  await expect(page.getByText('Loading activity distribution…')).toBeVisible()
   releaseDistribution()
-  await expect(page.getByRole('list', { name: 'Most observed DNS destinations' })).toBeVisible()
+  await expect(page.getByRole('list', { name: 'Most observed DNS queries' })).toBeVisible()
 
-  await page.getByLabel('Policy verdict').selectOption('expected')
-  await expect(page).toHaveURL(/verdict=expected/)
-  await expect(page.getByRole('list', { name: 'Most observed DNS destinations' })).toBeVisible()
+  await page.getByText('Advanced filters').click()
+  await page.getByLabel('Namespace').fill('production')
+  await expect(page).toHaveURL(/namespace=production/)
+  await expect(page.getByRole('list', { name: 'Most observed DNS queries' })).toBeVisible()
   failUnfilteredRefresh = true
-  await page.getByLabel('Policy verdict').selectOption('')
-  await expect(page).not.toHaveURL(/verdict=/)
+  await page.getByText('Advanced filters').click()
+  await page.getByLabel('Namespace').fill('')
+  await expect(page).not.toHaveURL(/namespace=/)
   await expect(
-    page.getByRole('heading', { name: 'DNS destination distribution may be stale' }),
+    page.getByRole('heading', { name: 'Activity distribution may be stale' }),
   ).toBeVisible()
-  await expect(page.getByRole('list', { name: 'Most observed DNS destinations' })).toContainText(
+  await expect(page.getByRole('list', { name: 'Most observed DNS queries' })).toContainText(
     's3.twcstorage.ru',
   )
 })
 
-test('shows grouped-overview and exact-list DNS empty states', async ({ page }) => {
+test('shows exact-overview and exact-list DNS empty states', async ({ page }) => {
   const { project, application } = await mockApi(page)
-  await page.route('**/runtime-inventory/dns-groups/distribution**', (route) =>
+  await page.route('**/runtime-inventory/distribution**', (route) =>
     route.fulfill({
       contentType: 'application/json',
       body: JSON.stringify({
-        total_group_count: 0,
-        total_observation_count: 0,
+        identity_version: 2,
+        kind: 'domain',
+        total_item_count: 0,
+        total_occurrence_count: 0,
         entries: [],
         other: null,
       }),
@@ -405,11 +465,11 @@ test('shows grouped-overview and exact-list DNS empty states', async ({ page }) 
   )
   await authenticate(page)
 
-  await expect(page.getByRole('heading', { name: 'No DNS activity to visualize' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'No activity to visualize' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'No activity observed' })).toBeVisible()
 })
 
-test('shows grouped DNS overview and exact-list request errors without the exact distribution', async ({
+test('shows exact DNS overview and exact-list request errors without grouped requests', async ({
   page,
 }) => {
   const { project, application } = await mockApi(page)
@@ -431,7 +491,7 @@ test('shows grouped DNS overview and exact-list request errors without the exact
     )
       exactDomainDistributionRequests += 1
   })
-  await page.route('**/runtime-inventory/dns-groups/distribution**', (route) =>
+  await page.route('**/runtime-inventory/distribution**', (route) =>
     route.fulfill({
       status: 500,
       contentType: 'application/json',
@@ -453,14 +513,38 @@ test('shows grouped DNS overview and exact-list request errors without the exact
   await authenticate(page)
 
   await expect(
-    page.getByRole('heading', { name: 'Could not load DNS destination distribution' }),
+    page.getByRole('heading', { name: 'Could not load activity distribution' }),
   ).toBeVisible()
   await expect(
     page.getByRole('heading', { name: 'Could not load Application Activity' }),
   ).toBeVisible()
   expect(exactDomainListRequests).toBeGreaterThan(0)
-  expect(exactDomainDistributionRequests).toBe(0)
-  expect(groupedDnsRequests).toBeGreaterThan(0)
+  expect(exactDomainDistributionRequests).toBeGreaterThan(0)
+  expect(groupedDnsRequests).toBe(0)
+})
+
+test('withholds exact DNS overview after backend access denial', async ({ page }) => {
+  const { project, application } = await mockApi(page)
+  await page.route('**/runtime-inventory/distribution**', (route) =>
+    route.fulfill({
+      status: 403,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        error: 'forbidden',
+        message: 'Access denied',
+        request_id: 'dns-denied',
+      }),
+    }),
+  )
+  await page.goto(
+    `/projects/${project.id}/applications/${application.id}/runtime-inventory?kind=domain`,
+  )
+  await authenticate(page)
+  await expect(
+    page.getByRole('heading', { name: 'Could not load activity distribution' }),
+  ).toBeVisible()
+  await expect(page.getByRole('list', { name: 'Most observed DNS queries' })).toHaveCount(0)
+  await expect(page.getByText('Access denied', { exact: true })).toBeVisible()
 })
 
 test('Application Activity is keyboard accessible at a narrow viewport', async ({ page }) => {

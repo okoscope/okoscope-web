@@ -4,12 +4,11 @@ import { Link, Outlet, createFileRoute, useLocation, useNavigate } from '@tansta
 import { useEffect, useState } from 'react'
 import { InventoryFilterFields, InventoryList } from '../features/runtime-inventory/components'
 import {
-  DnsGroupDistributionView,
+  DnsQueryDistributionView,
   InventoryKindDistribution,
   TopBehaviorDistribution,
 } from '../features/runtime-inventory/visualization'
 import {
-  dnsGroupDistributionOptions,
   inventoryFacetOptions,
   inventoryDistributionOptions,
   inventoryListOptions,
@@ -54,11 +53,7 @@ function RuntimeInventoryPage() {
   const summary = useQuery(inventorySummaryOptions(api, projectId, applicationId, search))
   const distribution = useQuery({
     ...inventoryDistributionOptions(api, projectId, applicationId, search),
-    enabled: !threadsActive && search.kind !== 'domain',
-  })
-  const dnsDistribution = useQuery({
-    ...dnsGroupDistributionOptions(api, projectId, applicationId, search),
-    enabled: !threadsActive && search.kind === 'domain',
+    enabled: !threadsActive,
   })
   const list = useQuery({
     ...inventoryListOptions(api, projectId, applicationId, search),
@@ -241,34 +236,6 @@ function RuntimeInventoryPage() {
               identity search, and behavior filters do not apply to these bounded aggregates.
             </p>
           </Card>
-        ) : search.kind === 'domain' ? (
-          dnsDistribution.isPending ? (
-            <Loading label="Loading DNS destination distribution…" />
-          ) : dnsDistribution.isError && !dnsDistribution.data ? (
-            <ApiErrorPanel
-              title="Could not load DNS destination distribution"
-              error={dnsDistribution.error}
-              onRetry={() => void dnsDistribution.refetch()}
-            />
-          ) : dnsDistribution.data.total_observation_count === 0 ? (
-            <EmptyState
-              title="No DNS activity to visualize"
-              description="No recorded DNS observations match the selected filters."
-            />
-          ) : (
-            <div className="flex h-full flex-col gap-6">
-              {dnsDistribution.isError && (
-                <ApiErrorPanel
-                  title="DNS destination distribution may be stale"
-                  error={dnsDistribution.error}
-                  onRetry={() => void dnsDistribution.refetch()}
-                />
-              )}
-              {dnsDistribution.data ? (
-                <DnsGroupDistributionView distribution={dnsDistribution.data} />
-              ) : null}
-            </div>
-          )
         ) : distribution.isPending ? (
           <Loading label="Loading activity distribution…" />
         ) : distribution.isError && !distribution.data ? (
@@ -292,11 +259,15 @@ function RuntimeInventoryPage() {
               />
             )}
             {distribution.data ? (
-              <TopBehaviorDistribution
-                distribution={distribution.data}
-                selectedToken={search.identity_token}
-                onIdentity={(identity_token) => setScope({ identity_token })}
-              />
+              search.kind === 'domain' ? (
+                <DnsQueryDistributionView distribution={distribution.data} />
+              ) : (
+                <TopBehaviorDistribution
+                  distribution={distribution.data}
+                  selectedToken={search.identity_token}
+                  onIdentity={(identity_token) => setScope({ identity_token })}
+                />
+              )
             ) : null}
           </div>
         )}

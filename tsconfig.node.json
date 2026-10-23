@@ -17,6 +17,7 @@
     "playwright.threads.config.ts",
     "e2e/thread-backend.setup.mjs",
     "playwright.real-backend.config.ts",
+    "playwright.dns-real-backend.config.ts",
     "playwright.group-same-events-real-backend.config.ts",
     "e2e/real-backend.setup.mjs",
     "e2e/real-backend.teardown.mjs",

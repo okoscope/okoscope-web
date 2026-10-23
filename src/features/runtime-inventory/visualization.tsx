@@ -166,6 +166,53 @@ export function DnsGroupDistributionView({
   )
 }
 
+export function DnsQueryDistributionView({
+  distribution,
+}: {
+  distribution: InventoryDistribution
+}) {
+  const entries: HorizontalBarItem[] = distribution.entries.map((entry) => {
+    const label = inventoryIdentityText('domain', entry.semantic_summary)
+    return {
+      id: entry.identity_token,
+      label: <span className="break-all font-mono">{label}</span>,
+      accessibleLabel: label,
+      value: entry.occurrence_count,
+    }
+  })
+  if (distribution.other)
+    entries.push({
+      id: 'other',
+      label: <span>Other observed DNS queries</span>,
+      accessibleLabel: 'Other observed DNS queries',
+      value: distribution.other.occurrence_count,
+      meta: `${formatCount(distribution.other.item_count)} unique identities`,
+    })
+  return (
+    <Card className="h-full">
+      <h2 className="text-xl font-semibold">Most observed DNS queries</h2>
+      <p className="mt-1 text-sm text-slate-400">
+        Share of {formatCount(distribution.total_occurrence_count)} recorded DNS observations for
+        matching inventory identities.
+      </p>
+      <p className="mt-1 text-sm text-slate-400">
+        Counts cover each identity’s recorded history; placement and time filters select identities,
+        not individual observations. Exact question names and record types stay separate.
+      </p>
+      <p className="mt-1 text-sm text-slate-400">
+        Policy verdict, suppression, and evaluation filters apply to the detailed list only.
+      </p>
+      <div className="mt-4">
+        <HorizontalBars
+          ariaLabel="Most observed DNS queries"
+          total={distribution.total_occurrence_count}
+          items={entries}
+        />
+      </div>
+    </Card>
+  )
+}
+
 export function TopBehaviorDistribution({
   distribution,
   selectedToken,

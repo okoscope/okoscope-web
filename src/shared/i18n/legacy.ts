@@ -281,6 +281,14 @@ export const legacyRussian: Record<string, string> = {
   'Process:': 'Процесс:',
   'Kubernetes DNS search expansion generated resolver questions for this destination. Exact questions remain available below.':
     'Поисковое расширение DNS в Kubernetes создало варианты запросов резолвера для этого назначения. Точные запросы доступны ниже.',
+  'Policy verdict, suppression, and evaluation filters apply to the detailed list only.':
+    'Фильтры вердикта политики, подавления и вычисления применяются только к подробному списку.',
+  'Most observed DNS queries': 'Наиболее наблюдаемые DNS-запросы',
+  'Other observed DNS queries': 'Прочие наблюдаемые DNS-запросы',
+  'recorded DNS observations for matching inventory identities.':
+    'записанных DNS-наблюдений для соответствующих идентичностей инвентаризации.',
+  'Counts cover each identity’s recorded history; placement and time filters select identities, not individual observations. Exact question names and record types stay separate.':
+    'Счётчики охватывают записанную историю каждой идентичности; фильтры размещения и времени выбирают идентичности, а не отдельные наблюдения. Точные имена запросов и типы записей остаются отдельными.',
   'Most observed DNS destinations': 'Наиболее наблюдаемые DNS-назначения',
   'Other observed DNS destinations': 'Прочие наблюдаемые DNS-назначения',
   'Loading DNS destination distribution…': 'Загрузка распределения DNS-назначений…',

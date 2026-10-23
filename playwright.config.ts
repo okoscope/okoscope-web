@@ -4,6 +4,7 @@ export default defineConfig({
   testDir: './e2e',
   testIgnore: [
     'docs-screenshots.spec.ts',
+    'dns-real-backend.spec.ts',
     'group-same-events-real-backend.spec.ts',
     'runtime-label-real-backend.spec.ts',
     'thread-activity-real-backend.spec.ts',

@@ -97,6 +97,19 @@ function ApplicationPage() {
         <div className="mt-7 grid gap-3 sm:grid-cols-2">
           <Link
             className="rounded-xl border border-slate-700 p-4 transition hover:border-slate-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
+            to="/projects/$projectId/applications/$applicationId/runtime-inventory"
+            params={{ projectId, applicationId }}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <strong className="text-lg">Application Activity</strong>
+              <Activity className="h-6 w-6 shrink-0 text-cyan-300" aria-hidden="true" />
+            </div>
+            <span className="mt-1 block text-sm text-slate-400">
+              Processes, connections, and domains observed in this application.
+            </span>
+          </Link>
+          <Link
+            className="rounded-xl border border-slate-700 p-4 transition hover:border-slate-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
             to="/projects/$projectId/applications/$applicationId/resources"
             params={{ projectId, applicationId }}
             search={{
@@ -126,19 +139,6 @@ function ApplicationPage() {
             <span className="mt-1 block text-sm text-slate-400">
               Classify expected behavior, review policy revisions, and manage temporary
               suppressions.
-            </span>
-          </Link>
-          <Link
-            className="rounded-xl border border-slate-700 p-4 transition hover:border-slate-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
-            to="/projects/$projectId/applications/$applicationId/runtime-inventory"
-            params={{ projectId, applicationId }}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <strong className="text-lg">Application Activity</strong>
-              <Activity className="h-6 w-6 shrink-0 text-cyan-300" aria-hidden="true" />
-            </div>
-            <span className="mt-1 block text-sm text-slate-400">
-              Processes, connections, and domains observed in this application.
             </span>
           </Link>
           <Link

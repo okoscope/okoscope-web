@@ -113,6 +113,31 @@ describe('localization', () => {
     expect(screen.getByText('Deployment/payment-api')).toBeVisible()
     expect(screen.getByRole('region', { name: 'Наиболее наблюдаемые DNS-запрос' })).toBeVisible()
   })
+  it('translates split inbound distribution labels and accessible names into Russian', async () => {
+    const behaviorLabel = 'Inbound connection'
+    render(
+      <LocalizationProvider initialLocale="ru">
+        <section aria-label={`Most observed ${behaviorLabel.toLowerCase()}`}>
+          <h2>Most observed {behaviorLabel.toLowerCase()}</h2>
+          <button aria-label={`Other observed ${behaviorLabel.toLowerCase()}: 4 observations, 20%`}>
+            Other observed {behaviorLabel.toLowerCase()}
+          </button>
+        </section>
+      </LocalizationProvider>,
+    )
+    expect(
+      await screen.findByRole('heading', { name: 'Наиболее наблюдаемые входящие соединения' }),
+    ).toBeVisible()
+    expect(
+      screen.getByRole('region', { name: 'Наиболее наблюдаемые входящие соединения' }),
+    ).toBeVisible()
+    expect(
+      screen.getByRole('button', {
+        name: 'Прочие наблюдаемые входящие соединения: 4 наблюдения, 20%',
+      }),
+    ).toHaveTextContent('Прочие наблюдаемые входящие соединения')
+    expect(screen.queryByText(/inbound connection/i)).not.toBeInTheDocument()
+  })
   it('translates termination and restart event labels through the legacy dictionary', async () => {
     render(
       <LocalizationProvider initialLocale="ru">

@@ -9,6 +9,8 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Put Application Activity first in application navigation and complete Russian
+  localization of observation chart labels, including accessible descriptions.
 - Clear the previously selected activity kind when switching to the separate Threads view.
 - Mark thread creation and exit counters as lower bounds when observation gaps are reported,
   show unavailable active counts for summaries spanning different processes, and reset thread

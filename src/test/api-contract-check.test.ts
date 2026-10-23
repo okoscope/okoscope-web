@@ -49,8 +49,8 @@ describe('API contract verification', () => {
             'missing CI source': 'CI requires OKOSCOPE_OPENAPI_SOURCE',
           }[scenario],
         )
-        expect(await readFile(localContract)).toEqual(contract)
-        expect(await readFile(localTypes)).toEqual(before)
+        expect((await readFile(localContract)).equals(contract)).toBe(true)
+        expect((await readFile(localTypes)).equals(before)).toBe(true)
       } finally {
         await rm(directory, { recursive: true, force: true })
       }

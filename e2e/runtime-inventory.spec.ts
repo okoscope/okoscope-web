@@ -2,6 +2,31 @@ import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 import { authenticate, mockApi } from './fixtures'
 
+test('localizes inbound distribution headings and accessible labels into Russian', async ({
+  page,
+}) => {
+  const { project, application } = await mockApi(page)
+  await page.goto(
+    `/projects/${project.id}/applications/${application.id}/runtime-inventory?kind=inbound_endpoint`,
+  )
+  await authenticate(page)
+  await page.getByLabel('Language').selectOption('ru')
+
+  await expect(
+    page.getByRole('heading', { name: 'Наиболее наблюдаемые входящие соединения' }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('list', { name: 'Наиболее наблюдаемые входящие соединения' }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: /^Прочие наблюдаемые входящие соединения:/ }),
+  ).toBeVisible()
+  await expect(
+    page.getByText('Прочие наблюдаемые входящие соединения', { exact: true }),
+  ).toBeVisible()
+  await expect(page.locator('main')).not.toContainText('inbound connection')
+})
+
 test('creates, edits, searches, and removes a behavior name while retaining technical evidence', async ({
   page,
 }) => {

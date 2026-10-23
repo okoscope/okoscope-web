@@ -312,6 +312,7 @@ export const legacyRussian: Record<string, string> = {
   'Accepted inbound connection': 'Принято входящее соединение',
   'Inbound connections': 'Входящие соединения',
   'Inbound connection': 'Входящее соединение',
+  'inbound connection': 'входящие соединения',
   'inbound observations': 'наблюдений входящих соединений',
   'All IPv4 interfaces': 'все IPv4-интерфейсы',
   'All IPv6 interfaces': 'все IPv6-интерфейсы',
@@ -885,6 +886,9 @@ function localize(value: string, locale: Locale): string {
   const logicalDnsDestinations = value.match(/^(\d[\d\s.,]*) logical DNS destinations$/)
   if (logicalDnsDestinations)
     return `${logicalDnsDestinations[1]} ${russianCountNoun(logicalDnsDestinations[1]!, 'логическое DNS-назначение', 'логических DNS-назначения', 'логических DNS-назначений')}`
+  const observationBar = value.match(/^(.+): (\d[\d\s.,]*) observations, (.+)$/)
+  if (observationBar)
+    return `${localize(observationBar[1]!, locale)}: ${observationBar[2]} ${russianCountNoun(observationBar[2]!, 'наблюдение', 'наблюдения', 'наблюдений')}, ${observationBar[3]}`
   const observedBehavior = value.match(/^(Most|Other) observed (.+)$/)
   if (observedBehavior)
     return `${observedBehavior[1] === 'Most' ? 'Наиболее наблюдаемые' : 'Прочие наблюдаемые'} ${localize(observedBehavior[2]!, locale)}`

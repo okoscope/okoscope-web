@@ -11,13 +11,16 @@ test('keeps all Application navigation cards accessible and consistently illustr
   await authenticate(page)
 
   const cards = [
+    ['Application Activity', 'activity', 'runtime-inventory'],
     ['Application resources', 'gauge', 'resources'],
     ['Managed runtime policies', 'shield-check', 'policies'],
-    ['Application Activity', 'activity', 'runtime-inventory'],
     ['New discoveries', 'sparkles', 'runtime-groups'],
     ['Releases and changes', 'git-compare-arrows', 'releases'],
     ['Requires attention', 'triangle-alert', 'attention'],
   ] as const
+
+  const navigationCards = page.locator('main a:has(strong)')
+  await expect(navigationCards.locator('strong')).toHaveText(cards.map(([name]) => name))
 
   for (const [name, icon, destination] of cards) {
     const card = page.getByRole('link', { name: new RegExp(`^${name}`) })
@@ -44,13 +47,24 @@ test('keeps all Application navigation cards accessible and consistently illustr
     expect(iconRightInset).toBeLessThanOrEqual(18)
   }
 
-  const firstCard = page.getByRole('link', { name: /^Application resources/ })
-  const secondCard = page.getByRole('link', { name: /^Managed runtime policies/ })
+  const firstCard = page.getByRole('link', { name: /^Application Activity/ })
+  const secondCard = page.getByRole('link', { name: /^Application resources/ })
+  const resourceUrl = new URL((await secondCard.getAttribute('href'))!, page.url())
+  expect(Object.fromEntries(resourceUrl.searchParams)).toEqual({
+    range: '24h',
+    metric: 'memory_current_bytes',
+    mode: 'per_ready_replica',
+    step: 'hour',
+  })
   const firstDesktopBox = await firstCard.boundingBox()
   const secondDesktopBox = await secondCard.boundingBox()
   expect(firstDesktopBox).not.toBeNull()
   expect(secondDesktopBox).not.toBeNull()
   expect(Math.abs(firstDesktopBox!.y - secondDesktopBox!.y)).toBeLessThanOrEqual(1)
+  expect(secondDesktopBox!.x).toBeGreaterThan(firstDesktopBox!.x + firstDesktopBox!.width)
+  await firstCard.focus()
+  await page.keyboard.press('Tab')
+  await expect(secondCard).toBeFocused()
 
   const attentionCard = page.getByRole('link', { name: /^Requires attention/ })
   await expect(attentionCard.locator('[class*="amber"]')).toHaveCount(0)
@@ -58,6 +72,7 @@ test('keeps all Application navigation cards accessible and consistently illustr
   await expect(attentionCard).toBeFocused()
 
   await page.setViewportSize({ width: 375, height: 812 })
+  await expect(navigationCards.locator('strong')).toHaveText(cards.map(([name]) => name))
   const firstMobileBox = await firstCard.boundingBox()
   const secondMobileBox = await secondCard.boundingBox()
   expect(firstMobileBox).not.toBeNull()
@@ -69,6 +84,14 @@ test('keeps all Application navigation cards accessible and consistently illustr
 
   await page.evaluate(() => localStorage.setItem('okoscope.locale', 'ru'))
   await page.reload()
+  await expect(navigationCards.locator('strong')).toHaveText([
+    'Активность приложения',
+    'Ресурсы приложения',
+    'Управляемые политики среды выполнения',
+    'Новые обнаружения',
+    'Релизы и изменения',
+    'Требует внимания',
+  ])
   await expect(page.getByRole('link', { name: /^Ресурсы приложения/ })).toBeVisible()
   await expect(page.getByRole('link', { name: /^Требует внимания/ })).toBeVisible()
 })

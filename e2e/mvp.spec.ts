@@ -388,6 +388,100 @@ test('links an empty agent health state to localized readiness guidance', async 
   await expect(page.getByRole('button', { name: /Platform/ })).toBeVisible()
 })
 
+for (const locale of ['en', 'ru'] as const) {
+  for (const width of [320, 375, 1280]) {
+    for (const publicSignupEnabled of [true, false]) {
+      test(`keeps authentication modes compact at ${width}px in ${locale}, signup ${publicSignupEnabled}`, async ({
+        page,
+      }) => {
+        await mockApi(page)
+        await page.route('**/api/v1/auth/policy', (route) =>
+          route.fulfill({
+            contentType: 'application/json',
+            body: JSON.stringify({
+              public_signup_enabled: publicSignupEnabled,
+              invitation_registration_enabled: true,
+              organization_mode: 'single',
+            }),
+          }),
+        )
+        await page.setViewportSize({ width, height: 900 })
+        await page.goto('/')
+        await page.getByLabel('Language').selectOption(locale)
+        const mode = page.getByRole('group', {
+          name: locale === 'ru' ? 'Режим аутентификации' : 'Authentication mode',
+        })
+        const signIn = mode.getByRole('button', {
+          name: locale === 'ru' ? 'Войти' : 'Sign in',
+          exact: true,
+        })
+        const register = mode.getByRole('button', {
+          name: locale === 'ru' ? 'Создать организацию' : 'Create organization',
+        })
+        await expect(signIn).toBeVisible()
+        await expect(mode.getByRole('button')).toHaveCount(publicSignupEnabled ? 2 : 1)
+
+        const assertCompact = async () => {
+          const measurements = await mode.evaluate((group) => ({
+            groupWidth: group.getBoundingClientRect().width,
+            buttons: [...group.querySelectorAll('button')].map((button) => {
+              const range = document.createRange()
+              range.selectNodeContents(button)
+              const box = button.getBoundingClientRect()
+              return {
+                x: box.x,
+                y: box.y,
+                right: box.right,
+                width: box.width,
+                lines: range.getClientRects().length,
+                fits: button.scrollWidth <= button.clientWidth,
+              }
+            }),
+          }))
+          for (const button of measurements.buttons) {
+            expect(button.lines).toBe(1)
+            expect(button.fits).toBe(true)
+            expect(button.x).toBeGreaterThanOrEqual(0)
+            expect(button.right).toBeLessThanOrEqual(width)
+          }
+          if (publicSignupEnabled) {
+            expect(measurements.buttons[1]!.y).toBe(measurements.buttons[0]!.y)
+            expect(measurements.buttons[1]!.x).toBeGreaterThan(measurements.buttons[0]!.right)
+          }
+          if (width === 1280) {
+            expect(
+              measurements.buttons.reduce((sum, button) => sum + button.width, 0),
+            ).toBeLessThan(measurements.groupWidth * 0.9)
+          }
+          const overflow = await page.evaluate(() => ({
+            scrollWidth: document.documentElement.scrollWidth,
+            viewportWidth: window.innerWidth,
+          }))
+          expect(
+            overflow.scrollWidth,
+            JSON.stringify({ measurements, overflow }),
+          ).toBeLessThanOrEqual(overflow.viewportWidth)
+        }
+        await assertCompact()
+        if (publicSignupEnabled) {
+          await register.click()
+          await expect(page.locator('#organization-name')).toBeVisible()
+          await assertCompact()
+          await signIn.focus()
+          await page.keyboard.press('Enter')
+          await expect(page.locator('#organization-name')).toHaveCount(0)
+          await expect(page.locator('#auth-password')).toHaveAttribute(
+            'autocomplete',
+            'current-password',
+          )
+        } else {
+          await expect(register).toHaveCount(0)
+        }
+      })
+    }
+  }
+}
+
 test('authentication flow and primary navigation have no detectable accessibility violations', async ({
   page,
 }) => {

@@ -263,11 +263,12 @@ function AuthenticationForm(props: AuthenticationFormProps) {
   return (
     <>
       <div
-        className={`grid gap-2 ${props.publicSignupEnabled ? 'grid-cols-2' : 'grid-cols-1'}`}
+        className="auth-mode-switch flex gap-2"
         role="group"
         aria-label={t('authenticationMode')}
       >
         <Button
+          className="whitespace-nowrap px-2 sm:px-3"
           type="button"
           variant={!registerMode ? 'default' : 'outline'}
           onClick={() => props.onMode('login')}
@@ -276,6 +277,7 @@ function AuthenticationForm(props: AuthenticationFormProps) {
         </Button>
         {props.publicSignupEnabled && (
           <Button
+            className="whitespace-nowrap px-2 sm:px-3"
             type="button"
             variant={registerMode ? 'default' : 'outline'}
             onClick={() => props.onMode('register')}

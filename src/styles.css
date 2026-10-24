@@ -56,6 +56,14 @@ input,
 select {
   font: inherit;
 }
+.auth-mode-switch > button {
+  font-size: 0.75rem;
+}
+@media (min-width: 40rem) {
+  .auth-mode-switch > button {
+    font-size: 0.875rem;
+  }
+}
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,

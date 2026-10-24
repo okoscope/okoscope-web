@@ -47,7 +47,7 @@ body::before {
 }
 @media (max-width: 48rem) {
   .auth-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 2rem;
   }
 }

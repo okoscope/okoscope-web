@@ -124,7 +124,10 @@ export function AuthenticationScreen({ expired }: { expired: boolean }) {
       <section className="max-w-xl self-center" aria-labelledby="auth-product-title">
         <BrandMark className="mb-6 h-24 w-32" />
         <p className="eyebrow">OKOSCOPE</p>
-        <h1 id="auth-product-title" className="mt-3 text-4xl font-semibold sm:text-5xl">
+        <h1
+          id="auth-product-title"
+          className="mt-3 text-4xl wrap-anywhere font-semibold sm:text-5xl"
+        >
           {t('authProductTitle')}
         </h1>
         <p className="mt-5 max-w-lg text-lg text-slate-300">{t('authProductHelp')}</p>
